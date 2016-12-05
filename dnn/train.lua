@@ -20,6 +20,7 @@ opt = lapp[[
 --langevin          (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
 --gamma             (default 1)                 Langevin gamma coefficient
+--scoping           (default 1e32)              Scoping parameter \gamma*(1-e^{-scoping*t})
 --langevin_noise    (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 0)                 GPU id
 -f,--full                                       Use all data
@@ -109,8 +110,9 @@ function trainer(d)
                     batch=b,
                     iter=epoch*num_batches + b,
                     loss= f,
-                    dF = torch.norm(optim_state.lparams.w)*opt.gamma,
+                    dF = torch.norm(optim_state.lparams.w),
                     lx = torch.mean(optim_state.lparams.lx),
+                    xxpd = optim_state.lparams.xxpd,
                     miss = (1-confusion.totalValid)*100,
                     mu = torch.mean(w),
                     stddev = torch.std(w),
@@ -221,13 +223,15 @@ function main()
     dampening = 0,
     rho=opt.rho,
     gamma=opt.gamma,
+    scoping=opt.scoping,
     langevin=opt.langevin,
     langevin_noise = opt.langevin_noise}
 
     local train, val, test = dataset.split( 1e-4,
     (opt.full and 1) or 0.05)
 
-    local symbols = {'tv', 'epoch', 'batch', 'iter', 'loss', 'dF', 'lx', 'miss', 'mu', 'stddev', 'gmax', 'gmin'}
+    local symbols = {   'tv', 'epoch', 'batch', 'iter', 'loss', 'dF', 'lx', 'xxpd',
+                        'miss', 'mu', 'stddev', 'gmax', 'gmin'}
     logger = nil
     if opt.log then
         logger, logfname = setup_logger(opt, symbols)
