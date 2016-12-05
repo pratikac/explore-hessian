@@ -47,8 +47,6 @@ function set_gpu()
     require 'cudnn'
     cudnn.benchmark = true
     cudnn.fastest = true
-    opt.backend = cudnn
-    opt.backend_name = 'cudnn'
 end
 
 

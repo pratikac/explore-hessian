@@ -2,8 +2,8 @@ require 'resnet'
 local optnet = require 'optnet'
 
 local models = {}
-local b = opt.backend
-local b_name = opt.backend_name
+local b = cudnn
+local b_name = 'cudnn'
 
 local function shapetest(m)
     local x = torch.randn(1,3,32,32):cuda()
@@ -113,15 +113,15 @@ local function cifarconv()
     end
 
     local m = nn.Sequential()
-    :add(nn.Dropout(0.2))
+    --:add(nn.Dropout(0.2))
     :add(convbn(3,96,3,3,1,1,1,1))
     :add(convbn(96,96,3,3,1,1,1,1))
     :add(convbn(96,96,3,3,2,2,1,1))
-    :add(nn.Dropout(0.5))
+    --:add(nn.Dropout(0.5))
     :add(convbn(96,192,3,3,1,1,1,1))
     :add(convbn(192,192,3,3,1,1,1,1))
     :add(convbn(192,192,3,3,2,2,1,1))
-    :add(nn.Dropout(0.5))
+    --:add(nn.Dropout(0.5))
     :add(convbn(192,192,3,3,1,1,1,1,1,1))
     :add(convbn(192,192,3,3,1,1,1,1))
     :add(convbn(192,10,1,1,1,1))
