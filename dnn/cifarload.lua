@@ -15,7 +15,7 @@ function dataset.split(a,b)
 
     if opt.full ~= true then
         print('Overfitting on 10% subset ...')
-        local frac = 0.1
+        local frac = 0.25
         local tn, ten = train.data:size(1), test.data:size(1)
 
         train.data = train.data:narrow(1,1,frac*tn)

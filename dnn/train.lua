@@ -10,32 +10,32 @@ require 'entropyoptim'
 
 opt = lapp[[
 --output            (default "/local2/pratikac")
--m,--model          (default 'mnistconv')         
+-m,--model          (default 'cifarconv')
 --retrain           (default '')
 -b,--batch_size     (default 64)                Batch size
 --LR                (default 0.1)               Learning rate
---optim             (default 'adam')            Optimization algorithm
---LRstep            (default 10)                Drop LR after x epochs
+--optim             (default 'sgd')             Optimization algorithm
+--LRstep            (default 6)                 Drop LR after x epochs
 --LRratio           (default 0.2)               LR drop factor
 --langevin          (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
 --gamma             (default 1)                 Langevin gamma coefficient
 --scoping           (default 1e32)              Scoping parameter \gamma*(1-e^{-scoping*t})
---langevin_noise    (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
+--langevin_noise    (default 1e-5)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 0)                 GPU id
 -f,--full                                       Use all data
--d,--dropout        (default 0.5)
+-d,--dropout        (default 0.0)
 --L2                (default 1e-3)              L2 regularization
 -s,--seed           (default 42)
--e,--max_epochs     (default 15)
+-e,--max_epochs     (default 20)
 --augment                                       Augment data with flips and mirrors
 -l,--log                                        Log statistics
 -v,--verbose                                    Show gradient statistics
 -h,--help                                       Print this message
 ]]
 
+print(opt)
 if opt.help then
-    print(opt)
     os.exit()
 end
 
@@ -227,8 +227,7 @@ function main()
     langevin=opt.langevin,
     langevin_noise = opt.langevin_noise}
 
-    local train, val, test = dataset.split( 1e-4,
-    (opt.full and 1) or 0.05)
+    local train, val, test = dataset.split(1e-5, (opt.full and 1) or 0.05)
 
     local symbols = {   'tv', 'epoch', 'batch', 'iter', 'loss', 'dF', 'lx', 'xxpd',
                         'miss', 'mu', 'stddev', 'gmax', 'gmin'}
