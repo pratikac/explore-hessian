@@ -81,19 +81,21 @@ function optim.entropyadam(opfunc, x, config, state)
         lparams.xxpd = lparams.xxpd/config.langevin
 
         lparams.w:copy(xc-lmx)
-
-        -- also multiply dfdx by rho
-        dfdx:mul(rho)
     end
 
     if opt.verbose and state.t % 10 == 1 then
         local debug_stats = {df=torch.norm(dfdx),
         dF=torch.norm(lparams.w),
-        --dfdF = torch.dot(dfdx/torch.norm(dfdx), lparams.w/torch.norm(lparams.w)),
-        --etanorm = torch.norm(lparams.eta*langevin_noise/math.sqrt(0.5*stepSize)),
+        dfdF = torch.dot(dfdx/torch.norm(dfdx), lparams.w/(torch.norm(lparams.w)+1e-6)),
+        eta = torch.norm(lparams.eta*langevin_noise/math.sqrt(0.5*stepSize)),
         xxpd = lparams.xxpd,
-        cgamma = lparams.cgamma}
+        g = lparams.cgamma}
         print(cjson.encode(debug_stats))
+    end
+
+    if opt.langevin > 0 then
+        -- also multiply dfdx by rho
+        dfdx:mul(rho)
     end
 
     x:copy(xc)
@@ -220,36 +222,28 @@ function optim.entropysgd(opfunc, x, config, state)
         lparams.xxpd = lparams.xxpd/config.langevin
         lparams.w:copy(xc-lmx)
 
-        -- also multiply dfdx by rho
-        dfdx:mul(rho)
     end
 
-    if opt.verbose and state.evalCounter % 10 == 1 then
+    if opt.verbose and state.evalCounter % 50 == 1 then
         local debug_stats = {df=torch.norm(dfdx),
         dF=torch.norm(lparams.w),
-        --dfdF = torch.dot(dfdx/torch.norm(dfdx), lparams.w/torch.norm(lparams.w)),
-        --etanorm = torch.norm(lparams.eta*langevin_noise/math.sqrt(0.5*clr)),
+        dfdF = torch.dot(dfdx/torch.norm(dfdx), lparams.w/(torch.norm(lparams.w)+1e-6)),
+        eta = torch.norm(lparams.eta*langevin_noise/math.sqrt(0.5*clr)),
         xxpd = lparams.xxpd,
-        cgamma = lparams.cgamma}
+        g = lparams.cgamma}
         print(cjson.encode(debug_stats))
+    end
+
+    if opt.langevin > 0 then
+        -- also multiply dfdx by rho
+        dfdx:mul(rho)
     end
 
     x:copy(xc)
     dfdx:add(lparams.w)
 
-    -- (5) parameter update with single or individual learning rates
-    if lrs then
-        if not state.deltaParameters then
-            state.deltaParameters = torch.Tensor():typeAs(x):resizeAs(dfdx)
-        end
-        state.deltaParameters:copy(lrs):cmul(dfdx)
-        x:add(-clr, state.deltaParameters)
-    else
-        x:add(-clr, dfdx)
-    end
+    x:add(-clr, dfdx)
 
-
-    -- return x*, f(x) before optimization
     return x,{fx}
 end
 

@@ -70,7 +70,6 @@ end
 
 function trainer(d)
     local x, y = d.data, d.labels
-    model:training()
     local w, dw = model:getParameters()
 
     local num_batches = x:size(1)/opt.batch_size
@@ -85,6 +84,10 @@ function trainer(d)
         timer:reset()
 
         local feval = function(_w, dry)
+            -- disable dropout for Langevin loop?
+            if dry == false then
+                model:training()
+            end
             local dry = dry or false
             if _w ~= w then w:copy(_w) end
             dw:zero()
