@@ -227,7 +227,7 @@ function main()
     langevin=opt.langevin,
     langevin_noise = opt.langevin_noise}
 
-    local train, val, test = dataset.split(1e-5, (opt.full and 1) or 0.05)
+    local train, val, test = dataset.split(0, (opt.full and 1) or 0.05)
 
     local symbols = {   'tv', 'epoch', 'batch', 'iter', 'loss', 'dF', 'lx', 'xxpd',
                         'miss', 'mu', 'stddev', 'gmax', 'gmin'}

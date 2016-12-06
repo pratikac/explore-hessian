@@ -2,11 +2,12 @@ mnist = require 'mnist'
 
 function mnist.split(val_frac, small_frac)
     local Ntrain, Ntest = 60000, 10000
-    local val_frac = val_frac or 0.12
-    local small_frac = small_frac or 0.05
-    local strain, num_train = 1, Ntrain*(1-val_frac)*small_frac
-    local sval, num_val = Ntrain*(1-val_frac), Ntrain*val_frac*small_frac
-    local stest, num_test = 1, Ntest*small_frac
+    local val_frac = val_frac or 0
+    local small_frac = small_frac or 1
+    local strain, num_train = 1, math.floor(Ntrain*(1-val_frac)*small_frac)
+    local sval, num_val = math.ceil(Ntrain*(1-val_frac)), math.ceil(Ntrain*val_frac*small_frac + 1)
+    local stest, num_test = 1, math.ceil(Ntest*small_frac)
+    --print(strain, num_train, sval, num_val, stest, num_test)
 
     local train, test = mnist.traindataset(), mnist.testdataset()
     local shuffle = torch.randperm(Ntrain):type('torch.LongTensor')

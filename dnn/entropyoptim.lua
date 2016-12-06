@@ -18,7 +18,7 @@ function optim.entropyadam(opfunc, x, config, state)
     local scoping = config.scoping or 1e32
     local langevin_noise = config.langevin_noise or 1e-3
 
-    state.lparams = state.lparams or {beta1=0.9}
+    state.lparams = state.lparams or {beta1=0.25}
     local lparams = state.lparams
 
     -- (1) evaluate f(x) and df/dx
@@ -61,7 +61,7 @@ function optim.entropyadam(opfunc, x, config, state)
         local lmx = lparams.lmx
         local eta = lparams.eta
 
-        local cgamma = gamma*(1-math.exp(-scoping*state.evalCounter))
+        lparams.cgamma = gamma*scoping*state.t
         local lstepSize = stepSize
 
         for i=1,config.langevin do
@@ -69,7 +69,7 @@ function optim.entropyadam(opfunc, x, config, state)
 
             -- bias term
             eta:normal()
-            ldfdx:add(-cgamma, xc-lx):add(langevin_noise/math.sqrt(0.5*lstepSize), eta)
+            ldfdx:add(-lparams.cgamma, xc-lx):add(langevin_noise/math.sqrt(0.5*lstepSize), eta)
 
             -- update and average
             lx:add(-lstepSize, ldfdx)
@@ -77,14 +77,23 @@ function optim.entropyadam(opfunc, x, config, state)
 
             -- collect statistics
             lparams.xxpd = lparams.xxpd + torch.norm(xc-lx)
-
         end
         lparams.xxpd = lparams.xxpd/config.langevin
 
-        lparams.w:copy(xc-lmx):mul(cgamma)
+        lparams.w:copy(xc-lmx)
 
         -- also multiply dfdx by rho
         dfdx:mul(rho)
+    end
+
+    if opt.verbose and state.t % 10 == 1 then
+        local debug_stats = {df=torch.norm(dfdx),
+        dF=torch.norm(lparams.w),
+        --dfdF = torch.dot(dfdx/torch.norm(dfdx), lparams.w/torch.norm(lparams.w)),
+        --etanorm = torch.norm(lparams.eta*langevin_noise/math.sqrt(0.5*stepSize)),
+        xxpd = lparams.xxpd,
+        cgamma = lparams.cgamma}
+        print(cjson.encode(debug_stats))
     end
 
     x:copy(xc)
@@ -165,7 +174,7 @@ function optim.entropysgd(opfunc, x, config, state)
     lparams.lmx = lparams.lx:clone()
     lparams.mdfdx = lparams.mdfdx or xc:clone():zero()
     lparams.xxpd = 0
-    lparams.cgamma = gamma*(1-math.exp(-scoping*state.evalCounter))
+    lparams.cgamma = gamma*scoping*state.t
 
     lparams.eta = lparams.eta or x.new(dfdx:size()):zero()
     lparams.w = lparams.w or x.new(dfdx:size()):zero()
@@ -209,7 +218,7 @@ function optim.entropysgd(opfunc, x, config, state)
             lparams.xxpd = lparams.xxpd + torch.norm(xc-lx)
         end
         lparams.xxpd = lparams.xxpd/config.langevin
-        lparams.w:copy(xc-lmx):mul(cgamma)
+        lparams.w:copy(xc-lmx)
 
         -- also multiply dfdx by rho
         dfdx:mul(rho)
@@ -219,7 +228,7 @@ function optim.entropysgd(opfunc, x, config, state)
         local debug_stats = {df=torch.norm(dfdx),
         dF=torch.norm(lparams.w),
         --dfdF = torch.dot(dfdx/torch.norm(dfdx), lparams.w/torch.norm(lparams.w)),
-        etanorm = torch.norm(lparams.eta*langevin_noise/math.sqrt(0.5*lclr)),
+        --etanorm = torch.norm(lparams.eta*langevin_noise/math.sqrt(0.5*clr)),
         xxpd = lparams.xxpd,
         cgamma = lparams.cgamma}
         print(cjson.encode(debug_stats))
