@@ -46,6 +46,7 @@ for v in product(*values):
     cmds.append(c)
 
 if not opt['run']:
-    print cmds
+    for c in cmds:
+        print c
 else:
     run_cmds(cmds, opt['max_jobs'])
