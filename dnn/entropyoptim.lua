@@ -91,6 +91,8 @@ function optim.entropyadam(opfunc, x, config, state)
         xxpd = lparams.xxpd,
         g = lparams.cgamma}
         print(cjson.encode(debug_stats))
+
+        lparams.dfdF = debug_stats.dfdF
     end
 
     if opt.langevin > 0 then
@@ -232,6 +234,8 @@ function optim.entropysgd(opfunc, x, config, state)
         xxpd = lparams.xxpd,
         g = lparams.cgamma}
         print(cjson.encode(debug_stats))
+
+        lparams.dfdF = debug_stats.dfdF
     end
 
     if opt.langevin > 0 then

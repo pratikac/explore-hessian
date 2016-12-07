@@ -113,6 +113,7 @@ function trainer(d)
                     iter=epoch*num_batches + b,
                     loss= f,
                     dF = torch.norm(optim_state.lparams.w),
+                    dfdF = optim_state.lparams.dfdF,
                     lx = torch.mean(optim_state.lparams.lx),
                     xxpd = optim_state.lparams.xxpd,
                     miss = (1-confusion.totalValid)*100,
@@ -233,7 +234,7 @@ function main()
     local train, val, test = dataset.split(0, (opt.full and 1) or 0.05)
 
     local symbols = {   'tv', 'epoch', 'batch', 'iter', 'loss', 'dF', 'lx', 'xxpd',
-    'miss', 'mu', 'stddev', 'gmax', 'gmin'}
+    'miss', 'mu', 'stddev', 'gmax', 'gmin','dfdF'}
     logger = nil
     if opt.log then
         logger, logfname = setup_logger(opt, symbols)
