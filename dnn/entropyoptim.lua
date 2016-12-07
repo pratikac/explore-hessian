@@ -176,7 +176,7 @@ function optim.entropysgd(opfunc, x, config, state)
     lparams.lmx = lparams.lx:clone()
     lparams.mdfdx = lparams.mdfdx or xc:clone():zero()
     lparams.xxpd = 0
-    lparams.cgamma = gamma*(1-math.exp(-scoping*state.t))
+    lparams.cgamma = gamma*(1-math.exp(-scoping*state.evalCounter))
 
     lparams.eta = lparams.eta or x.new(dfdx:size()):zero()
     lparams.w = lparams.w or x.new(dfdx:size()):zero()

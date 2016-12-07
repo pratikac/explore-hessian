@@ -15,7 +15,7 @@ opt = lapp[[
 -b,--batch_size     (default 64)                Batch size
 --LR                (default 0.1)               Learning rate
 --optim             (default 'sgd')             Optimization algorithm
---LRD               (default 2e-3)              Drop LR after x epochs
+--LRD               (default 0)                 Drop LR after x epochs
 --LRstep            (default 6)                 Drop LR after x epochs
 --LRratio           (default 0.2)               LR drop factor
 --langevin          (default 0)                 Num. Langevin iterations
@@ -72,6 +72,7 @@ end
 function trainer(d)
     local x, y = d.data, d.labels
     local w, dw = model:getParameters()
+    model:training()
 
     local num_batches = x:size(1)/opt.batch_size
     local bs = opt.batch_size
