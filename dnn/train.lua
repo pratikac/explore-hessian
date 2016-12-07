@@ -15,6 +15,7 @@ opt = lapp[[
 -b,--batch_size     (default 64)                Batch size
 --LR                (default 0.1)               Learning rate
 --optim             (default 'sgd')             Optimization algorithm
+--LRD               (default 2e-3)              Drop LR after x epochs
 --LRstep            (default 6)                 Drop LR after x epochs
 --LRratio           (default 0.2)               LR drop factor
 --langevin          (default 0)                 Num. Langevin iterations
@@ -84,11 +85,8 @@ function trainer(d)
         timer:reset()
 
         local feval = function(_w, dry)
-            -- disable dropout for Langevin loop?
-            if dry == false then
-                model:training()
-            end
             local dry = dry or false
+
             if _w ~= w then w:copy(_w) end
             dw:zero()
 
@@ -147,7 +145,7 @@ function trainer(d)
     epoch=epoch,
     loss=loss,
     miss = (1-confusion.totalValid)*100}
-logger_add(logger, stats)
+    logger_add(logger, stats)
 
 end
 
@@ -180,19 +178,19 @@ function tester(d)
         batch=b,
         loss= f,
         miss = (1-confusion.totalValid)*100}
-    logger_add(logger, stats)
+        logger_add(logger, stats)
 
-    if b % 50 == 0 then
-        print( ( colors.red .. '++[%2d][%3d/%3d] %.5f %.3f%%'):format(epoch, b, num_batches, loss/b, (1 - confusion.totalValid)*100))
+        if b % 50 == 0 then
+            print( ( colors.red .. '++[%2d][%3d/%3d] %.5f %.3f%%'):format(epoch, b, num_batches, loss/b, (1 - confusion.totalValid)*100))
+        end
     end
-end
-loss = loss/num_batches
-print( (colors.red .. '**[%2d] %.5f %.3f%%'):format(epoch, loss, (1 - confusion.totalValid)*100))
+    loss = loss/num_batches
+    print( (colors.red .. '**[%2d] %.5f %.3f%%'):format(epoch, loss, (1 - confusion.totalValid)*100))
 
-local stats = { tv=0,
-epoch=epoch,
-miss = (1-confusion.totalValid)*100,
-        loss=loss}
+    local stats = { tv=0,
+    epoch=epoch,
+    miss = (1-confusion.totalValid)*100,
+    loss=loss}
     logger_add(logger, stats)
 end
 
@@ -204,6 +202,7 @@ function save_model()
 end
 
 function learning_rate_schedule()
+    if opt.LRD > 0 then return opt.LR end
     local s = math.floor(epoch/opt.LRstep)
     local lr = opt.LR*opt.LRratio^s
     print(('[LR] %.5f'):format(lr))
@@ -220,7 +219,7 @@ function main()
     confusion = optim.ConfusionMatrix(params.classes)
     optim_state = { learningRate= opt.LR,
     weightDecay = opt.L2,
-    learningRateDecay = 0,
+    learningRateDecay = opt.LRD,
     momentum = 0.9,
     nesterov = true,
     dampening = 0,
@@ -233,7 +232,7 @@ function main()
     local train, val, test = dataset.split(0, (opt.full and 1) or 0.05)
 
     local symbols = {   'tv', 'epoch', 'batch', 'iter', 'loss', 'dF', 'lx', 'xxpd',
-                        'miss', 'mu', 'stddev', 'gmax', 'gmin'}
+    'miss', 'mu', 'stddev', 'gmax', 'gmin'}
     logger = nil
     if opt.log then
         logger, logfname = setup_logger(opt, symbols)
@@ -246,7 +245,7 @@ function main()
 
         optim_state.learningRate = learning_rate_schedule()
         --save_model()
-        
+
         epoch = epoch + 1
         print('')
     end
