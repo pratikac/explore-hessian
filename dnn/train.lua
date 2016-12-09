@@ -10,7 +10,7 @@ require 'entropyoptim'
 opt = lapp[[
 --output            (default "/local2/pratikac")
 -m,--model          (default 'cifarconv')
---estimateF           (default '')
+--estimateF         (default '')
 -b,--batch_size     (default 64)                Batch size
 --LR                (default 0.1)               Learning rate
 --optim             (default 'sgd')             Optimization algorithm
@@ -211,61 +211,71 @@ function learning_rate_schedule()
     return lr
 end
 
-function estimate_local_entropy(model, cost, d)
+function estimate_local_entropy(_model, cost, d)
     local x, y = d.data, d.labels
-
-    local modelc = model:clone()
+    local modelc = _model:clone()
     local wc,dwc = modelc:getParameters()
-    local w, dw = model:getParameters()
-    model:evaluate()
 
-    local num_batches = x:size(1)/opt.batch_size
-    local bs = opt.batch_size
-    local feval = function(_w)
-        if w ~= _w then w:copy(_w) end
-        dw:zero()
+    local res = {}
+    local gamma_array = torch.logspace(-10,2,13)
+    for gi,g in ipairs(torch.totable(gamma_array)) do
 
-        local idx = torch.Tensor(bs):random(1, d.size):type('torch.LongTensor')
-        local xc, yc = x:index(1, idx):cuda(), y:index(1, idx):cuda()
+        local model = modelc:clone()
+        local w, dw = model:getParameters()
+        model:evaluate()
 
-        local yh = model:forward(xc)
-        local f = cost:forward(yh, yc)
-        local dfdy = cost:backward(yh, yc)
-        model:backward(xc, dfdy)
-        cutorch.synchronize()
+        local num_batches = x:size(1)/opt.batch_size
+        local bs = opt.batch_size
+        local feval = function(_w)
+            if w ~= _w then w:copy(_w) end
+            dw:zero()
 
-        return f, dw
-    end
+            local idx = torch.Tensor(bs):random(1, d.size):type('torch.LongTensor')
+            local xc, yc = x:index(1, idx):cuda(), y:index(1, idx):cuda()
 
-    local eta_denom = 0
-    local Z,Zsq = 0,0
-    local num_iter = 1e6
-    local e = w.new(dw:size()):zero()
-    for i=1,num_iter do
-        local f,df = feval(w)
-        e:normal()
+            local yh = model:forward(xc)
+            local f = cost:forward(yh, yc)
+            local dfdy = cost:backward(yh, yc)
+            model:backward(xc, dfdy)
+            cutorch.synchronize()
 
-        eta = opt.LR/(1 + i*opt.LRD)
-        local noise_term = e*opt.langevin_noise/math.sqrt(opt.LR)
-        df:add(-opt.gamma, wc-w):add(opt.L2,w):add(noise_term)
-        w:add(-eta, df)
-
-        local dZ = math.exp(-f - opt.L2/2*torch.norm(w)^2 - opt.gamma/2*torch.norm(w-wc)^2)
-        Z = Z + dZ*eta
-        Zsq = Zsq + dZ^2*eta
-        eta_denom = eta_denom + eta
-
-        if opt.verbose then
-            print(f,torch.norm(df),torch.norm(noise_term),dZ)
+            return f, dw
         end
-        if i % 1000 == 0 then
-            print(('[%d] %.5f'):format(i, Z/eta_denom, Zsq/eta_denom))
+
+        local eta_denom = 0
+        local Z,Zsq = 0,0
+        local num_iter = 1e4
+        local e = w.new(dw:size()):zero()
+        for i=1,num_iter do
+            local f,df = feval(w)
+            e:normal()
+
+            local eta = opt.LR/(1 + i*opt.LRD)
+            local noise_term = e*opt.langevin_noise/math.sqrt(opt.LR)
+            df:add(-g, wc-w):add(opt.L2,w):add(noise_term)
+            w:add(-eta, df)
+
+            local dZ = math.exp(-f - opt.L2/2*torch.norm(w)^2 - opt.gamma/2*torch.norm(w-wc)^2)
+            Z = Z + dZ*eta
+            Zsq = Zsq + dZ^2*eta
+            eta_denom = eta_denom + eta
+
+            if opt.verbose then
+                print(eta,f,torch.norm(df),torch.norm(noise_term),dZ)
+            end
+            if i % 1000 == 0 then
+                print(('[%d][%.5e] %.5f +- %.5e'):format(i, g, Z/eta_denom, Zsq/eta_denom))
+            end
         end
+        Z = Z/eta_denom
+        Zsq = Zsq/eta_denom
+        print('Final Z: ' .. Z .. ' +- ' .. math.sqrt(Zsq - Z^2))
+        
+        table.insert(res, {g, Z, math.sqrt(Zsq - Z^2)})
+        torch.save(opt.estimateF:sub(1,-10) .. '.Z.t7', res)
     end
-    Z = Z/eta_denom
-    Zsq = Zsq/eta_denom
-    print('Final Z: ' .. Z .. ' +- ' .. math.sqrt(Zsq - Z^2))
-    return Z, Zsq - Z^2
+    print(res)
+    torch.save(opt.estimateF:sub(1,-10) .. '.Z.t7', res)
 end
 
 function main()

@@ -5,7 +5,8 @@ function build_file_name(opt, blacklist)
     local bl = tablex.union(blacklist or {},
                 {'backend', 'output', 'full', 'log', 'help', 'gpu',
                 'max_epochs', 'batch_size', 'backend_name',
-                'retrain', 'verbose', 'dataset', 'rho','augment'})
+                'retrain', 'verbose', 'dataset', 'rho','augment',
+                'estimateF'})
 
     local _opt = tablex.deepcopy(opt)
     for k,v in ipairs(bl) do _opt[v] = nil end
