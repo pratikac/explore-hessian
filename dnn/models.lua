@@ -113,7 +113,8 @@ local function cifarconv()
     end
 
     local m = nn.Sequential()
-    :add(nn.Dropout(0.2))               -- still use dropout on data layer
+    --:add(nn.Dropout(0.2))               -- still use dropout on data layer
+    :add(nn.Dropout(opt.dropout*0.4))
     :add(convbn(3,96,3,3,1,1,1,1))
     :add(convbn(96,96,3,3,1,1,1,1))
     :add(convbn(96,96,3,3,2,2,1,1))
