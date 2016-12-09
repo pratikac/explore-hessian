@@ -1,7 +1,6 @@
 require 'torch'
 require 'exptutils'
 require 'image'
-local pretty = require 'pl.pretty'
 local lapp = require 'pl.lapp'
 lapp.slack = true
 local colors = sys.COLORS
@@ -11,7 +10,7 @@ require 'entropyoptim'
 opt = lapp[[
 --output            (default "/local2/pratikac")
 -m,--model          (default 'cifarconv')
---retrain           (default '')
+--estimateF           (default '')
 -b,--batch_size     (default 64)                Batch size
 --LR                (default 0.1)               Learning rate
 --optim             (default 'sgd')             Optimization algorithm
@@ -199,8 +198,8 @@ end
 
 function save_model()
     if opt.log then
-        --torch.save(opt.output .. logfname .. '.model.t7', model:clearState())
-        --torch.save(opt.output .. logfname .. '.optim_state.t7', optim_state)
+        torch.save(opt.output .. logfname .. '.model.t7', model:clearState())
+        torch.save(opt.output .. logfname .. '.optim_state.t7', optim_state)
     end
 end
 
@@ -212,11 +211,68 @@ function learning_rate_schedule()
     return lr
 end
 
+function estimate_local_entropy(model, cost, d)
+    local x, y = d.data, d.labels
+
+    local modelc = model:clone()
+    local wc,dwc = modelc:getParameters()
+    local w, dw = model:getParameters()
+    model:evaluate()
+
+    local num_batches = x:size(1)/opt.batch_size
+    local bs = opt.batch_size
+    local feval = function(_w)
+        if w ~= _w then w:copy(_w) end
+        dw:zero()
+
+        local idx = torch.Tensor(bs):random(1, d.size):type('torch.LongTensor')
+        local xc, yc = x:index(1, idx):cuda(), y:index(1, idx):cuda()
+
+        local yh = model:forward(xc)
+        local f = cost:forward(yh, yc)
+        local dfdy = cost:backward(yh, yc)
+        model:backward(xc, dfdy)
+        cutorch.synchronize()
+
+        return f, dw
+    end
+
+    local eta_denom = 0
+    local Z,Zsq = 0,0
+    local num_iter = 1e6
+    local e = w.new(dw:size()):zero()
+    for i=1,num_iter do
+        local f,df = feval(w)
+        e:normal()
+
+        eta = opt.LR/(1 + i*opt.LRD)
+        local noise_term = e*opt.langevin_noise/math.sqrt(opt.LR)
+        df:add(-opt.gamma, wc-w):add(opt.L2,w):add(noise_term)
+        w:add(-eta, df)
+
+        local dZ = math.exp(-f - opt.L2/2*torch.norm(w)^2 - opt.gamma/2*torch.norm(w-wc)^2)
+        Z = Z + dZ*eta
+        Zsq = Zsq + dZ^2*eta
+        eta_denom = eta_denom + eta
+
+        if opt.verbose then
+            print(f,torch.norm(df),torch.norm(noise_term),dZ)
+        end
+        if i % 1000 == 0 then
+            print(('[%d] %.5f'):format(i, Z/eta_denom, Zsq/eta_denom))
+        end
+    end
+    Z = Z/eta_denom
+    Zsq = Zsq/eta_denom
+    print('Final Z: ' .. Z .. ' +- ' .. math.sqrt(Zsq - Z^2))
+    return Z, Zsq - Z^2
+end
+
 function main()
     model, cost, params = models.build()
-    if opt.retrain ~= '' then
-        print('Loading model: ' .. opt.retrain)
-        model = torch.load(opt.retrain)
+    if opt.estimateF ~= '' then
+        print('Loading model: ' .. opt.estimateF)
+        model = torch.load(opt.estimateF)
     end
 
     confusion = optim.ConfusionMatrix(params.classes)
@@ -235,23 +291,27 @@ function main()
 
     local train, val, test = dataset.split(0, (opt.full and 1) or 0.05)
 
-    local symbols = {   'tv', 'epoch', 'batch', 'iter', 'loss', 'dF', 'lx', 'xxpd',
-    'miss', 'mu', 'stddev', 'gmax', 'gmin','dfdF'}
-    logger = nil
-    if opt.log then
-        logger, logfname = setup_logger(opt, symbols)
-    end
+    if opt.estimateF == '' then
+        local symbols = {   'tv', 'epoch', 'batch', 'iter', 'loss', 'dF', 'lx', 'xxpd',
+        'miss', 'mu', 'stddev', 'gmax', 'gmin','dfdF'}
+        logger = nil
+        if opt.log then
+            logger, logfname = setup_logger(opt, symbols)
+        end
 
-    epoch = 1
-    while epoch <= opt.max_epochs do
-        trainer(train)
-        tester(test)
+        epoch = 1
+        while epoch <= opt.max_epochs do
+            trainer(train)
+            tester(test)
 
-        optim_state.learningRate = learning_rate_schedule()
-        --save_model()
+            optim_state.learningRate = learning_rate_schedule()
+            save_model()
 
-        epoch = epoch + 1
-        print('')
+            epoch = epoch + 1
+            print('')
+        end
+    else
+        estimate_local_entropy(model, cost, train)
     end
 end
 
