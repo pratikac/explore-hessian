@@ -7,8 +7,8 @@ import seaborn as sns
 import os, sys, glob, pdb, re, json
 sns.set()
 
-whitelist = set(['seed','model','LR','langevin_noise','LRstep', \
-            'gamma','langevin','rho','dropout','J'])
+whitelist = set(['seed','model','LR','langevin_noise', \
+            'gamma','langevin','dropout','scoping','tie_gamma'])
 
 #colors = ["blue", "darkseagreen", "indianred", "purple", "sepia", "black"]
 #colors = sns.color_palette("muted")
@@ -47,8 +47,14 @@ def condition(fs, df, conditions_list):
         print ''
     return idxs
 
-def plot_idx(fs, df, condition_list = None, idxs = None, max_epochs = 100, com=5):
-    if not idxs and not condition_list:
+def plot_idx(fs, df,
+    condition_list = None,
+    param_dict = None,
+    idxs = None, max_epochs = 100, com=5):
+
+    if not idxs and not condition_list and not param_dict:
+        return
+    if param_dict:
         return
     if condition_list and not idxs:
         idxs = condition(fs,df, condition_list)
@@ -65,7 +71,7 @@ def plot_idx(fs, df, condition_list = None, idxs = None, max_epochs = 100, com=5
                 res.append(y)
                 print i, y.min()
             sns.tsplot(np.array(res), color=colors[j % len(colors)],
-                    condition='D'+str(idx))
+                    condition='D'+str(idx)+' '+fs[i]['t'])
             j += 1
 
     # plt.figure(1)
@@ -73,10 +79,10 @@ def plot_idx(fs, df, condition_list = None, idxs = None, max_epochs = 100, com=5
     # plt.title('Training loss')
     # helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 1)].loss)
 
-    plt.figure(2)
-    plt.clf()
-    helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 1) & (df['batch'] == 0)].miss,
-        'Training error')
+    # plt.figure(2)
+    # plt.clf()
+    # helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 1) & (df['batch'] == 0)].miss,
+    #     'Training error')
 
     plt.figure(3)
     plt.clf()
