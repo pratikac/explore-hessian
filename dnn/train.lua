@@ -217,12 +217,13 @@ function estimate_local_entropy(_model, cost, d)
     local wc,dwc = modelc:getParameters()
 
     local res = {}
-    local gamma_array = torch.logspace(-10,2,13)
-    for gi,g in ipairs(torch.totable(gamma_array)) do
+    local gamma_array = {opt.gamma}
+    for gi,g in ipairs(gamma_array) do
 
         local model = modelc:clone()
         local w, dw = model:getParameters()
-        model:evaluate()
+        model:training()        --  this is hack because cudnn does not like backprop
+                                --  if evaluate() is being used
 
         local num_batches = x:size(1)/opt.batch_size
         local bs = opt.batch_size
