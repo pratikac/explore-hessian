@@ -217,13 +217,14 @@ function estimate_local_entropy(_model, cost, d)
     local wc,dwc = modelc:getParameters()
 
     local res = {}
-    local gamma_array = {opt.gamma}
-    for gi,g in ipairs(gamma_array) do
+    --local gamma_array = torch.logspace(-10,2,13)
+    local gamma_array = torch.Tensor(1):zero()
+    for gi,g in ipairs(torch.totable(gamma_array)) do
 
         local model = modelc:clone()
         local w, dw = model:getParameters()
         model:training()        --  this is hack because cudnn does not like backprop
-                                --  if evaluate() is being used
+        --  if evaluate() is being used
 
         local num_batches = x:size(1)/opt.batch_size
         local bs = opt.batch_size
@@ -245,7 +246,8 @@ function estimate_local_entropy(_model, cost, d)
 
         local eta_denom = 0
         local Z,Zsq = 0,0
-        local num_iter = 1e4
+        local num_iter = 1e5
+        opt.LRD = 100/num_iter
         local e = w.new(dw:size()):zero()
         for i=1,num_iter do
             local f,df = feval(w)
@@ -271,12 +273,12 @@ function estimate_local_entropy(_model, cost, d)
         Z = Z/eta_denom
         Zsq = Zsq/eta_denom
         print('Final Z: ' .. Z .. ' +- ' .. math.sqrt(Zsq - Z^2))
-        
+
         table.insert(res, {g, Z, math.sqrt(Zsq - Z^2)})
-        torch.save(opt.estimateF:sub(1,-10) .. '.Z.t7', res)
+        --torch.save(opt.estimateF:sub(1,-10) .. '.Z.t7', res)
     end
     print(res)
-    torch.save(opt.estimateF:sub(1,-10) .. '.Z.t7', res)
+    --torch.save(opt.estimateF:sub(1,-10) .. '.Z.t7', res)
 end
 
 function main()
