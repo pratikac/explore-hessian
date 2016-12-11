@@ -64,7 +64,8 @@ function optim.entropyadam(opfunc, x, config, state)
         if config.tie_gamma then
             lparams.cgamma = 1/(gamma*stepSize)
         else
-            lparams.cgamma = gamma*(1-math.exp(-scoping*state.t))
+            --lparams.cgamma = gamma*(state.t*scoping)^2
+            lparams.cgamma = gamma*(1 - math.exp(-state.t*scoping))
         end
         local lstepSize = stepSize
 
@@ -186,7 +187,8 @@ function optim.entropysgd(opfunc, x, config, state)
     if config.tie_gamma then
         lparams.cgamma = 1/(gamma*clr)
     else
-        lparams.cgamma = gamma*(1-math.exp(-scoping*state.evalCounter))
+        --lparams.cgamma = gamma*(state.evalCounter*scoping)^2 --- set scoping = 1/(batches*epochs) for this
+        lparams.cgamma = gamma*(1 - math.exp(-scoping*state.evalCounter))
     end
 
     lparams.eta = lparams.eta or x.new(dfdx:size()):zero()
