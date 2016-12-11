@@ -1,0 +1,164 @@
+% % set pdf figure transparency problems
+% \pdfpageattr {/Group << /S /Transparency /I true /CS /DeviceRGB>>}
+
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage{amsmath, amsthm, amssymb, bbm, bm}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{float}      % figure inside minipage,
+\usepackage{wrapfig, subcaption}
+\usepackage[margin=0cm]{caption}
+\usepackage[titletoc, toc]{appendix}
+\usepackage{microtype}
+\usepackage{blindtext}
+\usepackage{tabularx}
+
+\usepackage[boxruled, vlined, linesnumbered]{algorithm2e}
+\SetAlFnt{\small}
+\SetAlCapFnt{\small}
+\SetAlCapNameFnt{\small}
+\usepackage{algorithmic}
+\algsetup{linenosize=\tiny}
+
+\let\oldnl\nl% Store \nl in \oldnl
+\newcommand{\nonl}{\renewcommand{\nl}{\let\nl\oldnl}}% Remove line number for one line
+
+\usepackage[bookmarks=false]{hyperref}
+%\usepackage[hyperpageref]{backref}
+\hypersetup{
+colorlinks=true, linkcolor=Sepia, citecolor=Sepia, filecolor=magenta, urlcolor=black,
+}
+\usepackage{url, bookmark}
+
+\renewcommand{\qed}{\hfill \mbox{\raggedright \rule{0.1in}{0.1in}}}
+
+% math macros
+\newcommand{\reals}{\mathbb{R}}
+\newcommand{\naturals}{\mathbb{N}}
+\newcommand{\complex}{\mathbb{C}}
+
+\newcommand{\abs}[1]{\ensuremath \left| #1 \right|}
+\newcommand{\norm}[1]{\ensuremath \lVert#1\rVert}
+\newcommand{\given}{\, \vert \,}
+\providecommand{\cal}[1]{\ensuremath \mathcal{#1}}
+\newcommand{\ag}[1]{\ensuremath \left\langle#1\right\rangle}
+\providecommand{\OO}{\mathcal{O}}
+\newcommand{\indep}{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newcommand{\trace}{\trm{tr}}
+\newcommand{\kron}{\otimes}
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator*{\argmax}{argmax}
+
+% shortcuts
+\newcommand{\aeq}[1]{\begin{align} #1 \end{align}}
+\newcommand{\aeqs}[1]{\begin{align*} #1 \end{align*}}
+\newcommand{\beq}[1]{\begin{equation}#1\end{equation}}
+\newcommand{\beqs}[1]{\begin{equation*}#1\end{equation*}}
+
+\newcommand{\trm}[1]{\mathrm{#1}}
+\newcommand{\enum}[2][(a)]{\begin{enumerate}[#1]{#2}\end{enumerate}}
+\newcommand{\clist}[1]{\begin{itemize}\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
+{#1}\end{itemize}}
+\newcommand{\ilist}[1]{\begin{itemize}{#1}\end{itemize}}
+\newcommand{\bmat}[1]{\begin{bmatrix}#1\end{bmatrix}}
+\newcommand{\mpage}[2]{\begin{center}
+\begin{minipage}{#1}#2\end{minipage}\end{center}}
+\newcommand{\la}{\ \leftarrow\ }
+\newcommand{\ra}{\rightarrow}
+\providecommand\f[2]{\ensuremath \frac{#1}{#2}}
+\providecommand\rbrac[1]{\ensuremath \left(#1\right)}
+\providecommand\sqbrac[1]{\ensuremath \left[#1\right]}
+\providecommand\cbrac[1]{\ensuremath \left\{#1\right\}}
+
+\newcommand{\deriv}[1]{\f{d}{d #1}\ }
+\newcommand{\pderiv}[1]{\f{\partial}{\partial #1}\ }
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{problem}[theorem]{Problem}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{note}[theorem]{Note}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{assumption}[theorem]{Assumption}
+
+\renewcommand{\P}{\trm{P}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\corr}{\textrm{cross-corr}\ }
+\providecommand{\ones}{\mathbbm{1}}
+\providecommand{\ind}{{\bf 1}}
+\providecommand{\nnot}[1]{\overline{#1}}
+\providecommand{\oor}{\vee}
+\providecommand{\aand}{\wedge}
+\renewcommand{\implies}{\Rightarrow}
+\newcommand{\convp}{\overset{P}{\to}}
+\newcommand{\convd}{\overset{\DD}{\to}}
+
+\newcommand{\s}{\sigma}
+\newcommand{\w}{\omega}
+\renewcommand{\r}{\rho}
+\renewcommand{\t}{\tau}
+\renewcommand{\th}{\theta}
+\renewcommand{\a}{\alpha}
+\newcommand{\p}{\phi}
+\newcommand{\e}{\epsilon}
+\renewcommand{\b}{\beta}
+\newcommand{\g}{\gamma}
+\renewcommand{\d}{\delta}
+\newcommand{\D}{\Delta}
+\newcommand{\z}{\zeta}
+\renewcommand{\L}{\Lambda}
+\renewcommand{\l}{\lambda}
+\newcommand{\G}{\Gamma}
+\renewcommand{\S}{\Sigma}
+\newcommand{\Th}{\Theta}
+
+\def \XX {\mathcal{X}}
+\def \LL {\mathcal{L}}
+\def \DD {\mathcal{D}}
+\def \FF {\mathcal{F}}
+\def \OO {\mathcal{O}}
+\def \tOO {\widetilde{\mathcal{O}}}
+\def \BB {\mathcal{B}}
+\def \PP {\mathcal{P}}
+
+\newcommand{\bR}{\mathbb{R}}
+\newcommand{\bN}{\mathbb{N}}
+\newcommand{\bZ}{\mathbb{Z}}
+
+\def \rmF {\trm{F}}
+
+\newcommand{\var}{\trm{var}}
+\newcommand{\stddev}{\trm{stddev}}
+\newcommand{\covar}{\trm{covar}}
+
+\newcommand{\Poissondist}{\trm{Poisson}}
+\newcommand{\Berdist}{\trm{Ber}}
+\newcommand{\Geomdist}{\trm{Geom}}
+\newcommand{\Betadist}{\trm{Beta}}
+\newcommand{\Bindist}{\trm{Bin}}
+\newcommand{\Gammadist}{\trm{Gamma}}
+\newcommand{\InvGammadist}{\trm{InvGamma}}
+\newcommand{\Expdist}{\trm{Exp}}
+
+\newcommand{\mozo}{\{-1, 0, 1\}}
+\newcommand{\moo}{\{-1, 1\}}
+\newcommand{\mooc}{[-1, 1]}
+\newcommand{\zoo}{\{0, 1\}}
+
+\newcommand{\data}{\trm{input}}
+\newcommand{\convolution}{\trm{conv}}
+\newcommand{\maxpool}{\textrm{max-pool}}
+\newcommand{\meanpool}{\trm{meanpool}}
+\newcommand{\relu}{\trm{relu}}
+\newcommand{\dropout}{\trm{dropout}}
+\newcommand{\linear}{\trm{linear}}
+\newcommand{\softmax}{\trm{softmax}}
+\newcommand{\batchnorm}{\trm{batchnorm}}
+\newcommand{\block}{\trm{block}}
