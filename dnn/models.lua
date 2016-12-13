@@ -40,17 +40,14 @@ local function mnistconv()
 end
 
 local function mnistfc()
-    local m = nn:Sequential()
+    local m = nn:Sequential():add(nn.View(784))
     local c = 1024
-    local p = 1
+    local p = 2
 
-    m:add(nn.View(784))
-    m:add(nn.Linear(784, c))
-    m:add(nn.ReLU(true))
-    m:add(nn.Dropout(opt.dropout))
-
+    local c1 = c
     for i=1,p do
-        m:add(nn.Linear(c, c))
+        if i == 1 then c1 = 784 else c1 = c end
+        m:add(nn.Linear(c1, c))
         m:add(nn.ReLU(true))
         m:add(nn.Dropout(opt.dropout))
     end
@@ -58,7 +55,7 @@ local function mnistfc()
     m:add(nn.Linear(c, 10))
     m:add(b.LogSoftMax())
 
-    return m, {p=p+1, name='mnistfc'}
+    return m, {p=p, name='mnistfc'}
 end
 
 function models.mnist()
