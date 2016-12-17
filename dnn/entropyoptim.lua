@@ -61,12 +61,7 @@ function optim.entropyadam(opfunc, x, config, state)
         local lmx = lparams.lmx
         local eta = lparams.eta
 
-        if config.tie_gamma then
-            lparams.cgamma = 1/(gamma*stepSize)
-        else
-            --lparams.cgamma = gamma*(state.t*scoping)^2
-            lparams.cgamma = gamma*(1 - math.exp(-state.t*scoping))
-        end
+        lparams.cgamma = gamma*(1 - math.exp(-state.t*scoping))
         local lstepSize = stepSize
 
         for i=1,config.langevin do
@@ -194,12 +189,7 @@ function optim.entropysgd(opfunc, x, config, state)
     lparams.mdfdx = lparams.mdfdx or xc:clone():zero()
     lparams.xxpd = 0
 
-    if config.tie_gamma then
-        lparams.cgamma = 1/(gamma*clr)
-    else
-        --lparams.cgamma = gamma*(state.evalCounter*scoping)^2 --- set scoping = 1/(batches*epochs) for this
-        lparams.cgamma = gamma*(1 - math.exp(-scoping*state.evalCounter))
-    end
+    lparams.cgamma = gamma*(1 - math.exp(-scoping*state.evalCounter))
 
     lparams.eta = lparams.eta or x.new(dfdx:size()):zero()
     lparams.w = lparams.w or x.new(dfdx:size()):zero()
@@ -217,18 +207,6 @@ function optim.entropysgd(opfunc, x, config, state)
         local debug_states = {}
         for i=1,config.langevin do
             local lfx,ldfdx = opfunc(lx, true)
-
-            --[[
-            if mom ~= 0 then
-            mdfdx:mul(mom):add(1-damp, ldfdx)
-            end
-            if nesterov then
-            ldfdx:add(mom, mdfdx)
-            else
-            ldfdx = mdfdx
-            end
-            end
-            --]]
 
             -- bias term
             eta:normal()

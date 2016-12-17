@@ -19,13 +19,12 @@ opt = lapp[[
 --LRratio           (default 0.2)               LR drop factor
 --langevin          (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
---tie_gamma                                     Tie gamma with learning rate as 1/\gamma/\eta_t
 --gamma             (default 1)                 Langevin gamma coefficient
 --scoping           (default 1e32)              Scoping parameter \gamma*(1-e^{-scoping*t})
 --langevin_noise    (default 1e-5)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 0)                 GPU id
 -f,--full                                       Use all data
--d,--dropout        (default 0.0)
+-d,--dropout        (default 0)                 Dropout
 --L2                (default 1e-3)              L2 regularization
 -s,--seed           (default 42)
 -e,--max_epochs     (default 20)
@@ -296,7 +295,6 @@ function main()
     nesterov = true,
     dampening = 0,
     rho=opt.rho,
-    tie_gamma=opt.tie_gamma,
     gamma=opt.gamma,
     scoping=opt.scoping,
     langevin=opt.langevin,
