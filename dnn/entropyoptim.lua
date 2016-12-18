@@ -22,7 +22,7 @@ function optim.entropyadam(opfunc, x, config, state)
     local lparams = state.lparams
 
     -- (1) evaluate f(x) and df/dx
-    local fx, dfdx = opfunc(x)
+    local fx, dfdx = opfunc(x, false)
 
     -- (2) weight decay
     if wd ~= 0 then
@@ -147,7 +147,7 @@ function optim.entropysgd(opfunc, x, config, state)
 
     -- (1) evaluate f(x) and df/dx
     local xc = x:clone()
-    local fx,dfdx = opfunc(x)
+    local fx,dfdx = opfunc(x, false)
     state.evalCounter = state.evalCounter + 1
 
     -- Exponential moving average of gradient values
@@ -222,7 +222,6 @@ function optim.entropysgd(opfunc, x, config, state)
         end
         lparams.xxpd = lparams.xxpd/config.langevin
         lparams.w:copy(xc-lmx)
-
     end
 
     if opt.verbose and state.evalCounter % 50 == 1 then

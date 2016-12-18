@@ -1,5 +1,4 @@
 require 'resnet'
-local optnet = require 'optnet'
 
 local models = {}
 local b = cudnn
@@ -19,13 +18,13 @@ local function mnistconv()
     m:add(b.SpatialConvolution(1, c1, 5, 5))
     m:add(b.ReLU())
     m:add(b.SpatialMaxPooling(3,3,3,3))
-    m:add(b.SpatialBatchNormalization(c1))
+    m:add(nn.SpatialBatchNormalization(c1, nil, nil, false))
     m:add(nn.Dropout(opt.dropout))
 
     m:add(b.SpatialConvolution(c1, c2, 5, 5))
     m:add(b.ReLU())
     m:add(b.SpatialMaxPooling(2,2,2,2))
-    m:add(b.SpatialBatchNormalization(c2))
+    m:add(nn.SpatialBatchNormalization(c2, nil, nil, false))
     m:add(nn.Dropout(opt.dropout))
 
     m:add(nn.View(c2*2*2))
@@ -105,21 +104,20 @@ local function cifarconv()
         local arg = {...}
         return nn.Sequential()
         :add(b.SpatialConvolution(...))
-        :add(b.SpatialBatchNormalization(arg[2]))
+        :add(nn.SpatialBatchNormalization(arg[2], nil, nil, false))
         :add(b.ReLU(true))
     end
 
     local m = nn.Sequential()
-    --:add(nn.Dropout(0.2))               -- still use dropout on data layer
-    :add(nn.Dropout(opt.dropout*0.4))
+    --:add(nn.Dropout(opt.dropout*0.4))
     :add(convbn(3,96,3,3,1,1,1,1))
     :add(convbn(96,96,3,3,1,1,1,1))
     :add(convbn(96,96,3,3,2,2,1,1))
-    :add(nn.Dropout(opt.dropout))
+    --:add(nn.Dropout(opt.dropout))
     :add(convbn(96,192,3,3,1,1,1,1))
     :add(convbn(192,192,3,3,1,1,1,1))
     :add(convbn(192,192,3,3,2,2,1,1))
-    :add(nn.Dropout(opt.dropout))
+    --:add(nn.Dropout(opt.dropout))
     :add(convbn(192,192,3,3,1,1,1,1,1,1))
     :add(convbn(192,192,3,3,1,1,1,1))
     :add(convbn(192,10,1,1,1,1))

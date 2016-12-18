@@ -135,7 +135,7 @@ function trainer(d)
             assert(false, 'opt.optim: ' .. opt.optim)
         end
 
-        if b % 50 == 0 then
+        if b % 25 == 0 then
             print( (colors.blue .. '+[%2d][%3d/%3d] %.5f %.3f%% [%.2fs]'):format(epoch, b, num_batches, loss/b, (1 - confusion.totalValid)*100, timer:time().real))
         end
     end
@@ -181,7 +181,7 @@ function tester(d)
         miss = (1-confusion.totalValid)*100}
         logger_add(logger, stats)
 
-        if b % 50 == 0 then
+        if b % 25 == 0 then
             print( ( colors.red .. '++[%2d][%3d/%3d] %.5f %.3f%%'):format(epoch, b, num_batches, loss/b, (1 - confusion.totalValid)*100))
         end
     end
@@ -316,7 +316,7 @@ function main()
             tester(test)
 
             optim_state.learningRate = learning_rate_schedule()
-            save_model()
+            --save_model()
 
             epoch = epoch + 1
             print('')
