@@ -10,18 +10,17 @@ require 'entropyoptim'
 opt = lapp[[
 --output            (default "/local2/pratikac")
 -m,--model          (default 'cifarconv')
---estimateF         (default '')
+-F,--estimateF      (default '')
 -b,--batch_size     (default 64)                Batch size
 --LR                (default 0.1)               Learning rate
 --optim             (default 'sgd')             Optimization algorithm
---LRD               (default 0)                 Drop LR after x epochs
 --LRstep            (default 6)                 Drop LR after x epochs
 --LRratio           (default 0.2)               LR drop factor
---langevin          (default 0)                 Num. Langevin iterations
+--L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
 --gamma             (default 1)                 Langevin gamma coefficient
 --scoping           (default 1e32)              Scoping parameter \gamma*(1-e^{-scoping*t})
---langevin_noise    (default 1e-5)              Langevin dynamics additive noise factor (*stepSize)
+--noise             (default 1e-5)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 0)                 GPU id
 -f,--full                                       Use all data
 -d,--dropout        (default 0)                 Dropout
@@ -211,7 +210,6 @@ function save_model()
 end
 
 function learning_rate_schedule()
-    if opt.LRD > 0 then return opt.LR end
     local s = math.floor(epoch/opt.LRstep)
     local lr = opt.LR*opt.LRratio^s
     print(('[LR] %.5f'):format(lr))
@@ -261,7 +259,7 @@ function estimate_local_entropy(_model, cost, d)
             e:normal()
 
             local eta = opt.LR/(1 + i*opt.LRD)
-            local noise_term = e*opt.langevin_noise/math.sqrt(opt.LR)
+            local noise_term = e*opt.noise/math.sqrt(opt.LR)
             df:add(-g, wc-w):add(opt.L2,w):add(noise_term)
             w:add(-eta, df)
 
@@ -298,15 +296,14 @@ function main()
     confusion = optim.ConfusionMatrix(params.classes)
     optim_state = { learningRate= opt.LR,
     weightDecay = opt.L2,
-    learningRateDecay = opt.LRD,
     momentum = 0.9,
     nesterov = true,
     dampening = 0,
     rho=opt.rho,
     gamma=opt.gamma,
     scoping=opt.scoping,
-    langevin=opt.langevin,
-    langevin_noise = opt.langevin_noise}
+    L=opt.L,
+    noise = opt.noise}
 
     local train, val, test = dataset.split(0, (opt.full and 1) or 0.05)
 
