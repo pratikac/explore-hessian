@@ -3,10 +3,10 @@ local tablex = require 'pl.tablex'
 
 function build_file_name(opt, blacklist)
     local bl = tablex.union(blacklist or {},
-                {'backend', 'output', 'full', 'log', 'help', 'gpu',
-                'max_epochs', 'batch_size', 'backend_name',
-                'retrain', 'verbose', 'dataset', 'rho','augment',
-                'estimateF'})
+    {'backend', 'output', 'full', 'log', 'help', 'gpu',
+    'max_epochs', 'batch_size', 'backend_name',
+    'retrain', 'verbose', 'dataset', 'rho','augment',
+    'estimateF'})
 
     local _opt = tablex.deepcopy(opt)
     for k,v in ipairs(bl) do _opt[v] = nil end
@@ -16,6 +16,24 @@ function build_file_name(opt, blacklist)
     local fname = t .. '_opt_' .. s
     print('Log file: ' .. fname)
     return fname
+end
+
+function os.capture(cmd, raw)
+    local f = assert(io.popen(cmd, 'r'))
+    local s = assert(f:read('*a'))
+    f:close()
+    if raw then return s end
+    s = string.gsub(s, '^%s+', '')
+    s = string.gsub(s, '%s+$', '')
+    s = string.gsub(s, '[\n\r]+', ' ')
+    return s
+end
+
+function get_gitrev()
+    local sha = os.capture('git rev-parse HEAD')
+    local diff = os.capture('git diff', true)
+    local status = os.capture('git status', true)
+    return {sha=sha, diff=diff, status=status}
 end
 
 function setup_logger(opt, symbols)

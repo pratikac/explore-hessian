@@ -197,8 +197,16 @@ end
 
 function save_model()
     if opt.log then
-        torch.save(opt.output .. logfname .. '.model.t7', model:clearState())
-        torch.save(opt.output .. logfname .. '.optim_state.t7', optim_state)
+        local res = {}
+        if false then
+            res = {model=model:clearState(),
+                    optim_state=optim_state,
+                    gitrev=get_gitrev()
+                }
+        else
+            res = {gitrev=get_gitrev()}
+        end
+        torch.save(opt.output .. logfname .. '.t7', res)
     end
 end
 
@@ -316,7 +324,7 @@ function main()
             tester(test)
 
             optim_state.learningRate = learning_rate_schedule()
-            --save_model()
+            save_model()
 
             epoch = epoch + 1
             print('')
