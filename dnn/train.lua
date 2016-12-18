@@ -20,7 +20,7 @@ opt = lapp[[
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
 --gamma             (default 1)                 Langevin gamma coefficient
 --scoping           (default 1e32)              Scoping parameter \gamma*(1-e^{-scoping*t})
---noise             (default 1e-5)              Langevin dynamics additive noise factor (*stepSize)
+--noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 0)                 GPU id
 -f,--full                                       Use all data
 -d,--dropout        (default 0)                 Dropout
@@ -197,7 +197,7 @@ end
 function save_model()
     if opt.log then
         local res = {}
-        if false then
+        if true then
             res = {model=model:clearState(),
                     optim_state=optim_state,
                     gitrev=get_gitrev()
