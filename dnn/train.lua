@@ -13,6 +13,7 @@ opt = lapp[[
 -F,--estimateF      (default '')
 -b,--batch_size     (default 64)                Batch size
 --LR                (default 0.1)               Learning rate
+--LRD               (default 0)                 Learning rate decay
 --optim             (default 'sgd')             Optimization algorithm
 --LRstep            (default 100)               Drop LR after x epochs
 --LRratio           (default 1)                 LR drop factor
@@ -210,6 +211,7 @@ function save_model()
 end
 
 function learning_rate_schedule()
+    if opt.LRD > 0 then return opt.LR end
     local s = math.floor(epoch/opt.LRstep)
     local lr = opt.LR*opt.LRratio^s
     print(('[LR] %.5f'):format(lr))
@@ -302,6 +304,7 @@ function main()
 
     confusion = optim.ConfusionMatrix(params.classes)
     optim_state = { learningRate= opt.LR,
+    learningRateDecay = opt.LRD,
     weightDecay = opt.L2,
     momentum = 0.9,
     nesterov = true,
