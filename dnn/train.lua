@@ -14,8 +14,8 @@ opt = lapp[[
 -b,--batch_size     (default 64)                Batch size
 --LR                (default 0.1)               Learning rate
 --optim             (default 'sgd')             Optimization algorithm
---LRstep            (default 6)                 Drop LR after x epochs
---LRratio           (default 0.2)               LR drop factor
+--LRstep            (default 100)               Drop LR after x epochs
+--LRratio           (default 1)                 LR drop factor
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
 --gamma             (default 1)                 Langevin gamma coefficient
@@ -197,7 +197,7 @@ end
 function save_model()
     if opt.log then
         local res = {}
-        if true then
+        if false then
             res = {model=model:clearState(),
                     optim_state=optim_state,
                     gitrev=get_gitrev()
@@ -292,6 +292,13 @@ function main()
         print('Loading model: ' .. opt.estimateF)
         model = torch.load(opt.estimateF)
     end
+    local train, val, test = dataset.split(0, (opt.full and 1) or 0.05)
+
+    -- setup scoping here
+    if opt.scoping > 1e16 then
+        opt.scoping = 5/(opt.max_epochs*train.data:size(1)/opt.batch_size)
+        print('scoping: ' .. opt.scoping)
+    end
 
     confusion = optim.ConfusionMatrix(params.classes)
     optim_state = { learningRate= opt.LR,
@@ -304,8 +311,6 @@ function main()
     scoping=opt.scoping,
     L=opt.L,
     noise = opt.noise}
-
-    local train, val, test = dataset.split(0, (opt.full and 1) or 0.05)
 
     if opt.estimateF == '' then
         local symbols = {   'tv', 'epoch', 'batch', 'iter', 'loss', 'dF', 'lx', 'xxpd',
