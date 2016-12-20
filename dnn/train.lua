@@ -211,7 +211,6 @@ function save_model()
 end
 
 function learning_rate_schedule()
-    if opt.LRD > 0 then return opt.LR end
     local s = math.floor(epoch/opt.LRstep)
     local lr = opt.LR*opt.LRratio^s
     print(('[LR] %.5f'):format(lr))
