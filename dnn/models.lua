@@ -104,7 +104,8 @@ local function cifarconv()
         local arg = {...}
         return nn.Sequential()
         :add(b.SpatialConvolution(...))
-        :add(nn.SpatialBatchNormalization(arg[2], nil, nil, false))
+        --:add(nn.SpatialBatchNormalization(arg[2], nil, nil, false))
+        :add(b.SpatialBatchNormalization(arg[2]))
         :add(b.ReLU(true))
     end
 
