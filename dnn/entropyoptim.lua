@@ -18,7 +18,7 @@ function optim.entropyadam(opfunc, x, config, state)
     local scoping = config.scoping or 1e32
     local noise = config.noise or 1e-3
 
-    state.lparams = state.lparams or {beta1=0.25}
+    state.lparams = state.lparams or {beta1=0.75}
     local lparams = state.lparams
 
     -- (1) evaluate f(x) and df/dx
@@ -63,7 +63,7 @@ function optim.entropyadam(opfunc, x, config, state)
 
         lparams.cgamma = gamma*(1 - math.exp(-state.t*scoping))
         --lparams.cgamma = state.t*scoping
-        local lstepSize = stepSize
+        local lstepSize = opt.LR
 
         for i=1,config.L do
             local lfx,ldfdx = opfunc(lx, true)
@@ -139,7 +139,7 @@ function optim.entropysgd(opfunc, x, config, state)
     local gamma = config.gamma or 0
     local scoping = config.scoping or 1e32
     local noise = config.noise or 1e-3
-    state.lparams = state.lparams or {beta1=0.25}
+    state.lparams = state.lparams or {beta1=0.75}
     local lparams = state.lparams
 
     state.evalCounter = state.evalCounter or 0
@@ -204,7 +204,7 @@ function optim.entropysgd(opfunc, x, config, state)
         local mdfdx = lparams.mdfdx:zero()
         local cgamma = lparams.cgamma
 
-        local lclr = clr
+        local lclr = opt.LR
 
         local debug_states = {}
         for i=1,config.L do

@@ -198,7 +198,7 @@ end
 function save_model()
     if opt.log then
         local res = {}
-        if false then
+        if true then
             res = {model=model:clearState(),
                     optim_state=optim_state,
                     gitrev=get_gitrev()
