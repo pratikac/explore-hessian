@@ -61,9 +61,10 @@ function optim.entropyadam(opfunc, x, config, state)
         local lmx = lparams.lmx
         local eta = lparams.eta
 
-        lparams.cgamma = gamma*(1 - math.exp(-state.t*scoping))
-        --lparams.cgamma = state.t*scoping
-        local lstepSize = opt.LR
+        --lparams.cgamma = gamma*(1 - math.exp(-state.t*scoping))
+        lparams.cgamma = gamma*(1+scoping)^state.t
+
+        local lstepSize = clr
 
         for i=1,config.L do
             local lfx,ldfdx = opfunc(lx, true)
@@ -190,8 +191,8 @@ function optim.entropysgd(opfunc, x, config, state)
     lparams.mdfdx = lparams.mdfdx or xc:clone():zero()
     lparams.xxpd = 0
 
-    lparams.cgamma = gamma*(1 - math.exp(-scoping*state.evalCounter))
-    --lparams.cgamma = scoping*state.evalCounter
+    --lparams.cgamma = gamma*(1 - math.exp(-scoping*state.evalCounter))
+    lparams.cgamma = gamma*(1+scoping)^state.evalCounter
 
     lparams.eta = lparams.eta or x.new(dfdx:size()):zero()
     lparams.w = lparams.w or x.new(dfdx:size()):zero()
@@ -204,7 +205,7 @@ function optim.entropysgd(opfunc, x, config, state)
         local mdfdx = lparams.mdfdx:zero()
         local cgamma = lparams.cgamma
 
-        local lclr = opt.LR
+        local lclr = 0.1
 
         local debug_states = {}
         for i=1,config.L do
