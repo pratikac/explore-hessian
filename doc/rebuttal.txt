@@ -1,15 +1,26 @@
+We are happy to provide clarifications to the questions posed. We enclose them below.
+
 "mostly reinventing SVI"
-SVI computes the posterior distribution of hidden variables given data by maximizing the ELBO. We do not have hidden variables in our formulation. Note that variable "x" are the variables of our objective f(x), not data. We are interested in maximizing the free energy F(x,\gamma) (related to the entropy of the optimization objective f(x)) as defined in Eqn. 4. This is totally unrelated to marginal likelihood or variational ELBO.
+SVI computes the posterior distribution of hidden variables given data by maximizing the ELBO. Please note that we do not have hidden variables in our formulation; "x" are the variables of our objective f(x), not data. We are interested in maximizing the free energy F(x,\gamma) as defined in Eqn. 4. This is the *free energy of the energy landscape* (defined via a Gibbs distribution). This is thus unrelated to marginal likelihood or variational ELBO where one can impose entropic constraints on the posterior distribution of the *hidden variables* via a prior.
 
 "I suspect it'd become clear that you are maximizing the marginal likelihood"
-We are not maximizing the marginal likelihood.
+Please note that we are not maximizing the marginal likelihood, as discussed above.
 
-"how is this better than SGLD", "bizzare that you compare against Adam"
-SGLD is an MCMC algorithm that draws samples from a given distribution. If the step-size goes to zero slowly enough, akin to all MCMC algorithms, it converges to the maximum of the likelihood in exponentially long time-scales (see algorithms like SGHMC [CFG14], Santa [CCG15] etc. that train Bayesian neural networks using MCMC algorithms). Note, this is not the marginal likelihood because there is no notion of hidden variables in SGLD. Please see Appendix A for more details.
+"how is this better than SGLD", "bizarre that you compare against Adam instead of SGLD"
+SGLD is an MCMC algorithm that draws samples from a given distribution. If the step-size goes to zero slowly enough, akin to all MCMC algorithms, it converges to the maximum of the likelihood in exponentially long time-scales (see algorithms like SGHMC [CFG14], Santa [CCG15] etc. that train Bayesian neural networks using MCMC algorithms). Note that SGLD does not optimize the marginal likelihood because there is no notion of hidden variables in vanilla SGLD. We provide a brief review of SGLD in Appendix A of our paper.
 
-On the other hand, Adam is an algorithm for computing the maxmimum of a the likelihood of data given parameters or (equivalently, minimize the loss function). Entropy-SGD is desgined for minimizing the loss function f(x). It however does not explicitly do so and instead maximizes the local entropy. We therefore compare the two.
+We do not know of any results in the literature that train large deep networks such as the one used for CIFAR to get competitive error rates using SGLD. We would like to emphasize that Entropy-SGD simply uses MCMC sampling to estimate Eqn. 7 but it is unrelated to SGLD otherwise.
 
-Local entropy (local free energy) is defined in Def. 1 (Eqn. 4) while the discussion (pg. 5, first line) defines the classical entropy of a Gibbs distribution. The beginning of Sec. 3 based on Fig. 2 is intended to explain things to the read at an intuitive level.
+On the other hand, Adam is an algorithm for computing the maximum of a the likelihood of data given parameters or (equivalently, minimize the loss function). Entropy-SGD is an algorithm designed for minimizing the loss function f(x), in particular, it is not an MCMC algorithm that draws samples from the likelihood. It however does not explicitly do so and instead maximizes the local entropy. We therefore compare Entropy-SGD with state-of-the-art algorithms for training deep networks like Adam and SGD.
+
+"frustrating that you discuss free energy and entropy without precise definitions"
+Local entropy (local free energy) is formally defined in Def. 1 (Eqn. 4) but it is already introduced on pg. 2 in the Introduction. The discussion towards the end of Sec. 3 (pg. 5, first line) defines the classical entropy of a Gibbs distribution. The beginning of Sec. 3 based on Fig. 2 is intended to explain things to the reader at an intuitive level before proceeding to the formal definitions which are nevertheless present.
+
+Free energy and classical entropy are related by the informal description "free energy = internal energy - temperature x entropy". Formally, the relation is
+    F(\beta) = U(\beta) - \frac{1}{\beta} S(\beta)
+where the log-partition function (free energy) is defined as F(\beta) = -\beta^{-1} \log Z(\beta), the internal energy is U(\beta) = \partial_\beta (\beta F(\beta)) and S(\beta) = \beta^2 \partial_\beta (F(\beta)) is the classical entropy.
+
+Note that the above equation is about the entire Gibbs distribution, in our work we define a "local free energy" F(x, \beta) via the modified Gibbs distribution in Eqn. 3. We can add this discussion to the paper.
 
 [CFG14] Chen, Tianqi, Emily B. Fox, and Carlos Guestrin. "Stochastic Gradient Hamiltonian Monte Carlo." ICML. 2014.
 [CCF15] Chen, Changyou, et al. "Bridging the gap between stochastic gradient mcmc and stochastic optimization." arXiv:1512.07962 (2015).

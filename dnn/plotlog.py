@@ -7,8 +7,9 @@ import seaborn as sns
 import os, sys, glob, pdb, re, json
 sns.set()
 
-whitelist = set(['seed','model','LR','langevin_noise', \
-            'gamma','langevin','dropout','scoping','tie_gamma'])
+whitelist = set(['seed','model','LR','noise', \
+            'gamma','L','scoping','LRstep','rho','LRD', \
+            'langevin', 'langevin_noise'])
 
 #colors = ["blue", "darkseagreen", "indianred", "purple", "sepia", "black"]
 #colors = sns.color_palette("muted")
@@ -78,13 +79,16 @@ def plot_idx(fs, df,
     # plt.clf()
     # plt.title('Training loss')
     # helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 1)].loss)
+    # plt.xlim([0,max_epochs])
 
     # plt.figure(2)
     # plt.clf()
     # helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 1) & (df['batch'] == 0)].miss,
     #     'Training error')
+    # plt.xlim([0,max_epochs])
 
     plt.figure(3)
     plt.clf()
     helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 0) & (df['batch'] == 0)].miss,
         'Test error')
+    plt.xlim([0,max_epochs])
