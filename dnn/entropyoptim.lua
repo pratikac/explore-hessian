@@ -253,3 +253,51 @@ function optim.entropysgd(opfunc, x, config, state)
 
     return x,{fx}
 end
+
+function optim.sgdld(opfunc, x, config, state)
+    -- (0) get/update state
+    local config = config or {}
+    local state = state or config
+    local lr = config.learningRate or 1e-3
+    local lrd = config.learningRateDecay or 0
+    local wd = config.weightDecay or 0
+    local noise = config.noise or 1e-3
+
+    state.t = state.t or 0
+    
+    -- (1) evaluate f(x) and df/dx
+    local fx,dfdx = opfunc(x, false)
+    state.t = state.t + 1
+    state.eta = state.eta or x.new(dfdx:size()):zero()
+
+    -- so that the logging scripts do not break
+    state.lparams = state.lparams or {}
+    local lparams = state.lparams
+    lparams.lx = x:clone()
+    lparams.lmx = lparams.lx:clone()
+    lparams.eta = lparams.eta or x.new(dfdx:size()):zero()
+    lparams.xxpd = 0
+    lparams.w = lparams.w or x.new(dfdx:size()):zero()
+    lparams.w:zero()
+
+    -- lr annealing
+    local clr = lr / (1 + state.t*lrd)
+
+    -- weight decay
+    if wd ~= 0 then
+        dfdx:add(wd, x)
+    end
+
+    -- update gradient
+    state.eta:normal()
+    dfdx:add(noise/math.sqrt(0.5*clr), state.eta)
+    x:add(-clr, dfdx)
+
+    if opt.verbose and state.t % 10 == 1 then
+        local debug_stats = {df=torch.norm(dfdx),
+        eta = torch.norm(state.eta*noise/math.sqrt(0.5*clr))}
+        print(cjson.encode(debug_stats))
+    end
+
+    return x, {fx}
+end

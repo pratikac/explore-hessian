@@ -131,6 +131,8 @@ function trainer(d)
             optim.entropysgd(feval, w, optim_state)
         elseif opt.optim == 'adam' then
             optim.entropyadam(feval, w, optim_state)
+        elseif opt.optim == 'sgld' then
+            optim.sgdld(feval, w, optim_state)
         else
             assert(false, 'opt.optim: ' .. opt.optim)
         end
