@@ -258,13 +258,14 @@ function optim.sgdld(opfunc, x, config, state)
     -- (0) get/update state
     local config = config or {}
     local state = state or config
-    local lr = config.learningRate or 1e-3
+    local lr = config.learningRate or 1e-1
     local lrd = config.learningRateDecay or 0
     local wd = config.weightDecay or 0
     local noise = config.noise or 1e-3
 
+    local b = config.b or 0.25
     state.t = state.t or 0
-    
+
     -- (1) evaluate f(x) and df/dx
     local fx,dfdx = opfunc(x, false)
     state.t = state.t + 1
@@ -281,7 +282,7 @@ function optim.sgdld(opfunc, x, config, state)
     lparams.w:zero()
 
     -- lr annealing
-    local clr = lr / (1 + state.t*lrd)
+    local clr = lr / (1 + state.t)^(b)
 
     -- weight decay
     if wd ~= 0 then
@@ -290,14 +291,15 @@ function optim.sgdld(opfunc, x, config, state)
 
     -- update gradient
     state.eta:normal()
-    dfdx:add(noise/math.sqrt(0.5*clr), state.eta)
-    x:add(-clr, dfdx)
 
     if opt.verbose and state.t % 10 == 1 then
         local debug_stats = {df=torch.norm(dfdx),
         eta = torch.norm(state.eta*noise/math.sqrt(0.5*clr))}
         print(cjson.encode(debug_stats))
     end
+
+    dfdx:add(noise/math.sqrt(0.5*clr), state.eta)
+    x:add(-clr, dfdx)
 
     return x, {fx}
 end
