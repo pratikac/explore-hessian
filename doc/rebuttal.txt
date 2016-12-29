@@ -31,46 +31,47 @@ Note that the above equation is about the entire Gibbs distribution, in our work
 
 ----------------------------------------------------------------------
 
-Thanks for your comments, allow us to elaborate.
+Allow us to elaborate further.
 
-Let \Xi denote the dataset, z denote the weights and x be the parameters of the variational distribution on weights, i.e., the weights are sampled from the distribution q_x(z) := p_x(z | \Xi). Define the loss as the log-likehood of data, viz. -f(z) := \log p(\Xi | z). The ELBO is then given by
+Let \Xi denote the dataset, z denote the weights and x be the parameters of a variational distribution on weights denoted as q_x(z). Define the loss to be the negative log-likelihood of data, viz. -f(z) := \log p(\Xi | z). The ELBO is then given by
 (1) \log p(\Xi)
         \geq E_{z \sim q_x(z)} [\log p(\Xi | z)] - KL(q_x(z) || p(z))
-        = E_{z \sim q_x(z)} [-f(z)] - KL(q_x(z) || p(z))
-and we typically maximize the right hand side wrt x. Let us emphasize that in variational inference, x are the parameters and z are random variables. Also p(z) is a fixed (parameter-free) prior on the weights z.
+        = E_{z \sim q_x(z)} [-f(z)] - KL(q_x(z) || p(z));
+we maximize the right hand side with respect to x. The distribution p(z) is a fixed (parameter-free) prior on the weights.
 
-As noted in our previous comment, while our approach is not variational in nature, we shall now aim to connect the ELBO with local entropy. Focus on the local entropy term defined in Eqn. 4 in the paper: we have
+We shall now try to connect the ELBO with local entropy. In our paper, we maximize the local entropy (Eqn. 4 in the paper) or equivalently, its logarithm:
 (2) \log F(x,\gamma)
         = \log \int_{z \in Z} e^{-f(z; \Xi) - \gamma/2 |x-z|^2} dz
         \geq \int_{z \in Z} [-f(z; \Xi) - \gamma/2 |x-z|^2] dz.
-Eqns. (1) and (2) are thus very different objects. In general, there does not exist a direct mapping between local entropy and variational inference.
+The inequality follows by an application of Jensen's inequality. As noted in our previous comment, our approach is not variational in nature and it is easy to see that Eqns. (1) and (2) are quite different. In general, there does not seem to be direct reduction from local entropy to variational inference.
 
-We can however provide the following connected for a special case. Consider the family of flat variational distributions q_x(z) such that the distribution is uniform on some compact set around x, e.g., q_x(z) \propto c if |x-z| < C and zero otherwise. We will pick a special non-fixed prior p(z) \propto \exp(-\gamma/2 |x-z|^2). The expectation in Eqn. (1) can now be simplified as:
+We can however provide the following connection in a special case. Consider a family of flat variational distributions q_x(z) such that the distribution has a mean x and it is uniform on a compact set, for instance, let q_x(z) \propto c if |x-z| < C and zero otherwise. We will also pick a special prior p(z) \propto \exp(-\gamma/2 |x-z|^2). The expectation in Eqn. (1) can now be simplified as:
 (3) \log p(\Xi)
         \geq \int_{z \in Z} [-f(z)] - KL(q_x(z) || p(z))
         = -\int_{z \in Z} c*f(z) dz + H(q_x(z)) - \int_{z \in Z} c*\gamma/2 |x-z|^2 dz;
-The differential entropy entropy H(q_x(z)) is a constant wrt x. The other two terms are the same as Eqn. (2) (multiplied by a constant c).
+The differential entropy H(q_x(z)) is a constant with respect to x. For the purposes of maximization, ELBO as given in Eqn. (3) is thus equivalent to local entropy (upto an additive constant).
 
-In other words "local entropy is similar to performing variational inference within a special class of flat distributions around the paramter x". Such an explanation also validates our claim to finding flat regions in the energy landscape. The above mapping is however only heuristic because the prior p(z) is not fixed and depends on x itself which is unusual. The gradient of local entropy clarifies this:
-    dF  = -\gamma (x - E_{x' \sim r(z; x)} [z]);
+In other words, "local entropy is similar to performing variational inference within a class of uniform distributions with mean x". Such an explanation also validates our motivation to find flat regions in the energy landscape. The above discussion is however not entirely rigorous because the prior p(z) is not fixed and depends on the parameters x themselves. The gradient of local entropy (Eqn. 7 in the paper) clarifies this point:
+    dF  = -\gamma (x - E_{z \sim r(z; x)} [z]);
 where the distribution r(z; x) is
     \log r(z; x) \propto \log p(\Xi | z)  - \gamma/2 |x-z|^2
-and is thus a likelihood and prior that "moves" along with current iteratre x itself.
+and is thus a data likelihood term with a prior that "moves" along with current iterate x.
 
-It is thus easy to see the differences between a variational approach on the weights and our method. At present we do not see a more rigorous way to reduce our method to SVI, but we would welcome specific suggestions if that is indeed the case.
+At present we do not see a more rigorous way to reduce our method to SVI but we would welcome specific suggestions if that is indeed the case. We will update the paper with the above discussion.
 
-We have tested SGLD for LeNet on MNIST and All-CNN-BN on CIFAR and can add the results to the paper. In summary, after a hyper-parameter search, the best results we obtained yielded a test error of LeNet of 0.63 \pm 0.1% on MNIST after 300 epochs and 9.89 \pm 0.11% on All-CNN-BN after 500 epochs. Disregarding the slow convergence of SGLD, its generalization error is worse than the results in our paper, viz. 0.48% with Entropy-SGD on LeNet (0.51% with SGD) and 8.65% with Entropy-SGD on All-CNN-BN (8.3% with SGD). For comparison, the authors in [CCF15] report an error of 0.71% with SGLD on MNIST with a slightly larger network (and get 0.47% error with Santa). To our knowledge, there are no results in the literature where MCMC methods perform comparably to SGD on larger networks.
+In response to your previous comments, we have tested SGLD for LeNet on MNIST and All-CNN-BN on CIFAR and can add the following results to the paper. After a hyper-parameter search, the best results we obtained yielded a test error of LeNet of 0.63 \pm 0.1% on MNIST after 300 epochs and 9.89 \pm 0.11% on All-CNN-BN after 500 epochs. Disregarding the slow convergence of SGLD, its generalization error is worse than the results in our paper, viz. 0.48% with Entropy-SGD on LeNet (0.51% with SGD) and 8.65% with Entropy-SGD on All-CNN-BN (8.3% with SGD). For comparison, the authors in [CCF15] report an error of 0.71% with SGLD on MNIST with a slightly larger network (and get 0.47% error with Santa). To our knowledge, there are no results in the literature where MCMC methods perform comparably to SGD on larger networks.
 
+[CCF15] Chen, Changyou, et al. "Bridging the gap between stochastic gradient MCMC and stochastic optimization." arXiv:1512.07962 (2015).
 -------------------------------------------------------------------------
 
 You claim that "For modern deep networks with a few million weights, computing the Hessian-vector product as done in HS97 is prohibitive".  But in general the HVP can be computed for only twice the time cost as a gradient evaluation.  Can you elaborate on why this is expensive in your case?
 
-The above comment is for HVP of a general deep network, not our algorithm. And indeed, you are right that HVP can be computed using forward differencing with two back-props [P94, CSP93]. However, as [P94] mentions, it is a
+The above comment is for HVP of the loss function of a general deep network, not local entropy. Indeed, HVPs can be computed using forward differencing with two back-props. However, as [P94] mentions, such an approximation is highly susceptible to numerical errors --- especially in high dimensions [P94, M10]. Moreover, estimating HVP on a single mini-batch is not enough, as [CSP93] mention one typically has to average the HVP over many mini-batches; this is expensive. For instance, the authors in [CSP93] average over 10-20 batches for estimating the largest eigenvalue of the Hessian in a network with ~60,000 weights. [P94] offers an accurate, although more complex, algorithm to compute HVPs using the R-operator.
 
 [CSP93] LeCun, Yann, Patrice Y. Simard, and Barak Pearlmutter. "Automatic learning rate maximization by on-line estimation of the Hessian’s eigenvectors." NIPS 1993.
 [P94] Pearlmutter, Barak A. "Fast exact multiplication by the Hessian." Neural computation 6.1 (1994): 147-160.
+[M10] Martens, James. "Deep learning via Hessian-free optimization." ICML. 2010.
 
-
-- Bregman vs. KL
 - On the use of stochastic hessian information in optimization methods for machine learning
 - https://goo.gl/qxWzgr
+- http://icml2010.haifa.il.ibm.com/papers/458.pdf
