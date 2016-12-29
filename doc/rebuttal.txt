@@ -31,29 +31,46 @@ Note that the above equation is about the entire Gibbs distribution, in our work
 
 ----------------------------------------------------------------------
 
-Thanks for your comments, allow us to elaborate further.
+Thanks for your comments, allow us to elaborate.
 
-In the notation of the our paper let x denote the parameters and \xi_k denote individual samples. The ELBO is then given by
-    L = E_{x \sim q(x)} [\log p(\Xi | x)] - KL(q(x) || p(x))
-where p(x) is a fixed prior on the parameters and q(x) is the posterior distribution q(x | \Xi). In mean-field variational inference, we make a mean-field approximation of the distribution q(x) and have to come up with a prior p(x) (see [GG15,BKM16]). Using a Monte-Carlo approximation, the gradient of ELBO can be given by
-    dL = \sum_{k=1}^N \log p(\xi | x_k) - KL(q(x) || p(x))
-for samples x_k \sim q(x). The first term is simply how well x fits the data while the second term is the distance of the posterior from the prior. If p(x) = N(0, I), one can evaluate the KL term in closed form if q(x) is also a product of Gaussians etc. and compute dL. Note that this approach requires a number of critical assumptions such as a factorizing of q(x) for ease of sampling in the Monte-Carlo term and evaluating the KL term, Gaussian / some other easy to compute prior on weights. These assumptions are not typically valid in CNNs.
+Let \Xi denote the dataset, z denote the weights and x be the parameters of the variational distribution on weights, i.e., the weights are sampled from the distribution q_x(z) := p_x(z | \Xi). Define the loss as the log-likehood of data, viz. -f(z) := \log p(\Xi | z). The ELBO is then given by
+(1) \log p(\Xi)
+        \geq E_{z \sim q_x(z)} [\log p(\Xi | z)] - KL(q_x(z) || p(z))
+        = E_{z \sim q_x(z)} [-f(z)] - KL(q_x(z) || p(z))
+and we typically maximize the right hand side wrt x. Let us emphasize that in variational inference, x are the parameters and z are random variables. Also p(z) is a fixed (parameter-free) prior on the weights z.
 
-The gradient in Eqn. 7 in our paper can be written as:
-    dF = -\gamma (x - E_{x' \sim r(x'; x, \xi_k)} [x'])
-with the corresponding Monte-Carlo estimate of the expectation. The crucial difference is that the distribution r(x'; x) in our case is the one described in Eqn. 3, i.e.,
-    \log r(x'; x) = \log q(x')  + \gamma |x-x'|^2/2 - \log Z_{x,\gamma}.
-q(x') can be the same distribution as variational inference above. However, note that r(x'; x) in our work is a function of the current iterate x itself. This is akin to a "prior" that moves with the iterates x which is very different from a Bayesian neural network with a fixed prior.
+As noted in our previous comment, while our approach is not variational in nature, we shall now aim to connect the ELBO with local entropy. Focus on the local entropy term defined in Eqn. 4 in the paper: we have
+(2) \log F(x,\gamma)
+        = \log \int_{z \in Z} e^{-f(z; \Xi) - \gamma/2 |x-z|^2} dz
+        \geq \int_{z \in Z} [-f(z; \Xi) - \gamma/2 |x-z|^2] dz.
+Eqns. (1) and (2) are thus very different objects. In general, there does not exist a direct mapping between local entropy and variational inference.
 
-It is thus easy to see the differences between a variational approach on the weights and our method. We agree that the motivation for our work and approximate inference methods is similar but our method is much different from variational approximation. We'd be very interested if the reviewer has other ways of connecting our paper with it.
+We can however provide the following connected for a special case. Consider the family of flat variational distributions q_x(z) such that the distribution is uniform on some compact set around x, e.g., q_x(z) \propto c if |x-z| < C and zero otherwise. We will pick a special non-fixed prior p(z) \propto \exp(-\gamma/2 |x-z|^2). The expectation in Eqn. (1) can now be simplified as:
+(3) \log p(\Xi)
+        \geq \int_{z \in Z} [-f(z)] - KL(q_x(z) || p(z))
+        = -\int_{z \in Z} c*f(z) dz + H(q_x(z)) - \int_{z \in Z} c*\gamma/2 |x-z|^2 dz;
+The differential entropy entropy H(q_x(z)) is a constant wrt x. The other two terms are the same as Eqn. (2) (multiplied by a constant c).
 
-"SGLD is a simpler method"
-We respectfully disagree. In practice, it is very hard to get SGLD to work as well as SGD or Adam. This has motivated numerous other MCMC algorithms such as SGHMC, SGNHT [DFB14], Santa [CCF15] etc. None of these have yet been shown to beat SGD's error rates for large deep networks.
+In other words "local entropy is similar to performing variational inference within a special class of flat distributions around the paramter x". Such an explanation also validates our claim to finding flat regions in the energy landscape. The above mapping is however only heuristic because the prior p(z) is not fixed and depends on x itself which is unusual. The gradient of local entropy clarifies this:
+    dF  = -\gamma (x - E_{x' \sim r(z; x)} [z]);
+where the distribution r(z; x) is
+    \log r(z; x) \propto \log p(\Xi | z)  - \gamma/2 |x-z|^2
+and is thus a likelihood and prior that "moves" along with current iteratre x itself.
 
-While it is not hard to add experiments comparing Entropy-SGD to SGLD, this would be a digression. The error rates for baselines in our paper are close to the best error rates reported in the literature for these networks, e.g., on CIFAR, we get 8.3% with SGD and 8.65% with Entropy-SGD both of which are better than those of the original authors (9.08%) [SDB15]. The authors in [CCF15] get a comparable error rate on MNIST (0.47% vs 0.48% for us) with a larger network (Table 1) and a much more complex algorithm. [CCF15] also provides the results for SGLD on LeNet which are much worse than ours. Therefore, we feel our comparisons against baselines are entirely fair.
+It is thus easy to see the differences between a variational approach on the weights and our method. At present we do not see a more rigorous way to reduce our method to SVI, but we would welcome specific suggestions if that is indeed the case.
 
-[GG15] Gal, Yarin, and Zoubin Ghahramani. "Dropout as a Bayesian approximation: Representing model uncertainty in deep learning." arXiv:1506.02142 (2015).
-[BKM16] Blei, David M., Alp Kucukelbir, and Jon D. McAuliffe. "Variational inference: A review for statisticians." arXiv:1601.00670 (2016).
-[SDB15] Springenberg, Jost Tobias, et al. "Striving for simplicity: The all convolutional net." arXiv:1412.6806 (2014).
-[CCF15] Chen, Changyou, et al. "Bridging the gap between stochastic gradient MCMC and stochastic optimization." arXiv:1512.07962 (2015).
-[DFB14] Ding, Nan, et al. "Bayesian sampling using stochastic gradient thermostats." NIPS. 2014.
+We have tested SGLD for LeNet on MNIST and All-CNN-BN on CIFAR and can add the results to the paper. In summary, after a hyper-parameter search, the best results we obtained yielded a test error of LeNet of 0.63 \pm 0.1% on MNIST after 300 epochs and 9.89 \pm 0.11% on All-CNN-BN after 500 epochs. Disregarding the slow convergence of SGLD, its generalization error is worse than the results in our paper, viz. 0.48% with Entropy-SGD on LeNet (0.51% with SGD) and 8.65% with Entropy-SGD on All-CNN-BN (8.3% with SGD). For comparison, the authors in [CCF15] report an error of 0.71% with SGLD on MNIST with a slightly larger network (and get 0.47% error with Santa). To our knowledge, there are no results in the literature where MCMC methods perform comparably to SGD on larger networks.
+
+-------------------------------------------------------------------------
+
+You claim that "For modern deep networks with a few million weights, computing the Hessian-vector product as done in HS97 is prohibitive".  But in general the HVP can be computed for only twice the time cost as a gradient evaluation.  Can you elaborate on why this is expensive in your case?
+
+The above comment is for HVP of a general deep network, not our algorithm. And indeed, you are right that HVP can be computed using forward differencing with two back-props [P94, CSP93]. However, as [P94] mentions, it is a
+
+[CSP93] LeCun, Yann, Patrice Y. Simard, and Barak Pearlmutter. "Automatic learning rate maximization by on-line estimation of the Hessian’s eigenvectors." NIPS 1993.
+[P94] Pearlmutter, Barak A. "Fast exact multiplication by the Hessian." Neural computation 6.1 (1994): 147-160.
+
+
+- Bregman vs. KL
+- On the use of stochastic hessian information in optimization methods for machine learning
+- https://goo.gl/qxWzgr
