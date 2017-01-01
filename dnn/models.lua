@@ -261,11 +261,32 @@ function models.cifar()
     return m:cuda(), cost_function:cuda(), p
 end
 
+
+function models.char()
+    local m, p
+
+    local function charlstm()
+    end
+    local function charrnn()
+    end
+
+    if opt.model == 'rnn' then
+        m,p = charrnn()
+    elseif opt.model == 'lstm' then
+        m,p = charlstm()
+    end
+
+    local cost_function = nn.ClassNLLCriterion()
+    return m:cuda(), cost_function:cuda(), p
+end
+
 function models.build()
     if opt.dataset == 'mnist' then
         return models.mnist()
     elseif opt.dataset == 'cifar' then
         return models.cifar()
+    elseif opt.dataset == 'char' then
+        return models.char()
     else
         assert('Unknown opt.dataset: ' .. opt.dataset)
     end

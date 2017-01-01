@@ -43,6 +43,9 @@ if string.find(opt.model, 'mnist') then
     opt.dataset = 'mnist'
 elseif string.find(opt.model, 'cifar') then
     opt.dataset = 'cifar'
+elseif  string.find(opt.model, 'rnn') or
+        string.find(opt.model, 'lstm') then
+    opt.dataset = 'char'
 end
 
 dofile('utils.lua')
@@ -55,6 +58,8 @@ if opt.dataset == 'mnist' then
     dataset = mnist
 elseif opt.dataset == 'cifar' then
     dataset = require 'cifarload'
+elseif opt.dataset == 'char' then
+    dataset = require 'charload'
 end
 
 function augment(xc)
