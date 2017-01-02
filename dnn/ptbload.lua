@@ -76,20 +76,23 @@ function ptb.split(a,b)
         return ptb.text2tensor(tokens, vocab)
     end
 
-    local train, test = loadptb('ptb.train.txt'), loadptb('ptb.test.txt')
+    local train, val, test =    loadptb('ptb.train.txt'),
+                                loadptb('ptb.val.txt'),
+                                loadptb('ptb.test.txt')
 
     if opt and opt.full ~= true then
         print('Overfitting on 10% subset ...')
         local frac = 0.1
-        local tn, ten = train.data:size(1), test.data:size(1)
+        local tn, tvn, ten = train:size(1), val:size(1), test:size(1)
 
         train = train:narrow(1,1,frac*tn)
+        val = val:narrow(1,1,frac*tvn)
         test = test:narrow(1,1,frac*ten)
     end
 
-    local d = {data=train, size=train:size(1), vocab=vocab, ivocab=ivocab, wordf=wordf}
-    local v = {data=test, size=test:size(1)}
-    return d, v, v
+    return  {data=train, size=train:size(1), vocab=vocab, ivocab=ivocab, wordf=wordf},
+            {data=val, size=val:size(1)},
+            {data=test, size=test:size(1)}
 end
 
 return ptb

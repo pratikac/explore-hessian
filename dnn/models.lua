@@ -267,13 +267,11 @@ function models.char()
 
     local function charlstm()
     end
-    local function charrnn()
-    end
 
-    if opt.model == 'rnn' then
-        m,p = charrnn()
-    elseif opt.model == 'lstm' then
+    if opt.model == 'lstm' then
         m,p = charlstm()
+    else
+        assert('Unknown model: ' .. opt.model)
     end
 
     local cost_function = nn.ClassNLLCriterion()
