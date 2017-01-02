@@ -31,43 +31,34 @@ Note that the above equation is about the entire Gibbs distribution, in our work
 
 ----------------------------------------------------------------------
 
-Allow us to elaborate further.
+Title: You cannot do SVI on the network weights unless you choose a “moving prior”, a feature of our scheme.
 
-Let \Xi denote the dataset, z denote the weights and x be the parameters of a variational distribution on weights denoted as q_x(z). Define the loss to be the negative log-likelihood of data, viz. -f(z) := \log p(\Xi | z). The ELBO is then given by
-(1) \log p(\Xi)
+To address the objection 1) let \Xi denote the dataset, z  the weights and x the parameters of a variational distribution q_x(z). The ELBO can then be written as
+(i) \log p(\Xi)
         \geq E_{z \sim q_x(z)} [\log p(\Xi | z)] - KL(q_x(z) || p(z))
         = E_{z \sim q_x(z)} [-f(z)] - KL(q_x(z) || p(z));
-where the right hand side would be maximized with respect to x. The distribution p(z) is a fixed (parameter-free) prior on the weights.
+and maximized wrt x. The distribution p(z) is a fixed (parameter-free) prior, which one has to postulate.
 
-We shall now try to connect the ELBO with local entropy. In our paper, we maximize the local entropy (Eqn. 4 in the paper) or equivalently, its logarithm:
-(2) \log F(x,\gamma)
-        = \log \int_{z \in Z} e^{-f(z; \Xi) - \gamma/2 |x-z|^2} dz
-        \geq \int_{z \in Z} [-f(z; \Xi) - \gamma/2 |x-z|^2] dz.
-The inequality follows by an application of Jensen's inequality. As noted in our previous comment, our approach is not variational in nature and indeed, Eqns. (1) and (2) are quite different. In general, there does not seem to be direct reduction from local entropy to variational inference.
+On the other hand, Eqn. 4 in the paper can be used to write the log of local entropy, where f = -\logp(\Xi | z):
+(ii) \log F(x,\gamma)
+        = \log \int_{z \in Z} e^{-f(z; \Xi) - \gamma/2 |x-z|^2} dz.
+We are unaware of any way to choose a prior p(z) and a variational family q_x(z) that that makes (i) resemble (ii), and therefore interpret our method as “integrating out […] the posterior over neural network parameters.” The only way we can do so is to pick a specific “prior" that depends on the parameter x (hence, not really a prior). For instance, one could choose a uniform variational family and a Gaussian “prior" with mean x to make (ii) resemble ELBO. In this case p(z) would not be fixed, but it would “move” along with the current iterate x. This "moving prior" is a crucial feature of our proposed algorithm.
 
-We can however provide the following connection in a special case. Consider a family of flat variational distributions q_x(z) such that the distribution has a mean x and it is uniform on a compact set, for instance, let q_x(z) \propto c if |x-z| < C and zero otherwise. We will also pick a special prior p(z) \propto \exp(-\gamma/2 |x-z|^2). The expectation in Eqn. (2) can now be simplified as:
-(3) \log p(\Xi)
-        = E_{z \sim q_x(z)} [-f(z)] - KL(q_x(z) || p(z))
-        = -\int_{z \in Z} c*f(z) dz + H(q_x(z)) - \int_{z \in Z} c*\gamma/2 |x-z|^2 dz;
-The differential entropy H(q_x(z)) is a constant with respect to x. For the purposes of maximization, ELBO as given in Eqn. (3) is thus equivalent to local entropy (upto an additive constant).
+Concerning the relation to SGLD, consider Belief Propagation (BP). Our proposed algorithm relates to the "focusing-Belief Propagation" variant (fBP), rather than the standard one [BBC16]. The difference between BP and fBP is analogous to that between SLGD and entropy-SGD: the latter operates on a transformation of the landscape of the former, exploiting local entropic effects. This difference is crucial and indeed related to the "moving prior" of the previous discussion; plain SGLD (or BP) can only trade accuracy for entropy via the temperature parameter, which does not allow to directly use any geometric information on the landscape and does not help with narrow minima.
 
-In other words, "local entropy is similar to performing variational inference within a class of uniform distributions with mean x". Such an explanation also validates our motivation to find flat regions in the energy landscape. The above discussion is however not entirely rigorous because the prior p(z) is not fixed and depends on the parameters x themselves. The gradient of local entropy (Eqn. 7 in the paper) clarifies this point:
-    dF  = -\gamma (x - E_{z \sim r(z; x)} [z]);
-where the distribution r(z; x) is
-    \log r(z; x) \propto \log p(\Xi | z)  - \gamma/2 |x-z|^2
-and is thus a data likelihood term with a prior that "moves" along with current iterate x.
+In view of your comment 2), we also implemented SGLD for LeNet on MNIST and All-CNN-BN on CIFAR and will add the following results to our paper: After a hyper-parameter search, the best rwe obtained were a test error of LeNet on 0.63 \pm 0.1% on MNIST after 300 epochs and 9.89 \pm 0.11% on All-CNN-BN after 500 epochs. Disregarding the slow convergence of SGLD, its generalization error is slightly worse than the results in our paper, viz. 0.48% with Entropy-SGD on LeNet (0.51% with SGD) and 8.65% with Entropy-SGD on All-CNN-BN (8.3% with SGD). For comparison, the authors in [CCF15] report an error of 0.71% with SGLD on MNIST with a slightly larger network (0.47% with Santa), there are no results in the literature where MCMC methods perform comparably to SGD on larger networks.
 
-At present we do not see a more rigorous way to reduce our method to SVI but we would welcome specific suggestions if that is indeed the case. We will update the paper with the above discussion.
-
-In response to your previous comments, we have tested SGLD for LeNet on MNIST and All-CNN-BN on CIFAR and can add the following results to the paper. After a hyper-parameter search, the best results we obtained yielded a test error of LeNet of 0.63 \pm 0.1% on MNIST after 300 epochs and 9.89 \pm 0.11% on All-CNN-BN after 500 epochs. Disregarding the slow convergence of SGLD, its generalization error is worse than the results in our paper, viz. 0.48% with Entropy-SGD on LeNet (0.51% with SGD) and 8.65% with Entropy-SGD on All-CNN-BN (8.3% with SGD). For comparison, the authors in [CCF15] report an error of 0.71% with SGLD on MNIST with a slightly larger network (and get 0.47% error with Santa). To our knowledge, there are no results in the literature where MCMC methods perform comparably to SGD on larger networks.
-
+[BBC16] Baldassi, Carlo, et al. "Unreasonable effectiveness of learning neural networks: From accessible states and robust ensembles to basic algorithmic schemes." PNAS (2016).
 [CCF15] Chen, Changyou, et al. "Bridging the gap between stochastic gradient MCMC and stochastic optimization." arXiv:1512.07962 (2015).
+
 -------------------------------------------------------------------------
 
-You claim that "For modern deep networks with a few million weights, computing the Hessian-vector product as done in HS97 is prohibitive".  But in general the HVP can be computed for only twice the time cost as a gradient evaluation.  Can you elaborate on why this is expensive in your case?
+Title: Re: Is the Hessian-vector product actually expensive?
 
-The above comment is for HVP of the loss function of a general deep network, not local entropy. Indeed, HVPs can be computed using forward differencing with two back-props and Hessian-free methods do exploit this, although to a limited degree of success [M10]. Such an approximation is susceptible to numerical errors --- especially in high dimensions [P94, M10]. Moreover, one typically has to average the HVP over many samples in the dataset which is expensive (for instance, the authors in [LSP93] average over a few hundred samples, which roughly translates to 5-10x SGD _per_ HVP). More accurate algorithms like that of [P94] also require this averaging over samples.
+Comment 3) above is for HVP of the loss function of a general deep network, not local entropy. Indeed, HVPs can be computed using forward differencing with two back-props and Hessian-free methods do exploit this, although to a limited degree of success [M10]. Such an approximation is susceptible to numerical errors --- especially in high dimensions [P94, M10]. One typically averages the HVP over many samples in the dataset which is expensive (for instance, the authors in [LSP93] average over a few hundred samples, which roughly translates to 5-10x one iteration of vanilla SGD). More accurate algorithms like that of [P94] also require this averaging over samples.
 
-[LSP93] LeCun, Yann, Patrice Y. Simard, and Barak Pearlmutter. "Automatic learning rate maximization by on-line estimation of the Hessian’s eigenvectors." NIPS 1993.
+Practically speaking, one could argue that accuracy in the approximation of the HVP does not matter in SGD; what matters is only the local curvature at the scale of the perturbation, which needs to be chosen carefully.  In this case, indeed, approximate computation of HVP can be considered cheap.
+
+[LSP93] LeCun, Yann, Patrice Y. Simard, and Barak Pearlmutter. "Automatic learning rate maximization by on-line estimation of the Hessian’s eigenvectors." NIPS (1993).
 [P94] Pearlmutter, Barak A. "Fast exact multiplication by the Hessian." Neural computation 6.1 (1994): 147-160.
-[M10] Martens, James. "Deep learning via Hessian-free optimization." ICML. 2010.
+[M10] Martens, James. "Deep learning via Hessian-free optimization." ICML (2010).
