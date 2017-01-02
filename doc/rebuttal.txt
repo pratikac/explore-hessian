@@ -37,17 +37,17 @@ Let \Xi denote the dataset, z denote the weights and x be the parameters of a va
 (1) \log p(\Xi)
         \geq E_{z \sim q_x(z)} [\log p(\Xi | z)] - KL(q_x(z) || p(z))
         = E_{z \sim q_x(z)} [-f(z)] - KL(q_x(z) || p(z));
-we maximize the right hand side with respect to x. The distribution p(z) is a fixed (parameter-free) prior on the weights.
+where the right hand side would be maximized with respect to x. The distribution p(z) is a fixed (parameter-free) prior on the weights.
 
 We shall now try to connect the ELBO with local entropy. In our paper, we maximize the local entropy (Eqn. 4 in the paper) or equivalently, its logarithm:
 (2) \log F(x,\gamma)
         = \log \int_{z \in Z} e^{-f(z; \Xi) - \gamma/2 |x-z|^2} dz
         \geq \int_{z \in Z} [-f(z; \Xi) - \gamma/2 |x-z|^2] dz.
-The inequality follows by an application of Jensen's inequality. As noted in our previous comment, our approach is not variational in nature and it is easy to see that Eqns. (1) and (2) are quite different. In general, there does not seem to be direct reduction from local entropy to variational inference.
+The inequality follows by an application of Jensen's inequality. As noted in our previous comment, our approach is not variational in nature and indeed, Eqns. (1) and (2) are quite different. In general, there does not seem to be direct reduction from local entropy to variational inference.
 
-We can however provide the following connection in a special case. Consider a family of flat variational distributions q_x(z) such that the distribution has a mean x and it is uniform on a compact set, for instance, let q_x(z) \propto c if |x-z| < C and zero otherwise. We will also pick a special prior p(z) \propto \exp(-\gamma/2 |x-z|^2). The expectation in Eqn. (1) can now be simplified as:
+We can however provide the following connection in a special case. Consider a family of flat variational distributions q_x(z) such that the distribution has a mean x and it is uniform on a compact set, for instance, let q_x(z) \propto c if |x-z| < C and zero otherwise. We will also pick a special prior p(z) \propto \exp(-\gamma/2 |x-z|^2). The expectation in Eqn. (2) can now be simplified as:
 (3) \log p(\Xi)
-        \geq \int_{z \in Z} [-f(z)] - KL(q_x(z) || p(z))
+        = E_{z \sim q_x(z)} [-f(z)] - KL(q_x(z) || p(z))
         = -\int_{z \in Z} c*f(z) dz + H(q_x(z)) - \int_{z \in Z} c*\gamma/2 |x-z|^2 dz;
 The differential entropy H(q_x(z)) is a constant with respect to x. For the purposes of maximization, ELBO as given in Eqn. (3) is thus equivalent to local entropy (upto an additive constant).
 
@@ -66,12 +66,8 @@ In response to your previous comments, we have tested SGLD for LeNet on MNIST an
 
 You claim that "For modern deep networks with a few million weights, computing the Hessian-vector product as done in HS97 is prohibitive".  But in general the HVP can be computed for only twice the time cost as a gradient evaluation.  Can you elaborate on why this is expensive in your case?
 
-The above comment is for HVP of the loss function of a general deep network, not local entropy. Indeed, HVPs can be computed using forward differencing with two back-props. However, as [P94] mentions, such an approximation is highly susceptible to numerical errors --- especially in high dimensions [P94, M10]. Moreover, estimating HVP on a single mini-batch is not enough, as [CSP93] mention one typically has to average the HVP over many mini-batches; this is expensive. For instance, the authors in [CSP93] average over 10-20 batches for estimating the largest eigenvalue of the Hessian in a network with ~60,000 weights. [P94] offers an accurate, although more complex, algorithm to compute HVPs using the R-operator.
+The above comment is for HVP of the loss function of a general deep network, not local entropy. Indeed, HVPs can be computed using forward differencing with two back-props and Hessian-free methods do exploit this, although to a limited degree of success [M10]. Such an approximation is susceptible to numerical errors --- especially in high dimensions [P94, M10]. Moreover, one typically has to average the HVP over many samples in the dataset which is expensive (for instance, the authors in [LSP93] average over a few hundred samples, which roughly translates to 5-10x SGD _per_ HVP). More accurate algorithms like that of [P94] also require this averaging over samples.
 
-[CSP93] LeCun, Yann, Patrice Y. Simard, and Barak Pearlmutter. "Automatic learning rate maximization by on-line estimation of the Hessian’s eigenvectors." NIPS 1993.
+[LSP93] LeCun, Yann, Patrice Y. Simard, and Barak Pearlmutter. "Automatic learning rate maximization by on-line estimation of the Hessian’s eigenvectors." NIPS 1993.
 [P94] Pearlmutter, Barak A. "Fast exact multiplication by the Hessian." Neural computation 6.1 (1994): 147-160.
 [M10] Martens, James. "Deep learning via Hessian-free optimization." ICML. 2010.
-
-- On the use of stochastic hessian information in optimization methods for machine learning
-- https://goo.gl/qxWzgr
-- http://icml2010.haifa.il.ibm.com/papers/458.pdf
