@@ -15,12 +15,12 @@ opt = lapp[[
 --LR                (default 1)                 Learning rate
 --LRD               (default 0)                 Learning rate decay
 --optim             (default 'sgd')             Optimization algorithm
---LRstep            (default 4)                 Drop LR after x epochs
---LRratio           (default 0.3)               LR drop factor
+--LRstep            (default 3)                 Drop LR after x epochs
+--LRratio           (default 0.2)               LR drop factor
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
---gamma             (default 1e-3)              Langevin gamma coefficient
---scoping           (default 1e-2)              Scoping parameter \gamma*(1+scoping)^t
+--gamma             (default 1e-5)              Langevin gamma coefficient
+--scoping           (default 1e-3)              Scoping parameter \gamma*(1+scoping)^t
 --noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 0)                 GPU id
 -f,--full                                       Use all data

@@ -6,12 +6,12 @@ function build_file_name(opt, blacklist)
     {'backend', 'output', 'full', 'log', 'help', 'gpu',
     'max_epochs', 'batch_size', 'backend_name',
     'retrain', 'verbose', 'dataset', 'augment',
-    'estimateF'})
+    'estimateF','LRD','rho'})
 
     local _opt = tablex.deepcopy(opt)
     for k,v in ipairs(bl) do _opt[v] = nil end
 
-    local t = os.date('%Y_%b_%d_%a_%H_%M_%S')
+    local t = os.date('%b_%d_%a_%H_%M_%S')
     local s = cjson.encode(_opt)
     local fname = t .. '_opt_' .. s
     print('Log file: ' .. fname)
