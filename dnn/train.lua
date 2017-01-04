@@ -16,7 +16,7 @@ opt = lapp[[
 --LRD               (default 0)                 Learning rate decay
 --optim             (default 'sgd')             Optimization algorithm
 --LRstep            (default 3)                 Drop LR after x epochs
---LRratio           (default 0.5)               LR drop factor
+--LRratio           (default 0.33)              LR drop factor
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
 --gamma             (default 1e-5)              Langevin gamma coefficient
@@ -24,7 +24,7 @@ opt = lapp[[
 --noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 2)                 GPU id
 -f,--full                                       Use all data
--d,--dropout        (default 0.4)               Dropout
+-d,--dropout        (default 0.5)               Dropout
 --L2                (default 1e-3)              L2 regularization
 -s,--seed           (default 42)
 -e,--max_epochs     (default 15)
@@ -218,8 +218,13 @@ function save_model()
 end
 
 function learning_rate_schedule()
-    local s = math.floor(epoch/opt.LRstep)
-    local lr = opt.LR*opt.LRratio^s
+    local lr
+    if opt.LRD > 0 then
+        lr = opt.LR*(1-opt.LRD)^epoch
+    else
+        local s = math.floor(epoch/opt.LRstep)
+        lr = opt.LR*opt.LRratio^s
+    end
     print(('[LR] %.5f'):format(lr))
     return lr
 end
@@ -310,7 +315,7 @@ function main()
 
     confusion = optim.ConfusionMatrix(params.classes)
     optim_state = { learningRate= opt.LR,
-    learningRateDecay = opt.LRD,
+    learningRateDecay = 0,
     weightDecay = opt.L2,
     momentum = 0.9,
     nesterov = true,
