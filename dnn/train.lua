@@ -16,7 +16,7 @@ opt = lapp[[
 --LRD               (default 0)                 Learning rate decay
 --optim             (default 'sgd')             Optimization algorithm
 --LRstep            (default 3)                 Drop LR after x epochs
---LRratio           (default 0.2)               LR drop factor
+--LRratio           (default 0.1)               LR drop factor
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
 --gamma             (default 1e-5)              Langevin gamma coefficient
@@ -27,7 +27,7 @@ opt = lapp[[
 -d,--dropout        (default 0.5)               Dropout
 --L2                (default 1e-3)              L2 regularization
 -s,--seed           (default 42)
--e,--max_epochs     (default 20)
+-e,--max_epochs     (default 15)
 --augment                                       Augment data with flips and mirrors
 -l,--log                                        Log statistics
 -v,--verbose                                    Show gradient statistics

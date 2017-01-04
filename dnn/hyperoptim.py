@@ -1,7 +1,7 @@
 import os, sys, subprocess, json, argparse
 from itertools import product
 
-parser = argparse.ArgumentParser(description='Quick dirty jobber')
+parser = argparse.ArgumentParser(description='Quick dirty hyperoptim')
 parser.add_argument('-c','--command',   help='Main command', type=str, required=True)
 parser.add_argument('-p','--params',    help='JSON dict of the hyper-parameters', type=str)
 parser.add_argument('-r', '--run',      help='run',  action='store_true')
