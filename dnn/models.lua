@@ -261,11 +261,30 @@ function models.cifar()
     return m:cuda(), cost_function:cuda(), p
 end
 
+
+function models.ptb()
+    local m, p
+
+    local function net()
+    end
+
+    if opt.model == 'lstm' then
+        m,p = net()
+    else
+        assert('Unknown model: ' .. opt.model)
+    end
+
+    local cost_function = nn.ClassNLLCriterion()
+    return m:cuda(), cost_function:cuda(), p
+end
+
 function models.build()
     if opt.dataset == 'mnist' then
         return models.mnist()
     elseif opt.dataset == 'cifar' then
         return models.cifar()
+    elseif opt.dataset == 'ptb' then
+        return models.ptb()
     else
         assert('Unknown opt.dataset: ' .. opt.dataset)
     end
