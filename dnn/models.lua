@@ -110,7 +110,7 @@ local function cifarconv()
     end
 
     local m = nn.Sequential()
-    :add(nn.Dropout(opt.dropout*0.4))
+    :add(nn.Dropout(0.2))
     :add(convbn(3,96,3,3,1,1,1,1))
     :add(convbn(96,96,3,3,1,1,1,1))
     :add(convbn(96,96,3,3,2,2,1,1))
@@ -264,15 +264,29 @@ end
 
 function models.ptb()
     local m, p
+    local n,layers = 1500,2
+    local vocab_size = 10000
 
     local function net()
+        local r = nn.Sequential()
+            :add(nn.LookupTable(vocab_size, n))
+            :add(nn.LSTM(n,n))
+            :add(nn.Dropout(opt.dropout))
+            :add(nn.LSTM(n,vocab_size))
+            :add(nn.Dropout(opt.dropout))
+            :add(nn.LogSoftMax())
+        return nn.Sequencer(r)
     end
 
     if opt.model == 'lstm' then
-        m,p = net()
+        m = net()
     else
         assert('Unknown model: ' .. opt.model)
     end
+    
+    local w, dw = m:getParameters()
+    p.n = math.sqrt(w:numel()/p.p)
+    p.classes = torch.totable(torch.LongTensor():range(1,vocab_size))
 
     local cost_function = nn.ClassNLLCriterion()
     return m:cuda(), cost_function:cuda(), p

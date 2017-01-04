@@ -61,8 +61,8 @@ function ptb.text2tensor(tokens, vocab)
     return tensor
 end
 
-local loc = '/local2/pratikac/ptb'
 function ptb.split(a,b)
+    local loc = '/local2/pratikac/ptb'
     print('Loading PTB')
 
     local vocab, ivocab, wordf
@@ -77,7 +77,7 @@ function ptb.split(a,b)
     end
 
     local train, val, test =    loadptb('ptb.train.txt'),
-                                loadptb('ptb.val.txt'),
+                                loadptb('ptb.valid.txt'),
                                 loadptb('ptb.test.txt')
 
     if opt and opt.full ~= true then
@@ -90,9 +90,15 @@ function ptb.split(a,b)
         test = test:narrow(1,1,frac*ten)
     end
 
-    return  {data=train, size=train:size(1), vocab=vocab, ivocab=ivocab, wordf=wordf},
-            {data=val, size=val:size(1)},
-            {data=test, size=test:size(1)}
+    local ds = {}
+    for _,d in ipairs({train,val,test}) do
+        local n = d:size(1)
+        local i1 = torch.LongTensor():range(1,n-1)
+        local i2 = torch.LongTensor():range(2,n)
+        table.insert(ds, {data=d:index(1,i1), labels=d:index(1,i2),
+                    size=n-1, vocab=vocab, ivocab=ivocab, wordf=wordf})
+    end
+    return ds[1],ds[2],ds[3]
 end
 
 return ptb
