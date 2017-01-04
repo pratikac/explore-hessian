@@ -262,14 +262,14 @@ function models.cifar()
 end
 
 
-function models.char()
+function models.ptb()
     local m, p
 
-    local function charlstm()
+    local function net()
     end
 
     if opt.model == 'lstm' then
-        m,p = charlstm()
+        m,p = net()
     else
         assert('Unknown model: ' .. opt.model)
     end
@@ -283,8 +283,8 @@ function models.build()
         return models.mnist()
     elseif opt.dataset == 'cifar' then
         return models.cifar()
-    elseif opt.dataset == 'char' then
-        return models.char()
+    elseif opt.dataset == 'ptb' then
+        return models.ptb()
     else
         assert('Unknown opt.dataset: ' .. opt.dataset)
     end

@@ -12,19 +12,19 @@ opt = lapp[[
 -m,--model          (default 'cifarconv')
 -F,--estimateF      (default '')
 -b,--batch_size     (default 64)                Batch size
---LR                (default 0.1)               Learning rate
+--LR                (default 1)                 Learning rate
 --LRD               (default 0)                 Learning rate decay
 --optim             (default 'sgd')             Optimization algorithm
---LRstep            (default 100)               Drop LR after x epochs
---LRratio           (default 1)                 LR drop factor
+--LRstep            (default 4)                 Drop LR after x epochs
+--LRratio           (default 0.3)               LR drop factor
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
---gamma             (default 1)                 Langevin gamma coefficient
---scoping           (default 1e32)              Scoping parameter \gamma*(1-e^{-scoping*t})
+--gamma             (default 1e-3)              Langevin gamma coefficient
+--scoping           (default 1e-2)              Scoping parameter \gamma*(1+scoping)^t
 --noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 0)                 GPU id
 -f,--full                                       Use all data
--d,--dropout        (default 0)                 Dropout
+-d,--dropout        (default 0.5)               Dropout
 --L2                (default 1e-3)              L2 regularization
 -s,--seed           (default 42)
 -e,--max_epochs     (default 20)
@@ -45,7 +45,7 @@ elseif string.find(opt.model, 'cifar') then
     opt.dataset = 'cifar'
 elseif  string.find(opt.model, 'rnn') or
         string.find(opt.model, 'lstm') then
-    opt.dataset = 'char'
+    opt.dataset = 'ptb'
 end
 
 dofile('utils.lua')
@@ -58,8 +58,8 @@ if opt.dataset == 'mnist' then
     dataset = mnist
 elseif opt.dataset == 'cifar' then
     dataset = require 'cifarload'
-elseif opt.dataset == 'char' then
-    dataset = require 'charload'
+elseif opt.dataset == 'ptb' then
+    dataset = require 'ptbload'
 end
 
 function augment(xc)
