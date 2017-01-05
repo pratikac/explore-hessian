@@ -233,9 +233,8 @@ function learning_rate_schedule()
         --lr = opt.LR*opt.LRratio^s
         local regimes = {
             {1,4,1},
-            {5,6,0.2},
-            {7,8,0.05},
-            {9,12,0.01}
+            {5,6,0.25},
+            {7,12,0.1}
         }
         for _,row in ipairs(regimes) do
             if epoch >= row[1] and epoch <= row[2] then
@@ -247,7 +246,7 @@ function learning_rate_schedule()
     return lr
 end
 
-function estimate_local_entropy(cost, d)
+function estimate_local_entropy(d)
     local x, y = d.data, d.labels
     local modelc = model:clone()
     local wc,dwc = modelc:getParameters()
@@ -271,13 +270,12 @@ function estimate_local_entropy(cost, d)
         local dfdy = cost:backward(yh, yc)
         model:backward(xc, dfdy)
         cutorch.synchronize()
-
         return f, dw
     end
 
     local res = {}
     local eta = 0.1
-    local N = 5e4
+    local N = 100*num_batches
     local e = w.new(dw:size()):zero()
     for i=1,N do
         local f,df = feval(w)
@@ -294,6 +292,8 @@ function estimate_local_entropy(cost, d)
             end
         end
     end
+
+    model = modelc:clone()
     res = torch.Tensor(res)
     torch.save(opt.estimateF:sub(1,-10) .. '.F.t7', res)
 end
@@ -344,7 +344,7 @@ function main()
             print('')
         end
     else
-        estimate_local_entropy(model, cost, train)
+        estimate_local_entropy(train)
     end
 end
 
