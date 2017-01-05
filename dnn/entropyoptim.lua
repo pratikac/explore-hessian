@@ -12,13 +12,15 @@ function optim.entropyadam(opfunc, x, config, state)
     local beta2 = config.beta2 or 0.999
     local epsilon = config.epsilon or 1e-8
     local wd = config.weightDecay or 0
+    local mom = 0.9
+    local nesterov = true
 
     local rho = config.rho or 0
     local gamma = config.gamma or 0
     local scoping = config.scoping or 1e32
     local noise = config.noise or 1e-3
 
-    state.lparams = state.lparams or {beta1=0.9}
+    state.lparams = state.lparams or {beta1=0.75}
     local lparams = state.lparams
 
     -- (1) evaluate f(x) and df/dx
@@ -51,6 +53,7 @@ function optim.entropyadam(opfunc, x, config, state)
     -- (x-<x>) that is added to SGD from Langevin
     lparams.lx = xc:clone()
     lparams.lmx = lparams.lx:clone()
+    lparams.mdfdx = lparams.mdfdx or xc:clone():zero()
     lparams.eta = lparams.eta or x.new(dfdx:size()):zero()
     lparams.xxpd = 0
     lparams.w = lparams.w or x.new(dfdx:size()):zero()
@@ -60,6 +63,7 @@ function optim.entropyadam(opfunc, x, config, state)
         local lx = lparams.lx
         local lmx = lparams.lmx
         local eta = lparams.eta
+        local mdfdx = lparams.mdfdx
 
         --lparams.cgamma = gamma*(1 - math.exp(-state.t*scoping))
         lparams.cgamma = gamma*(1+scoping)^state.t
@@ -68,6 +72,15 @@ function optim.entropyadam(opfunc, x, config, state)
 
         for i=1,config.L do
             local lfx,ldfdx = opfunc(lx, true)
+
+            if mom ~= 0 then
+                mdfdx:mul(mom):add(1-damp, ldfdx)
+            end
+            if nesterov then
+                ldfdx:add(mom, mdfdx)
+            else
+                ldfdx = mdfdx
+            end
 
             -- bias term
             eta:normal()
@@ -140,7 +153,7 @@ function optim.entropysgd(opfunc, x, config, state)
     local gamma = config.gamma or 0
     local scoping = config.scoping or 1e32
     local noise = config.noise or 1e-3
-    state.lparams = state.lparams or {beta1=0.9}
+    state.lparams = state.lparams or {beta1=0.75}
     local lparams = state.lparams
 
     state.evalCounter = state.evalCounter or 0
