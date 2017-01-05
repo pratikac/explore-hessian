@@ -15,7 +15,7 @@ opt = lapp[[
 --LR                (default 1)                 Learning rate
 --LRD               (default 0)                 Learning rate decay
 --optim             (default 'sgd')             Optimization algorithm
---LRstep            (default 3)                 Drop LR after x epochs
+--LRstep            (default 4)                 Drop LR after x epochs
 --LRratio           (default 0.2)               LR drop factor
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
@@ -159,11 +159,12 @@ end
 
 function tester(d)
     local x, y = d.data, d.labels
-    model:evaluate()
+    --model:evaluate()
 
     local num_batches = math.ceil(x:size(1)/opt.batch_size)
     local bs = opt.batch_size
 
+    local mc = 5
     local loss = 0
     confusion:zero()
     for b =1,num_batches do
@@ -173,13 +174,17 @@ function tester(d)
         local xc, yc = x:narrow(1, sidx + 1, eidx-sidx):cuda(),
         y:narrow(1, sidx + 1, eidx-sidx):cuda()
 
-        local yh = model:forward(xc)
-        local f = cost:forward(yh, yc)
-        cutorch.synchronize()
+        local f = 0
+        for m=1,mc do
+            local yh = model:forward(xc)
+            f = f + cost:forward(yh, yc)
+            cutorch.synchronize()
 
+            confusion:batchAdd(yh, yc)
+            confusion:updateValids()
+        end
+        f = f/mc
         loss = loss + f
-        confusion:batchAdd(yh, yc)
-        confusion:updateValids()
 
         local stats = { tv=0,
         epoch=epoch,
@@ -218,12 +223,22 @@ function save_model()
 end
 
 function learning_rate_schedule()
-    local lr
+    local lr = opt.LR
     if opt.LRD > 0 then
         lr = opt.LR*(1-opt.LRD)^epoch
     else
-        local s = math.floor(epoch/opt.LRstep)
-        lr = opt.LR*opt.LRratio^s
+        --local s = math.floor(epoch/opt.LRstep)
+        --lr = opt.LR*opt.LRratio^s
+        local regimes = {
+            {1,4,1},
+            {5,7,0.2},
+            {8,15,0.05}
+        }
+        for _,row in ipairs(regimes) do
+            if epoch >= row[1] and epoch <= row[2] then
+                lr = row[3]
+            end
+        end
     end
     print(('[LR] %.5f'):format(lr))
     return lr
