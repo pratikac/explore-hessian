@@ -27,7 +27,7 @@ opt = lapp[[
 -d,--dropout        (default 0.5)               Dropout
 --L2                (default 1e-3)              L2 regularization
 -s,--seed           (default 42)
--e,--max_epochs     (default 10)
+-e,--max_epochs     (default 12)
 --augment                                       Augment data with flips and mirrors
 -l,--log                                        Log statistics
 -v,--verbose                                    Show gradient statistics
@@ -231,8 +231,8 @@ function learning_rate_schedule()
         --lr = opt.LR*opt.LRratio^s
         local regimes = {
             {1,4,1},
-            {5,7,0.2},
-            {8,15,0.05}
+            {5,6,0.2},
+            {7,15,0.05}
         }
         for _,row in ipairs(regimes) do
             if epoch >= row[1] and epoch <= row[2] then
@@ -351,10 +351,10 @@ function main()
 
         epoch = 1
         while epoch <= opt.max_epochs do
+            optim_state.learningRate = learning_rate_schedule()
             trainer(train)
             tester(test)
 
-            optim_state.learningRate = learning_rate_schedule()
             save_model()
 
             epoch = epoch + 1
