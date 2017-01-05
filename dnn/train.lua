@@ -159,12 +159,12 @@ end
 
 function tester(d)
     local x, y = d.data, d.labels
-    --model:evaluate()
+    model:evaluate()
 
     local num_batches = math.ceil(x:size(1)/opt.batch_size)
     local bs = opt.batch_size
 
-    local mc = 5
+    local mc = 1
     local loss = 0
     confusion:zero()
     for b =1,num_batches do
