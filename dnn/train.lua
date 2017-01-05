@@ -10,6 +10,7 @@ require 'entropyoptim'
 opt = lapp[[
 --output            (default "/local2/pratikac")
 -m,--model          (default 'cifarconv')
+--retrain           (default '')
 -F,--estimateF      (default '')
 -b,--batch_size     (default 128)               Batch size
 --LR                (default 1)                 Learning rate
@@ -213,7 +214,8 @@ function save_model()
         if true then
             res = {model=model:clearState(),
                     optim_state=optim_state,
-                    gitrev=get_gitrev()
+                    gitrev=get_gitrev(),
+                    epoch=epoch
                 }
         else
             res = {gitrev=get_gitrev()}
@@ -232,7 +234,8 @@ function learning_rate_schedule()
         local regimes = {
             {1,4,1},
             {5,6,0.2},
-            {7,15,0.05}
+            {7,8,0.05},
+            {9,12,0.01}
         }
         for _,row in ipairs(regimes) do
             if epoch >= row[1] and epoch <= row[2] then
@@ -244,92 +247,72 @@ function learning_rate_schedule()
     return lr
 end
 
-function estimate_local_entropy(_model, cost, d)
+function estimate_local_entropy(cost, d)
     local x, y = d.data, d.labels
-    local modelc = _model:clone()
+    local modelc = model:clone()
     local wc,dwc = modelc:getParameters()
 
-    local res = {}
-    --local gamma_array = torch.logspace(-10,2,13)
-    local gamma_array = torch.Tensor(1):zero()
-    for gi,g in ipairs(torch.totable(gamma_array)) do
+    local w, dw = model:getParameters()
+    --  this is hack because cudnn does not like backprop
+    --  if evaluate() is being used
+    model:training()
 
-        local model = modelc:clone()
-        local w, dw = model:getParameters()
-        model:training()        --  this is hack because cudnn does not like backprop
-        --  if evaluate() is being used
+    local num_batches = math.ceil(x:size(1)/opt.batch_size)
+    local bs = opt.batch_size
+    local feval = function(_w)
+        if w ~= _w then w:copy(_w) end
+        dw:zero()
 
-        local num_batches = x:size(1)/opt.batch_size
-        local bs = opt.batch_size
-        local feval = function(_w)
-            if w ~= _w then w:copy(_w) end
-            dw:zero()
+        local idx = torch.Tensor(bs):random(1, d.size):type('torch.LongTensor')
+        local xc, yc = x:index(1, idx):cuda(), y:index(1, idx):cuda()
 
-            local idx = torch.Tensor(bs):random(1, d.size):type('torch.LongTensor')
-            local xc, yc = x:index(1, idx):cuda(), y:index(1, idx):cuda()
+        local yh = model:forward(xc)
+        local f = cost:forward(yh, yc)
+        local dfdy = cost:backward(yh, yc)
+        model:backward(xc, dfdy)
+        cutorch.synchronize()
 
-            local yh = model:forward(xc)
-            local f = cost:forward(yh, yc)
-            local dfdy = cost:backward(yh, yc)
-            model:backward(xc, dfdy)
-            cutorch.synchronize()
-
-            return f, dw
-        end
-
-        local eta_denom = 0
-        local Z,Zsq = 0,0
-        local num_iter = 1e5
-        opt.LRD = 100/num_iter
-        local e = w.new(dw:size()):zero()
-        for i=1,num_iter do
-            local f,df = feval(w)
-            e:normal()
-
-            local eta = opt.LR/(1 + i*opt.LRD)
-            local noise_term = e*opt.noise/math.sqrt(opt.LR)
-            df:add(-g, wc-w):add(opt.L2,w):add(noise_term)
-            w:add(-eta, df)
-
-            local dZ = math.exp(-f - opt.L2/2*torch.norm(w)^2 - opt.gamma/2*torch.norm(w-wc)^2)
-            Z = Z + dZ*eta
-            Zsq = Zsq + dZ^2*eta
-            eta_denom = eta_denom + eta
-
-            if opt.verbose then
-                print(eta,f,torch.norm(df),torch.norm(noise_term),dZ)
-            end
-            if i % 1000 == 0 then
-                print(('[%d][%.5e] %.5f +- %.5e'):format(i, g, Z/eta_denom, Zsq/eta_denom))
-            end
-        end
-        Z = Z/eta_denom
-        Zsq = Zsq/eta_denom
-        print('Final Z: ' .. Z .. ' +- ' .. math.sqrt(Zsq - Z^2))
-
-        table.insert(res, {g, Z, math.sqrt(Zsq - Z^2)})
-        --torch.save(opt.estimateF:sub(1,-10) .. '.Z.t7', res)
+        return f, dw
     end
-    print(res)
-    --torch.save(opt.estimateF:sub(1,-10) .. '.Z.t7', res)
+
+    local res = {}
+    local eta = 0.1
+    local N = 5e4
+    local e = w.new(dw:size()):zero()
+    for i=1,N do
+        local f,df = feval(w)
+        table.insert(res, {i,torch.norm(w-wc),f})
+
+        e:normal()
+        local noise_term = e*opt.noise/math.sqrt(opt.LR)
+        df:add(opt.L2,w):add(noise_term)
+        w:add(-eta, df)
+
+        if opt.verbose then
+            if i % 1000 == 0 then
+                print(f, torch.norm(w-wc), torch.norm(df), torch.norm(noise_term))
+            end
+        end
+    end
+    res = torch.Tensor(res)
+    torch.save(opt.estimateF:sub(1,-10) .. '.F.t7', res)
 end
 
 function main()
     model, cost, params = models.build()
-    if opt.estimateF ~= '' then
-        print('Loading model: ' .. opt.estimateF)
-        model = torch.load(opt.estimateF)
+    if opt.retrain ~= '' or opt.estimateF ~= '' then
+        print('Loading model: ' .. opt.retrain)
+        local f = torch.load(opt.retrain)
+        model, optim_state = f.model, f.optim_state
+        optim_state.learningRate = opt.LR
+        epoch = f.epoch
+        print('Will stop logging...')
+        opt.log = false
     end
     local train, val, test = dataset.split(0, (opt.full and 1) or 0.05)
 
-    -- setup scoping here
-    if opt.scoping > 1e16 then
-        opt.scoping = 5/(opt.max_epochs*train.data:size(1)/opt.batch_size)
-        print('scoping: ' .. opt.scoping)
-    end
-
     confusion = optim.ConfusionMatrix(params.classes)
-    optim_state = { learningRate= opt.LR,
+    optim_state = optim_state or { learningRate= opt.LR,
     learningRateDecay = 0,
     weightDecay = opt.L2,
     momentum = 0.9,
@@ -349,7 +332,7 @@ function main()
             logger, logfname = setup_logger(opt, symbols)
         end
 
-        epoch = 1
+        epoch = epoch or 1
         while epoch <= opt.max_epochs do
             optim_state.learningRate = learning_rate_schedule()
             trainer(train)
