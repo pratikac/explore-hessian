@@ -211,14 +211,14 @@ function optim.entropysgd(opfunc, x, config, state)
     lparams.w = lparams.w or x.new(dfdx:size()):zero()
     lparams.w:zero()
 
+    local lclr = 0.1
+
     if config.L > 0 then
         local lx = lparams.lx
         local lmx = lparams.lmx
         local eta = lparams.eta
         local mdfdx = lparams.mdfdx:zero()
         local cgamma = lparams.cgamma
-
-        local lclr = 0.1
 
         local debug_states = {}
         for i=1,config.L do
@@ -253,7 +253,7 @@ function optim.entropysgd(opfunc, x, config, state)
         local debug_stats = {df=torch.norm(dfdx),
         dF=torch.norm(lparams.w),
         dfdF = torch.dot(dfdx/torch.norm(dfdx), lparams.w/(torch.norm(lparams.w)+1e-6)),
-        eta = torch.norm(lparams.eta*noise/math.sqrt(0.5*clr)),
+        eta = torch.norm(lparams.eta*noise/math.sqrt(0.5*lclr)),
         xxpd = lparams.xxpd,
         g = lparams.cgamma}
         print(cjson.encode(debug_stats))
