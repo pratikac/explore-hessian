@@ -1,0 +1,23 @@
+Notes
+=====
+
+writing
+    - remove rho, temperature
+    - section on variational stuff
+    - related work
+        +"Flat Minima" discussion
+        +perceptron para
+    - section on scoping
+        #epochs clarify
+    - appendix on variational connection
+    - massage the connection to the Hessian
+
+expts
+    - dropout + scoping:    ~8.3 all-cnn
+                            lenet?
+    - energy vs. distance
+            all-cnn without dropout vs. with dropout
+            (with / without local entropy?)
+            Hessian estimate for these along with it
+    - PTB
+    - comparison with SGLD

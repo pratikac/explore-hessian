@@ -11,7 +11,7 @@ sns.set_style('ticks')
 sns.set_color_codes()
 
 fsz = 24
-com = .01
+com = 0.001
 loss_subsample = 30
 
 parser = argparse.ArgumentParser()
@@ -50,74 +50,81 @@ def load(fs, m=50):
 
     return r
 
-# def plot_lenet():
-#     r = load(sorted(glob.glob('../results/nov_expts/dnn/lenet/*\"langevin\":0*.log')), \
-#         sorted(glob.glob('../results/dnn/nov_expts/lenet/*\"langevin\":20*.log')), 100)
+def plot_lenet():
+    r1, r2 = load(sorted(glob.glob('../results/nov_expts/dnn/lenet/*\"langevin\":0*.log')), 100), \
+        load(sorted(glob.glob('../results/jan_expts/lenet/*.log')), 5)
 
-#     fig = plt.figure(1, figsize=(8,7))
-#     plt.clf()
-#     ax = fig.add_subplot(111)
-#     plt.title(r'LeNet: Validation error')
+    fig = plt.figure(1, figsize=(8,7))
+    plt.clf()
+    ax = fig.add_subplot(111)
+    plt.title(r'LeNet: Validation error')
 
-#     sns.tsplot(np.array([smooth(r['valid'][0].ix[i]) for i in range(5)]),
-#             condition=r'Adam', rasterized=True, color='k')
-#     sns.tsplot(np.array([smooth(r['valid'][1].ix[i]) for i in range(4)]),
-#             condition=r'entropy-SGD', rasterized=True, color='r')
+    v1 = np.array([smooth(r1['valid'].ix[i]) for i in range(5)])
+    v2 = np.array([smooth(r2['valid'].ix[i]) for i in range(5)])
+    sns.tsplot(v1,
+            condition=r'Adam', rasterized=True, color='k')
+    sns.tsplot(v2, time=np.arange(20,120,20),
+            condition=r'Entropy-SGD', rasterized=True, color='r')
 
-#     plt.ylim([0.4, 0.8])
-#     plt.xlim([0,100])
-#     yticks = [0.45,.55,.65,.75]
-#     plt.yticks(yticks, [str(y) for y in yticks])
-#     plt.xlabel(r'Epochs')
-#     plt.ylabel(r'\% Error')
+    plt.ylim([0.45, 0.75])
+    plt.xlim([20,100])
+    yticks = [0.45,.55,.65,.75]
+    plt.yticks(yticks, [str(y) for y in yticks])
+    xticks = [20, 40, 60, 80, 100]
+    plt.xticks(xticks, [str(x) for x in xticks])
+    plt.xlabel(r'\#backprops/\#batches')
+    plt.ylabel(r'\% Error')
 
-#     plt.plot([98.89], [0.512], 'o', c='k', markersize=10)
-#     plt.plot([81.7], [0.48], 'o', c='r', markersize=10)
+    plt.plot([98.89], [0.512], 'o', c='k', markersize=10)
+    plt.plot([80], [0.502], 'o', c='r', markersize=10)
+    plt.plot(range(100), 0.50*np.ones(100), 'r--', lw=1)
 
-#     ax.text(90, 0.54, r'$0.51\%$', fontsize=fsz,
-#             verticalalignment='center', color='k')
-#     ax.text(75, 0.46, r'$0.48\%$', fontsize=fsz,
-#             verticalalignment='center', color='r')
+    ax.text(90, 0.54, r'$0.51\%$', fontsize=fsz,
+            verticalalignment='center', color='k')
+    ax.text(75, 0.48, r'$0.50\%$', fontsize=fsz,
+            verticalalignment='center', color='r')
 
-#     plt.grid('on')
+    plt.grid('on')
 
-#     if opt['save']:
-#         plt.savefig('../../doc/fig/lenet_valid.pdf', bbox_inches='tight')
+    if opt['save']:
+        plt.savefig('../doc/fig/lenet_valid.pdf', bbox_inches='tight')
 
-# def plot_mnistfc():
-#     r = load(sorted(glob.glob('../results/nov_expts/dnn/mnistfc/*\"langevin\":0*.log')), \
-#         sorted(glob.glob('../results/dnn/nov_expts/mnistfc/*\"langevin\":5*.log')), 100)
+def plot_mnistfc():
+    r1, r2 = load(sorted(glob.glob('../results/nov_expts/dnn/mnistfc/*\"langevin\":0*.log')), 100), \
+            load(sorted(glob.glob('../results/jan_expts/mnistfc/*.log')), 10)
 
-#     fig = plt.figure(2, figsize=(8,7))
-#     plt.clf()
-#     ax = fig.add_subplot(111)
-#     plt.title(r'mnistfc: Validation error')
+    fig = plt.figure(2, figsize=(8,7))
+    plt.clf()
+    ax = fig.add_subplot(111)
+    plt.title(r'mnistfc: Validation error')
 
-#     v1 = np.array([smooth(r['valid'][0].ix[i]) for i in range(5)])
-#     v2 = np.array([smooth(r['valid'][1].ix[i]) for i in range(5)])
-#     sns.tsplot(v1,
-#             condition=r'Adam', rasterized=True, color='k')
-#     sns.tsplot(v2,
-#             condition=r'entropy-SGD', rasterized=True, color='r')
-#     plt.grid('on')
+    v1 = np.array([smooth(r1['valid'].ix[i]) for i in range(5)])
+    v2 = np.array([smooth(r2['valid'].ix[i]) for i in range(5)])
+    sns.tsplot(v1,
+            condition=r'Adam', rasterized=True, color='k')
+    sns.tsplot(v2, time=np.arange(20,220,20),
+            condition=r'Entropy-SGD', rasterized=True, color='r')
+    plt.grid('on')
 
-#     plt.ylim([1, 2.5])
-#     plt.xlim([0,100])
-#     yticks = [1, 1.5, 2, 2.5]
-#     plt.yticks(yticks, [str(y) for y in yticks])
-#     plt.xlabel(r'Epochs')
-#     plt.ylabel(r'\% Error')
+    plt.ylim([1.2, 2])
+    plt.xlim([20,120])
+    yticks = [1.2, 1.4, 1.6, 1.8, 2]
+    plt.yticks(yticks, [str(y) for y in yticks])
+    plt.xlabel(r'\#backprops/\#batches')
+    plt.ylabel(r'\% Error')
 
-#     plt.plot([69], [1.39], 'o', c='k', markersize=10)
-#     plt.plot([24], [1.39], 'o', c='r', markersize=10)
+    plt.plot([69], [1.39], 'o', c='k', markersize=10)
+    plt.plot([120], [1.37], 'o', c='r', markersize=10)
+    plt.plot(range(120), 1.37*np.ones(120), 'r--', lw=1)
 
-#     ax.text(66, 1.3, r'$1.39\%$', fontsize=fsz,
-#             verticalalignment='center', color='k')
-#     ax.text(20, 1.3, r'$1.39\%$', fontsize=fsz,
-#             verticalalignment='center', color='r')
+    ax.text(66, 1.35, r'$1.39\%$', fontsize=fsz,
+            verticalalignment='center', color='k')
+    ax.text(115, 1.42, r'$1.37\%$', fontsize=fsz,
+            verticalalignment='center', color='r')
 
-#     if opt['save']:
-#         plt.savefig('../../doc/fig/mnistfc_valid.pdf', bbox_inches='tight')
+    if opt['save']:
+        plt.savefig('../doc/fig/mnistfc_valid.pdf', bbox_inches='tight')
+
 
 def plot_allcnn():
     r1, r2 = load(sorted(glob.glob('../results/nov_expts/dnn/allcnn/original/*.log')), 200), \
@@ -134,7 +141,7 @@ def plot_allcnn():
     sns.tsplot(v1,
             condition=r'SGD', rasterized=True, color='k')
     sns.tsplot(v2, time=np.arange(20,220,20),
-            condition=r'entropy-SGD', rasterized=True, color='r')
+            condition=r'Entropy-SGD', rasterized=True, color='r')
     plt.grid('on')
 
     plt.ylim([5, 25])
@@ -142,7 +149,7 @@ def plot_allcnn():
     yticks = [5, 10, 15, 20, 25]
     plt.yticks(yticks, [str(y) for y in yticks])
     plt.xlabel(r'\#backprops/\#batches')
-    plt.ylabel(r'\% error')
+    plt.ylabel(r'\% Error')
 
     plt.plot([190], [8.30], 'o', c='k', markersize=10)
     plt.plot([200], [8.28], 'o', c='r', markersize=10)
@@ -167,7 +174,7 @@ def plot_allcnn():
     sns.tsplot(v1, time = np.arange(0,200),
             condition=r'SGD', rasterized=True, color='k')
     sns.tsplot(v2, time = np.arange(20,220,20),
-            condition=r'entropy-SGD', rasterized=True, color='r')
+            condition=r'Entropy-SGD', rasterized=True, color='r')
     plt.grid('on')
 
     plt.ylim([0,0.5])
@@ -177,7 +184,7 @@ def plot_allcnn():
     yticks = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
     plt.yticks(yticks, [str(y) for y in yticks])
     plt.xlabel(r'\#backprops/\#batches')
-    plt.ylabel(r'cross-entropy loss')
+    plt.ylabel(r'Cross-entropy Loss')
 
     plt.plot([200], [0.03465], 'o', c='k', markersize=10)
     plt.plot([200], [0.02681], 'o', c='r', markersize=10)
@@ -191,6 +198,6 @@ def plot_allcnn():
     if opt['save']:
         plt.savefig('../doc/fig/allcnn_loss.pdf', bbox_inches='tight')
 
-# plot_lenet()
-# plot_mnistfc()
-# plot_allcnn()
+plot_lenet()
+plot_mnistfc()
+plot_allcnn()
