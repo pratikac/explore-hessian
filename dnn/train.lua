@@ -4,6 +4,7 @@ require 'image'
 local lapp = require 'pl.lapp'
 lapp.slack = true
 local colors = sys.COLORS
+paths = require 'paths'
 
 require 'entropyoptim'
 
@@ -293,16 +294,16 @@ function estimate_local_entropy(d)
     end
 
     local res = {}
-    local eta = 0.1
-    local N = 100*num_batches
+    local eta, l2 = 0.1, 1e-3
+    local N = 200*num_batches
     local e = w.new(dw:size()):zero()
     for i=1,N do
         local f,df = feval(w)
         table.insert(res, {i,torch.norm(w-wc),f})
 
         e:normal()
-        local noise_term = e*opt.noise/math.sqrt(opt.LR)
-        df:add(opt.L2,w):add(noise_term)
+        local noise_term = e*opt.noise/math.sqrt(eta)
+        df:add(l2,w):add(noise_term)
         w:add(-eta, df)
 
         if opt.verbose then
@@ -314,17 +315,21 @@ function estimate_local_entropy(d)
 
     model = modelc:clone()
     res = torch.Tensor(res)
+    torch.save('F_' .. paths.basename(opt.estimateF), res)
     torch.save(opt.estimateF:sub(1,-10) .. '.F.t7', res)
 end
 
 function main()
     model, cost, params = models.build()
-    if opt.retrain ~= '' or opt.estimateF ~= '' then
-        print('Loading model: ' .. opt.retrain)
-        local f = torch.load(opt.retrain)
+    local fp = ''
+    if opt.retrain ~= '' then fp = opt.retrain end
+    if opt.estimateF ~= '' then fp = opt.estimateF end
+    if fp ~= '' then
+        print('Loading model: ' .. fp)
+        local f = torch.load(fp)
         model, optim_state = f.model, f.optim_state
         optim_state.learningRate = opt.LR
-        epoch = f.epoch + 1
+        if f.epoch then epoch = f.epoch + 1 else epoch = 1 end
         print('Will stop logging...')
         opt.log = false
     end
