@@ -28,7 +28,7 @@ opt = lapp[[
 -d,--dropout        (default 0.25)              Dropout
 --L2                (default 0)                 L2 regularization
 -s,--seed           (default 42)
--e,--max_epochs     (default 15)
+-e,--max_epochs     (default 05)
 --augment                                       Augment data with flips and mirrors
 -l,--log                                        Log statistics
 -v,--verbose                                    Show gradient statistics
