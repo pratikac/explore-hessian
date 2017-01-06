@@ -22,13 +22,13 @@ opt = lapp[[
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
 --gamma             (default 1e-4)              Langevin gamma coefficient
 --scoping           (default 1e-3)              Scoping parameter \gamma*(1+scoping)^t
---noise             (default 3e-4)              Langevin dynamics additive noise factor (*stepSize)
+--noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 2)                 GPU id
 -f,--full                                       Use all data
--d,--dropout        (default 0.25)              Dropout
+-d,--dropout        (default 0.15)              Dropout
 --L2                (default 0)                 L2 regularization
 -s,--seed           (default 42)
--e,--max_epochs     (default 05)
+-e,--max_epochs     (default 10)
 --augment                                       Augment data with flips and mirrors
 -l,--log                                        Log statistics
 -v,--verbose                                    Show gradient statistics
@@ -239,12 +239,21 @@ function learning_rate_schedule()
             {7,12,0.01}
         }
         --]]
+        --[[
         -- lenet
         local regimes = {
             {1,2,1},
             {3,7,0.1},
             {8,15,0.01}
         }
+        --]]
+        -- mnistfc
+        local regimes = {
+            {1,2,1},
+            {3,7,0.1},
+            {8,15,0.01}
+        }
+
         for _,row in ipairs(regimes) do
             if epoch >= row[1] and epoch <= row[2] then
                 lr = row[3]
