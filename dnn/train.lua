@@ -13,22 +13,22 @@ opt = lapp[[
 --retrain           (default '')
 -F,--estimateF      (default '')
 -b,--batch_size     (default 128)               Batch size
---LR                (default 1)                 Learning rate
+--LR                (default 0)                 Learning rate
 --LRD               (default 0)                 Learning rate decay
 --optim             (default 'sgd')             Optimization algorithm
 --LRstep            (default 4)                 Drop LR after x epochs
 --LRratio           (default 0.2)               LR drop factor
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
---gamma             (default 3e-2)              Langevin gamma coefficient
+--gamma             (default 1e-4)              Langevin gamma coefficient
 --scoping           (default 1e-3)              Scoping parameter \gamma*(1+scoping)^t
---noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
+--noise             (default 3e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 2)                 GPU id
 -f,--full                                       Use all data
--d,--dropout        (default 0.5)               Dropout
---L2                (default 1e-3)              L2 regularization
+-d,--dropout        (default 0.25)              Dropout
+--L2                (default 0)                 L2 regularization
 -s,--seed           (default 42)
--e,--max_epochs     (default 12)
+-e,--max_epochs     (default 15)
 --augment                                       Augment data with flips and mirrors
 -l,--log                                        Log statistics
 -v,--verbose                                    Show gradient statistics
@@ -228,16 +228,27 @@ function learning_rate_schedule()
     local lr = opt.LR
     if opt.LRD > 0 then
         lr = opt.LR*(1-opt.LRD)^epoch
+    elseif opt.LR > 0 then
+        lr = opt.LR
     else
+        --[[
         -- all-cnn-bn on cifar10
         local regimes = {
             {1,4,1},
             {5,6,0.2},
             {7,12,0.01}
         }
+        --]]
+        -- lenet
+        local regimes = {
+            {1,2,1},
+            {3,7,0.1},
+            {8,15,0.01}
+        }
         for _,row in ipairs(regimes) do
             if epoch >= row[1] and epoch <= row[2] then
                 lr = row[3]
+                break
             end
         end
     end
