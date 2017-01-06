@@ -29,22 +29,30 @@
 
 \title{Entropy-SGD: Biasing Gradient Descent Into Wide Valleys}
 
-\author{Pratik Chaudhari$^{1}$, Anna Choromanska$^{2}$, Stefano Soatto$^{1}$, Yann LeCun$^{2,3}$\\[0.05in]
-$^{1}$ Computer Science, University of California, Los Angeles\\
-$^{2}$ Courant Institute of Mathematical Sciences, New York University\\
-$^{3}$ Facebook AI Research\\[0.05in]
+\author{Pratik Chaudhari$^{1}$, Anna Choromanska$^{2}$, Stefano Soatto$^{1}$, Yann LeCun$^{2,3}$, Carlo Baldassi$^{4}$,\\[0.03in]
+\textbf{Christian Borgs$^{5}$, Jennifer Chayes$^{5}$, Riccardo Zecchina$^{4}$}\\[0.05in]
+$^{1}$ Computer Science, University of California, Los Angeles.\\
+$^{2}$ Courant Institute of Mathematical Sciences, New York University.\\
+$^{3}$ Facebook AI Research, New York.\\
+$^{4}$ Politecnico di Torino.\\
+$^{5}$ Microsoft Research New England, Cambridge.\\ [0.05in]
 {\footnotesize
 Email:\ \href{mailto:pratikac@ucla.edu}{pratikac@ucla.edu},
 \href{mailto:achoroma@cims.nyu.edu}{achoroma@cims.nyu.edu},
 \href{mailto:soatto@cs.ucla.edu}{soatto@cs.ucla.edu},
-\href{mailto:yann@cs.nyu.edu}{yann@cs.nyu.edu}}
-}
+\href{mailto:yann@cs.nyu.edu}{yann@cs.nyu.edu},
+\href{mailto:carlobaldassi@gmail.com}{carlobaldassi@gmail.com}}\\[0.03in]
+{\footnotesize
+\hspace{0.33in} \href{mailto:borgs@microsoft.com}{borgs@microsoft.com},
+\href{mailto:jchayes@microsoft.com}{jchayes@microsoft.com},
+\href{mailto:riccardo.zecchina@polito.it}{riccardo.zecchina@polito.it}
+}}
 
 % macros to color text and insert margin comments
 \setlength{\marginparwidth}{1in}
-\newcommand{\pc}[2]{{\color{ForestGreen} #1}\marginpar{\tiny\noindent{\raggedright{\color{Sienna}[PC]}\color{Sienna}{ #2} \par}}}
-\renewcommand{\ss}[2]{{\color{cyan} #1}\marginpar{\tiny\noindent{\raggedright{\color{BurntOrange}[SS]}\color{BurntOrange}{ #2} \par}}}
-\newcommand{\ac}[2]{{\color{magenta} #1}\marginpar{\tiny\noindent{\raggedright{\color{magenta}[AC]}\color{magenta}{ #2} \par}}}
+\newcommand{\pc}[2]{{\color{ForestGreen}#1}\marginpar{\tiny\noindent{\raggedright{\color{Sienna}[PC]}\color{Sienna}{#2} \par}}}
+\renewcommand{\ss}[2]{{\color{cyan}#1}\marginpar{\tiny\noindent{\raggedright{\color{BurntOrange}[SS]}\color{BurntOrange}{#2} \par}}}
+\newcommand{\ac}[2]{{\color{magenta}#1}\marginpar{\tiny\noindent{\raggedright{\color{magenta}[AC]}\color{magenta}{#2} \par}}}
 \newcommand{\todo}[1]{{\color{gray}#1}\marginpar{\tiny\noindent{\raggedright{\color{blue}[TODO]}}}}
 \newcommand{\ignore}[1]{}
 
@@ -62,64 +70,63 @@ Email:\ \href{mailto:pratikac@ucla.edu}{pratikac@ucla.edu},
 \maketitle
 
 \begin{abstract}
-This paper proposes a new optimization algorithm called $\entropysgd$ for training deep neural networks that is motivated by the local geometry of the energy landscape at solutions found by gradient descent. Local extrema with low generalization error have a large proportion of almost-zero eigenvalues in the Hessian with very few positive or negative eigenvalues. We leverage upon this observation to construct a local entropy based objective that favors well-generalizable solutions lying in the flat regions of the energy landscape, while avoiding poorly-generalizable solutions located in the sharp valleys.
-%
-Our algorithm resembles two nested loops of SGD, where we use Langevin dynamics to compute the gradient of local entropy at each update of the weights.
-%
-We prove that incorporating local entropy into the objective function results in a smoother energy landscape and use uniform stability to show improved generalization bounds over SGD.
-%
-Our experiments on competitive baselines demonstrate that $\entropysgd$ leads to improved generalization and has the potential to accelerate training.
+This paper proposes a new optimization algorithm called $\entropysgd$ for training deep neural networks that is motivated by the local geometry of the energy landscape. We construct a local-entropy-based objective function that favors well-generalizable solutions lying in large flat regions of the energy landscape, while avoiding poorly-generalizable solutions located in the sharp valleys. Our algorithm resembles two nested loops of SGD, where we use Langevin dynamics to compute the gradient of the local entropy at each update of the weights. We prove that incorporating the local entropy into the objective function results in a smoother energy landscape, and we use uniform stability to show improved generalization bounds over SGD. Our experiments on competitive baselines demonstrate that $\entropysgd$ alone leads to generalization performances that compare with state of the art techniques and has the potential to accelerate training.
+\pc{}{We also perform a direct comparison between the information provided by the local entropy measure and the analysis of the Hessian in qualitatively different minima.}
 \end{abstract}
 
 \section{Introduction}
 \label{s:intro}
+This paper presents a new optimization tool for deep learning, designed to exploit the local geometrical properties of the objective function. Recent works on shallow networks with discrete weights~\citep{baldassi2015subdominant,baldassi2016unreasonable} have shown that the geometrical structure of the energy landscape is characterized by the existence of an exponentially large number of local minima, a large number of narrow isolated minima, and few very dense regions of minima. These dense states have been discovered analytically by adopting an appropriate local entropy measure, and have been shown to be both algorithmically accessible and to have good generalization properties in both random and real-world settings. The original analysis was done in the case of binary weights, and was later generalized by~\citet{baldassi2016multilevel} to the case of weights with an arbitrary number of precision bits. Here, we generalize this approach to the case of deep architectures and continuous weights, and develop a Langevin stochastic gradient descent algorithm based on the local entropy measure.
 
-This paper focuses on developing new optimization tools for deep learning that are tailored to exploit the local geometric properties of the objective function. Consider the histogram in Fig.~\ref{fig:lenet_hessian}, showing the eigenspectrum of the Hessian at a local minimum discovered by Adam~\citep{kingma2014adam} for a convolutional neural network on MNIST~\citep{lecun1998gradient} with about $47,000$ weights (cf.\@ Sec.~\ref{ss:expt:universality}). It is evident that:
+The existence of wide minima in deep networks is also suggested by the spectral analysis of the Hessian. Consider the histogram in Fig.~\ref{fig:lenet_hessian}, showing the spectrum of the Hessian at the endpoint of the optimization performed by Adam~\citep{kingma2014adam} for a convolutional neural network on MNIST~\citep{lecun1998gradient} with about $47,000$ weights (cf.\@ Sec.~\ref{ss:expt:universality}). It is evident that:
 \begin{enumerate}[(i)]
 \item a large number of directions ($\approx 94\%$) have near-zero eigenvalues (magnitude less than $10^{-4}$),
 \item positive eigenvalues (right inset) have a long tail with the largest one being almost $40$,
 \item negative eigenvalues (left inset), which are directions of descent that the optimizer missed, have a much faster decay (the largest negative eigenvalue is only $-0.4$).
 \end{enumerate}
-Interestingly, this trend is not unique to this particular network. Rather, its qualitative properties are shared across a variety of network architectures, sizes, datasets or optimization algorithms (refer to Sec.~\ref{s:expt} for more experiments).  Local minima that generalize well and are discovered by gradient descent lie in "wide valleys" of the energy landscape, that look more like the bottom of a bucket than sharp isolated minima like the holes on a golf-course.
-%For an intuitive understanding of this phenomenon, imagine a Bayesian prior concentrated at the minimizer of the expected loss, the likelihood of wide valleys under this prior is much higher than narrow, sharp valleys even if the latter are close to the global minimum in training loss.
-Almost-flat regions of the energy landscape are robust to data perturbations, noise in the activations as well as perturbations of the parameters --- all of which are widely-used techniques to achieve good generalization. This suggests that wide valleys should result in better generalization and, indeed, standard optimization algorithms in deep learning --- without being explicitly tailored to do so --- seem to discover exactly that.
+Interestingly, this trend is not unique to this particular network. Rather, its qualitative properties are shared across a variety of network architectures, sizes, datasets or optimization algorithms (see references in Sec.~\ref{s:prior_work}, and Sec.~\ref{s:expt} for more experiments). \pc{Local minima}{We are using the term ``local minima'' loosely here, since a few of the eigenvalues of the Hessian may be slightly negative} that generalize well and are discovered by gradient descent lie in "wide valleys" of the energy landscape, rather than in sharp isolated minima. For an intuitive understanding of this phenomenon, imagine a Bayesian prior concentrated at the minimizer of the expected loss, the likelihood of wide valleys under this prior is much higher than narrow, sharp valleys even if the latter are close to the global minimum in training loss.
+Almost-flat regions of the energy landscape are robust to data perturbations, noise in the activations, as well as perturbations of the parameters --- all of which are widely-used techniques to achieve good generalization. This suggests that wide valleys should result in better generalization and, indeed, standard optimization algorithms in deep learning --- without being explicitly tailored to do so --- seem to discover exactly that.
 
-\begin{figure}[!tbh]
-\vspace*{-0.1in}
+\begin{figure}[tbh]
+% \vspace*{-0.1in}
 \centering
 \includegraphics[width=\textwidth]{lenet_hessian.pdf}
 \caption{\small Eigenspectrum of the Hessian at a local minimum of a CNN on MNIST (two independent runs). \textbf{Remark:} The central plot shows the eigenvalues in a small neighborhood of zero whereas the left and right insets show the entire tails of the eigenspectrum.}
 \label{fig:lenet_hessian}
 \end{figure}
 
-Based on this understanding of how the local geometry looks at the end of optimization, can we modify SGD to actively seek such regions? We show that flat regions in the energy landscape correspond to regions where the log-partition function is small, if computed locally on the Gibbs distribution corresponding to the optimization problem. Roughly, for parameters denoted by $x \in \reals^n$, we modify a loss function $f(x)$ to be
+Based on this understanding of how the local geometry looks at the end of optimization, can we modify SGD to actively seek such regions? Motivated by the work of~\citet{baldassi2015subdominant,baldassi2016unreasonable} on shallow networks, we propose to replace the original loss function $f(x)$ by:
+$$	
+% \rho
+f(x) 
+- \log \int_{x' \in \reals^n}\ \exp \rbrac{-\b f(x') - \f{\b \g}{2}\ \norm{x-x'}^2_2}\ dx'.
 $$
-	f(x) - \log \int_{x' \in \reals^n}\ \exp \rbrac{-f(x') - \f{\g}{2}\ \norm{x-x'}^2_2}\ dx';
-$$
-where the second term is a log-partition function which is seen as a ``local free energy'' and measures both the depth of a valley at a location $x$ and its flatness through the entropy of $f(x')$. The $\entropysgd$ algorithm presented in this paper employs a few iterations of stochastic gradient Langevin dynamics (SGLD) to approximate the second term before each update of the parameters using the back-propagated gradient. At a conceptual level, this algorithm resembles running two nested loops of SGD. We show that the above modified loss function results in a smoother energy landscape defined by the hyper-parameter $\g$ which we can think of as a ``scope'' that seeks out valleys of specific widths. Actively biasing towards wide valleys aids generalization, in fact, we can optimize solely the free energy term to obtain similar generalization error as SGD on the original loss function. Our experiments in Sec.~\ref{s:expt} on MNIST and CIFAR-10~\citep{krizhevsky2009learning} show that $\entropysgd$ scales to deep networks used in practice and in terms of the number of updates to the parameters, trains much quicker than SGD.
+The second term measures both the depth of a valley at a location  $x \in \reals^n$, and its flatness through the entropy of $f(x')$;  we call it the {\it local free entropy} in analogy to the free entropy in statistical physics. The $\entropysgd$ algorithm presented in this paper employs a few iterations of stochastic gradient Langevin dynamics (SGLD) to approximate the second term before each update of the parameters using the back-propagated gradient. At a conceptual level, this algorithm resembles running two nested loops of SGD. We show that the above modified loss function results in a smoother energy landscape defined by the hyper-parameter $\g$ which we can think of as a ``scope'' that seeks out valleys of specific widths. Actively biasing towards wide valleys aids generalization, in fact, we can optimize solely the free energy term to obtain similar generalization error as SGD on the original loss function. Our experiments in Sec.~\ref{s:expt} on MNIST and CIFAR-10~\citep{krizhevsky2009learning} show that $\entropysgd$ scales to deep networks used in practice and in terms of the number of updates to the parameters, trains much more quickly than SGD.
 
 \section{Related work}
 \label{s:prior_work}
 
-Our above observation about the eigenspectrum of Hessian (further discussed in Sec.~\ref{s:expt}) is similar to results on a perceptron model in~\citet{dauphin2014identifying} where the authors connect the loss function of a deep network to a high-dimensional Gaussian random field. They also relate to earlier studies such as~\citet{Baldi:1989:NNP:70359.70362,Fyodorov2007,Bray2007} which show that critical points with high training error are exponentially likely to be saddle points with many negative directions and all local minima are likely to have error that is very close to that of the global minimum. The authors also argue that convergence of gradient descent is affected by the proliferation of saddle points surrounded by high error plateaus --- as opposed to multiple local minima. One can also see this via an application of Kramer's law: the time spent by diffusion is inversely proportional to the smallest negative eigenvalue of the Hessian at a saddle point~\citep{bovier2006metastability}.
+Our above observation about the spectrum of Hessian (further discussed in Sec.~\ref{s:expt}) is similar to results on a perceptron model in~\citet{dauphin2014identifying} where the authors connect the loss function of a deep network to a high-dimensional Gaussian random field. They also relate to earlier studies such as~\citet{Baldi:1989:NNP:70359.70362,Fyodorov2007,Bray2007} which show that critical points with high training error are exponentially likely to be saddle points with many negative directions and all local minima are likely to have error that is very close to that of the global minimum. The authors also argue that convergence of gradient descent is affected by the proliferation of saddle points surrounded by high error plateaus --- as opposed to multiple local minima. One can also see this via an application of Kramer's law: the time spent by diffusion is inversely proportional to the smallest negative eigenvalue of the Hessian at a saddle point~\citep{bovier2006metastability}.
 
-The existence of multiple, almost equivalent, local minima in deep networks has been predicted using a wide variety of theoretical analyses and empirical observations, e.g., papers such as~\citet{spinglass2015,DBLP:conf/colt/ChoromanskaLA15,chaudhari2015trivializing} that build upon results from statistical physics as also others such as~\citet{haeffele2015global} and~\citet{janzamin2015beating} that obtain similar results for matrix and tensor factorization problems. Although assumptions in these works are somewhat unrealistic in the context of deep networks used in practice, similar results are also true for linear networks which afford a more thorough analytical treatment~\citep{DBLP:journals/corr/SaxeMG13}. For instance,~\citet{soudry2016no} show that with mild over-parameterization and dropout-like noise, training error for a neural network with one hidden layer and piece-wise linear activation is zero at every local minimum. All these results suggest that the energy landscape of deep neural networks should be easy to optimize and they more or less hold in practice --- it is easy to optimize a prototypical deep network to near-zero loss \emph{on the training set}~\citep{hardt2015train,DBLP:journals/corr/GoodfellowV14}.
+The existence of multiple, almost equivalent, local minima in deep networks has been predicted using a wide variety of theoretical analyses and empirical observations, e.g., papers such as~\citet{spinglass2015,DBLP:conf/colt/ChoromanskaLA15,chaudhari2015trivializing,sagun2014explorations} that build upon results from statistical physics as also others such as~\citet{haeffele2015global} and~\citet{janzamin2015beating} that obtain similar results for matrix and tensor factorization problems. Although assumptions in these works are somewhat unrealistic in the context of deep networks used in practice, similar results are also true for linear networks which afford a more thorough analytical treatment~\citep{DBLP:journals/corr/SaxeMG13}. For instance,~\citet{soudry2016no} show that with mild over-parameterization and dropout-like noise, training error for a neural network with one hidden layer and piece-wise linear activation is zero at every local minimum. All these results suggest that the energy landscape of deep neural networks should be easy to optimize and they more or less hold in practice --- it is easy to optimize a prototypical deep network to near-zero loss \emph{on the training set}~\citep{hardt2015train,DBLP:journals/corr/GoodfellowV14}.  
 %Works such as which shows that for deep linear networks with more than three layers, there exist ``bad'' saddle points, i.e., where the Hessian has no negative eigenvalues; SGD will find it difficult to make progress in such regions.
 
 Obtaining good \emph{generalization} error, however, is challenging: complex architectures are sensitive to initial conditions and learning rates~\citep{sutskever2013importance} and even linear networks~\citep{kawaguchi2016deep} may have degenerate and hard to escape saddle points~\citep{ge2015escaping,anandkumar2016efficient}. Techniques such as adaptive~\citep{duchi2011adaptive} and annealed learning rates, momentum~\citep{tieleman2012lecture}, as well as architectural modifications like dropout~\citep{srivastava2014dropout}, batch-normalization~\citep{ioffe2015batch,cooijmans2016recurrent}, weight scaling~\citep{salimans2016weight} etc. are different ways of tackling this issue by making the underlying landscape more amenable to first-order algorithms. However, the training process often requires a combination of such techniques and it is unclear beforehand to what extent each one of them helps.
 
-Such a paradox between a seemingly benign energy landscape and delicate training algorithms is also seen in problems such as random $k$-SAT~\citep{achlioptas2006solution} and compressed sensing~\citep{krzakala2012statistical}. Introducing non-local terms in classical inference techniques for these problems has led to state-of-the-art algorithms~\citep{braunstein2005survey,maneva2007new}. Closer to deep learning, although motivated from similar ideas, the authors in~\citet{baldassi2015subdominant,baldassi2016unreasonable} show that, both theoretically and practically, ensembles of perceptrons can be trained in parallel by penalizing each individual model to be close to the ensemble average. Using a novel out-of-equilibrium analysis, the authors show that such an ensemble recovers dense clusters in the solution space. Such dense clusters generalize better than isolated local minima that may lie close to the global minimum. A related work in this direction is EASGD~\citep{zhang2015deep} which trains multiple deep networks in parallel and encourages individual models to explore by modulating their distance to the ensemble average; this is a special case of robust ensembles.
+Closer to the subject of this work,~\citet{baldassi2015subdominant,baldassi2016unreasonable} show that, both theoretically and practically, ensembles of perceptrons can be trained in parallel by penalizing each individual model to be close to the ensemble average. Using a novel out-of-equilibrium analysis, the authors show that such an ensemble recovers dense clusters in the solution space. Such dense clusters generalize better than isolated local minima. A related work in this direction is EASGD~\citep{zhang2015deep} which trains multiple deep networks in parallel and encourages individual models to explore by modulating their distance to the ensemble average; this is a special case of robust ensembles, as introduced in~\citet{baldassi2016unreasonable}.
 
-An ensemble training procedure thus provides improved generalization but it incurs a large complexity in terms of hardware and communication across workers. In this paper, we construct an optimization algorithm for a general deep network that can exploit the same phenomenon of out-of-equilibrium dense clusters but does not require distributed training. The enabling technique in our case is that we approximate the local entropy using Langevin dynamics. \citet{baldassi2016unreasonable} instead employ belief propagation to do so; this can only be done for simpler perceptron models considered there.
+An ensemble training procedure thus provides improved generalization but it incurs a large complexity in terms of hardware and communication across workers. In this paper, we construct an optimization algorithm for a general deep network that can exploit the same phenomenon of out-of-equilibrium dense clusters but does not require distributed training. The enabling technique in our case is that we approximate the local entropy using Langevin dynamics. \citet{baldassi2016local} instead employ belief propagation to do so, but it's not clear whether this scales well beyond the shallow networks considered there.
 
-The authors in~\citet{hochreiter1997flat} introduce hard constraints on the width of local minima and training loss and show using the Gibbs formalism~\citep{haussler1997mutual} that this leads to improved generalization. However, as they mention, the effect of hyper-parameters for these constraints is intricately tied together and they are difficult to choose even for small problems. Their formulation depends on Hessian-vector products. It is unclear how this method could be scaled to modern deep networks. Motivated by the same final goal, viz., flat local minima, our approach eliminates these extraneous and difficult to control hyper-parameters and instead results in a scalable algorithm. Also recent work by~\citet{keskar2016large} is relevant in the context of the main theme of our paper. The authors estimate the loss in a neighborhood of the weights to argue that small batch size in SGD (i.e., larger gradient noise) generalizes better than large mini-batches and also results in significantly flatter minima.
+The authors in~\citet{hochreiter1997flat} introduce hard constraints on the width of local minima and training loss and show using the Gibbs formalism~\citep{haussler1997mutual} that this leads to improved generalization. \pc{Their analysis of the generalization performance (see their Sec. A1) necessitates a few unrealistic assumptions whereas in our analysis, as will be shown, we use uniform stability~\citet{bousquet2002stability} to obtain a precise characterization of generalization.}{} Furthermore, as they mention, the effect of hyper-parameters for the constraints they use is intricately tied together and they are difficult to choose even for small problems. Their formulation depends on Hessian-vector products. It is unclear how this method could be scaled to modern deep networks. Motivated by the same final goal, viz., flat local minima, our approach eliminates these extraneous and difficult to control hyper-parameters and instead results in a scalable algorithm. Also recent work by~\citet{keskar2016large} is relevant in the context of the main theme of our paper. The authors estimate the loss in a neighborhood of the weights to argue that small batch size in SGD (i.e., larger gradient noise) generalizes better than large mini-batches and also results in significantly flatter minima.
 
 In the sense that local entropy results in a smoother energy landscape (cf.\@ Sec.~\ref{ss:theoretical_properties}), it resembles continuation methods~\citep{allgower2012numerical} that convolve the loss function to solve sequentially refined optimization problems. These techniques however require a special class of loss functions where successively smaller convolutions result in minimizers that lie close to each other or closed-form expressions of smoothened loss functions~\citep{,DBLP:conf/icml/HazanLS16,mobahi2015link}; these may not be possible for deep networks with isolated minima and highly-nonlinear loss functions. Our modified objective instead weighs each location by the local entropy in its neighborhood and does not require stringent assumptions on the objective, it is also applicable to full-scale deep networks. %\pc{Let us also note that motivated from continuation,~\citet{gulcehre2016mollifying} insert annealed additive noise in the activation function to approximately convolve the original objective function.}{This paper is not related to our work, it is related to continuation. I don't see any reason to add this sentence}
 
-\section{Local entropy}
+\section{Local free entropy}
 \label{s:local_entropy}
 
-We first provide a simple intuition for the concept of local entropy of an energy landscape. Consider a cartoon energy landscape in Fig.~\ref{fig:scoping} where the x-axis denotes the configuration space of the parameters. We have constructed two local minima: a shallower although wider one at $x_{\trm{robust}}$ and a very sharp global minimum at $x_{\textrm{non-robust}}$. Under a Bayesian prior on the parameters, say a Gaussian of a fixed variance at locations $x_{\textrm{robust}}$ and $x_{\textrm{non-robust}}$ respectively, the wider local minimum has a higher log-likelihood than the sharp valley on the right. In discrete optimization problems, such wide local minima are dense clusters of solutions in the parameter space where nearby parameters have similar energy, say, the number of clauses violated in $k$-SAT~\citep{sipser2006introduction,achlioptas2006solution}. On the other hand, sharp local minima are isolated solutions that are far away from other solutions.
+We first provide a simple intuition for the concept of local free entropy of an energy landscape. Consider a cartoon energy landscape in Fig.~\ref{fig:scoping} where the x-axis denotes the configuration space of the parameters. We have constructed two local minima: a shallower although wider one at $x_{\trm{robust}}$ and a very sharp global minimum at $x_{\trm{non-robust}}$. Under a Bayesian prior on the parameters, say a Gaussian of a fixed variance at locations $x_{\trm{robust}}$ and $x_{\trm{non-robust}}$ respectively, the wider local minimum has a higher log-likelihood than the sharp valley on the right.
+%[This is incorrect -- k-SAT has different behavior.] In discrete optimization problems, such wide local minima are dense clusters of solutions in the parameter space where nearby parameters have similar energy, say, the number of clauses violated in $k$-SAT~\citep{sipser2006introduction,achlioptas2006solution}.
+\pc{On the other hand, sharp local minima are isolated solutions that are far away from other solutions.}{cite Baldassi in this section}
 
 \begin{wrapfigure}{r}{0.4\textwidth}
 \centering
@@ -129,43 +136,42 @@ We first provide a simple intuition for the concept of local entropy of an energ
 \vspace{0.2in}
 \end{wrapfigure}
 
-The above discussion suggests that parameters that lie in wider local minima like $x_{\trm{robust}}$, which may possibly have a higher loss than the global minimum, should generalize better than the ones that are simply at the global minimum. This motivates us to use a very well-known quantity from thermodynamics known as ``free energy'' (also sometimes called ``free entropy''):
-$$
-    \textrm{free energy} = \textrm{internal energy} - \textrm{temperature} \times \textrm{entropy}.
-$$
-Roughly, internal energy is the average energy of all configurations while entropy counts the number of distinct configurations in a physical system at a given temperature. In a neighborhood of $x_{\textrm{robost}}$, the entropy term term is small while internal energy is large. Conversely, near $x_{\textrm{non-robust}}$, internal energy is low while entropy is high. The ``negative free entropy'' computed locally near a particular configuration thus provides a way of picking large flat regions of landscape over sharp, narrow valleys in spite of the latter possibly having a lower loss. Quite conveniently, free energy is also the log-partition function of a system.
+The above discussion suggests that parameters that lie in wider local minima like $x_{\trm{robust}}$, which may possibly have a higher loss than the global minimum, should generalize better than the ones that are simply at the global minimum. This motivates us to maximize the ``local free entropy'' term presented in the introduction: In a neighborhood of $x_{\trm{robust}}$, that term is large because it includes the contributions from a whole region of good configurations; conversely, in the region near $x_{\trm{non-robust}}$ there are no such contributions except for the minimum itself and the resulting local free entropy is low. The local free entropy thus provides a way of picking large,
+approximately flat, regions of the landscape over sharp, narrow valleys in spite of the latter possibly having a lower loss. Quite conveniently, the local free entropy is also computed from the partition function with a local re-weighting term.
 
 Formally, for a parameter vector $x \in \reals^n$, consider a Gibbs distribution corresponding to a given energy landscape $f(x)$:
-\beq{
+\begin{equation}
     \P(x;\ \b) = Z_\b^{-1}\ \exp\ \rbrac{-\b\ f(x)};
     \label{eq:gibbs_original}
-}
-where $\b$ is known as the inverse temperature and $Z_\b$ is a normalizing constant. As $\b \to \infty$, the probability distribution above concentrates on the global minimum of $f(x)$ given as
-\beq{
-	x^* = \argmin_x\ f(x),
+\end{equation}
+where $\b$ is known as the inverse temperature and $Z_\b$ is a normalizing constant, also known 
+as the partition function in physics. As $\b \to \infty$, the probability distribution above concentrates on the global minimum of $f(x)$ (assuming it's unique) given as:
+\begin{equation}
+    x^* = \argmin_x\ f(x),
     \label{eq:argmin_generic}
-}
-which establishes the link between the Gibbs distribution and a generic optimization problem~\eqref{eq:argmin_generic}. We would instead like the probability distribution --- and therefore the underlying optimization problem --- to focus on flat regions such as $x_{\textrm{robust}}$. With this in mind, let us construct a modified Gibbs distribution:
-\beq{
+\end{equation}
+which establishes the link between the Gibbs distribution and a generic optimization problem~\eqref{eq:argmin_generic}. We would instead like the probability distribution --- and therefore the underlying optimization problem --- to focus on flat regions such as $x_{\textrm{robust}}$, as in the figure. With this in mind, let us construct a modified Gibbs distribution:
+\begin{equation}
     \P(x';\ x, \b, \g) = Z_{x,\b,\ \g}^{-1}\ \exp\ \rbrac{-\b\ f(x') - \b\ \f{\g}{2}\ \norm{x-x'}^2_2}.
     \label{eq:gibbs_modified}
-}
-The distribution in~\eqref{eq:gibbs_modified} is a function of a dummy variable $x'$ and is parameterized by the original location $x$. The parameter $\g$ biases the modified distribution~\eqref{eq:gibbs_modified} towards $x$; a large $\g$ results in a $P(x';\ x,\b,\g)$ with all its mass near $x$ irrespective of the energy landscape of $f(x')$. For small values of $\g$, the term $f(x')$ in the exponent dominates and the modified distribution is similar to the original Gibbs distribution in~\eqref{eq:gibbs_original}. We will set the inverse temperature $\b$ to $1$ because $\g$ affords us similar control on the Gibbs distribution.
+\end{equation}
+The distribution in~\eqref{eq:gibbs_modified} is a function of a dummy variable $x'$ and is parameterized by the original location $x$. The parameter $\g$ biases the modified distribution~\eqref{eq:gibbs_modified} towards $x$; a large $\g$ results in a $P(x';\ x,\b,\g)$ with all its mass near $x$ irrespective of the energy landscape of $f(x')$. For small values of $\g$, the term $f(x')$ in the exponent dominates and the modified distribution is similar to the original Gibbs distribution in~\eqref{eq:gibbs_original}. 
+%We will set the inverse temperature $\b$ to $1$ because $\g$ affords us similar control on the Gibbs distribution.
 
-\begin{definition}[Local entropy]
+\begin{definition}[Local free entropy]
 \label{def:local_entropy}
-The local free energy of the Gibbs distribution in~\eqref{eq:gibbs_original}, colloquially called ``local entropy'' in the sequel and denoted by $F(x, \g)$, is defined as the log-partition function of modified Gibbs distribution~\eqref{eq:gibbs_modified}, i.e.,
-\aeq{
-    F(x, \g) &= \log Z_{x, 1, \g} \notag\\
-    &= \log \int_{x'}\ \exp \Big(-f(x') - \f{\g}{2}\ \norm{x-x'}^2_2 \Big)\ dx'.
+The local free entropy of the Gibbs distribution in~\eqref{eq:gibbs_original}, colloquially called ``local entropy'' in the sequel and denoted by $F(x, \g)$, is defined as the log-partition function of modified Gibbs distribution~\eqref{eq:gibbs_modified}, i.e.,
+\begin{align}
+    F(x, \beta, \g) &= \log Z_{x, \beta, \g} \notag\\
+    &= \log \int_{x'}\ \exp \Big(-\beta f(x') - \f{\beta\g}{2}\ \norm{x-x'}^2_2 \Big)\ dx'.
     \label{eq:local_entropy}
-}
+\end{align}
 \end{definition}
-The parameter $\g$ is used to focus the modified Gibbs distribution upon a local neighborhood of $x$ and we call it a ``scope'' henceforth. Fig.~\ref{fig:scoping} shows the negative local entropy $-F(x, \g)$ for the original energy landscape. Note that $-F(x,\g)$ has a global minimum near $x_{\textrm{robust}}$ which is exactly what we want; indeed, $x_{\textrm{robust}}$ has a higher local entropy than $x_{\textrm{non-robust}}$.
+The parameter $\g$ is used to focus the modified Gibbs distribution upon a local neighborhood of $x$ and we call it a ``scope'' henceforth. Fig.~\ref{fig:scoping} shows the negative local entropy $-F(x, \b,  \g)$ for the original energy landscape. Note that $-F(x, \b, \g)$ has a global minimum near $x_{\textrm{robust}}$ which is exactly what we want; indeed, $x_{\textrm{robust}}$ has a higher local entropy than $x_{\textrm{non-robust}}$.
 
 Let us also note that the quantity we have defined as local entropy in Def.~\ref{def:local_entropy} is different from classical entropy which counts the number of likely configurations under a given distribution. This is given by
 $
-    - \int_{x'}\ \log \P(x';\ x, \g)\ d \P(x';\ x, \g)
+    - \int_{x'}\ \log \P(x';\ x, \b, \g)\ d \P(x';\ x, \b, \g)
 $
 for the Gibbs distribution in~\eqref{eq:gibbs_modified}. Minimizing classical entropy however does not differentiate between flat regions that have very high loss versus dense regions that lie deeper in the energy landscape. For instance, in Fig.~\ref{fig:scoping}, classical entropy is smallest in the neighborhood of $x_{\textrm{candidate}}$ which is a large region with very high loss on the training dataset and is unlikely to generalize well.
 \ignore{We could minimize a modified loss function of the form $f(x) + \lambda S(x, \g)$ whose gradient can be computed to be
@@ -184,37 +190,37 @@ with $g(x') = f(x') + \f{\g}{2}\ \norm{x-x'}^2_2$. The gradient of the entropy c
 We now present the $\entropysgd$ algorithm, a variant of SGD that is motivated from local entropy. Simply speaking, we modify the loss function of a deep network to include the negative local entropy from Sec.~\ref{s:local_entropy}. The gradient of the modified loss can then be computed using Langevin dynamics. The $\entropysgd$ algorithm (cf. Alg.~\ref{alg:entropysgd}) thus has a strong flavor of ``SGD-inside-SGD'': the outer SGD updates the parameters, while an inner SGD estimates the gradient of local entropy at each iteration.
 
 Consider a typical classification setting, let $x \in \reals^n$ be the weights of a deep neural network and $\xi_k \in \Xi$ be samples from a dataset $\Xi$ of size $N$. Let $f(x; \xi_k)$ be the loss function, e.g., cross-entropy of the classifier on a sample $\xi_k$. The original optimization problem is:
-\beq{
+\begin{equation}
     x^* = \argmin_x\ \f{1}{N}\ \sum_{k=1}^N\ f(x;\ \xi_k);
     \label{eq:dnn_objective}
-}
+\end{equation}
 where the objective $f(x, \xi_k)$ is typically, a non-convex function in both the weights $x$ and the sample $\xi_k$. The $\entropysgd$ algorithm instead solves the problem
-\beq{
+\begin{equation}
     x^*_{\entropysgd} = \argmin_x\ \r\ \rbrac{\f{1}{N}\ \sum_{k=1}^N\ f(x;\ \xi_k)} - F(x, \gamma;\ \Xi);
     \label{eq:entropysgd_objective}
-}
+\end{equation}
 where we have made the dependence of local entropy $F(x,\g)$ on the dataset $\Xi$ explicit. The objective in~\eqref{eq:entropysgd_objective} thus scales the original loss by a hyper-parameter $\rho$ and adds the negative local entropy term $F(x, \g, \Xi)$ introduced in Sec.~\ref{s:local_entropy}. The parameter $\rho$ allows us to control the contribution of the original back-propagated gradient in $\entropysgd$. Sec.~\ref{ss:intuition_local_entropy} and Sec.~\ref{ss:theoretical_properties} below discuss the effect of $\rho$ and the scoping parameter $\g$.
 
 \subsection{Computing the gradient of local entropy}
 \label{ss:grad_local_entropy}
 
 The gradient of local entropy over a randomly sampled mini-batch of $m$ samples denoted by $\xi_{\ell_i} \in \minibatch{\ell}$ for $i \leq m$ is easy to derive and is given by
-\beq{
+\begin{equation}
     \nabla_x F\rbrac{x, \g;\ \minibatch{\ell}} = -\g\ \rbrac{x - \ag{x';\ \minibatch{\ell}}};
     \label{eq:local_entropy_grad}
-}
+\end{equation}
 where the notation $\ag{\cdot}$ denotes an expectation of its arguments (we have again made the dependence on the data explicit) over a Gibbs distribution of the original optimization problem modified to focus on the neighborhood of $x$; this is given by
-\beq{
+\begin{equation}
     \P(x';\ x, \g) \propto\ \exp \sqbrac{-\rbrac{\f{1}{m}\ \sum_{i=1}^m\ f\rbrac{x;\ \xi_{\ell_i}}} - \f{\g}{2}\ \norm{x-x'}_2^2}.
     \label{eq:entropysgd_modified_gibbs}
-}
+\end{equation}
 Computationally, the gradient in~\eqref{eq:local_entropy_grad} involves estimating $\ag{x';\ \minibatch{\ell}}$ with the current weights fixed to $x$. This is an expectation over a Gibbs distribution and is hard to compute. We can however approximate it using Markov chain Monte-Carlo (MCMC) techniques. In this paper, we use stochastic gradient Langevin dynamics (SGLD)~\citep{welling2011bayesian} that is an MCMC algorithm for drawing samples from a Bayesian posterior and scales to large datasets using mini-batch updates. Please see Sec.~\ref{s:app:langevin} in the Supplement for a brief overview of SGLD. For our application, as lines 3-6 of Alg.~\ref{alg:entropysgd} show SGLD resembles a few iterations of SGD with additive gradient noise.
 
 The gradient of the first term in~\eqref{eq:entropysgd_objective} is computed using back-propagation and the final gradient is
-\beq{
+\begin{equation}
     \r\ \rbrac{\f{1}{m}\ \sum_{i=1}^m\ \nabla f(x;\ \xi_{k_i})} + \g\ \rbrac{x - \ag{x';\ \minibatch{\ell}}}.
     \label{eq:entropysgd_grad}
-}
+\end{equation}
 Note that we use different mini-batches (denoted by $k$ and $\ell$ respectively) to compute the back-propagated gradient and gradient of the local entropy. From our experiments, we observe that using the same mini-batches for the gradients performs marginally worse in terms of convergence speed. This is explained by the fact that local entropy is really a log-partition function and depends upon the entire dataset.
 
 \subsection{Intuition behind local entropy}
@@ -275,7 +281,7 @@ Let us note that although we have written Alg.~\ref{alg:entropysgd} in the class
 \subsection{Theoretical Properties}
 \label{ss:theoretical_properties}
 
-Our main result in this section is to show that $\entropysgd$ results in a smoother loss function and obtains better generalization error than the original objective~\eqref{eq:dnn_objective} if trained for the same number of iterations. Proofs are deferred to the Appendix (see Sec.~\ref{s:app:proofs}).
+\pc{Our main result in this section is to show that $\entropysgd$ results in a smoother loss function and obtains better generalization error than the original objective~\eqref{eq:dnn_objective} if trained for the same number of iterations. Proofs are deferred to the Appendix (see Sec.~\ref{s:app:proofs}).}{Clarify that the analysis here is only a sketch, it is not rigorous}
 
 With some overload of notation, we assume that the original loss $f(x)$ is $\b$-smooth, i.e., for all $x,y \in \reals^n$, we have $\norm{\nabla f(x) - \nabla f(y)} \leq \b\ \norm{x-y}$. We additionally assume for the purpose of analysis that no eigenvalue of the Hessian $\nabla^2 f(x)$ lies in the set $[-2 \g-c, c]$ for some small $c > 0$.
 %
@@ -299,22 +305,22 @@ We now employ the following theorem that bounds the stability of an optimization
 \begin{theorem}[\citet{hardt2015train}]
 \label{thm:generalization_bound_nonconvex}
 For an $\a$-Lipschitz and $\b$-smooth loss function, if SGD converges in $T$ iterations on $N$ samples with decreasing learning rate $\eta_t \leq 1/t$ the stability is bounded by
-\aeqs{
+\begin{align*}
     \e
     %&\leq \f{1}{N-1}\ \rbrac{1 + \f{1}{\b c}}\ \rbrac{2 c \a^2}^{\f{1}{1 + \b c}}\ T^{\f{\b c}{1 + \b c}}\\
     &\lessapprox \f{1}{N}\ \a^{1/(1 + \b)}\ T^{1 - 1/(1 + \b)}.
-}
+\end{align*}
 \end{theorem}
 %
 Using Lem.~\ref{lem:smoothness_reduction} and Thm.~\ref{thm:generalization_bound_nonconvex} we have
-\beq{
+\begin{equation}
     \e_{\ \entropysgd} \lessapprox \rbrac{\a\ T^{-1}}^{\rbrac{1 - \f{1}{1 + \g^{-1}c}}\ \b}\ \e_{\ \textrm{SGD}},
     \label{eq:stability_bound}
-}
+\end{equation}
 which shows that $\entropysgd$ generalizes better than SGD for all $T > \a$. For the objective~\eqref{eq:entropysgd_objective}, we have the constant $1 - \r - \f{1}{1 + \g^{-1}\ c}$ in the exponent instead.
 
 As an aside, it is easy to see from the proof of Lem.~\ref{lem:smoothness_reduction} that for a convex loss function $f(x)$, adding the local entropy term does not change the minimizer of the original problem.
- 
+
 \section{Experiments}
 \label{s:expt}
 
@@ -451,7 +457,7 @@ Fig.~\ref{fig:allcnn} compares $\entropysgd$ against SGD with $20$ SGLD iteratio
 
 As discussed in Sec.~\ref{ss:intuition_local_entropy}, SGLD updates in the inner loop of our algorithm compute the average gradient of the original loss in the neighborhood of the current weights. An inexpensive and approximate way of computing these updates is to average the gradient over random perturbations of weights during the forward pass itself and, on the same mini-batch as the outer loop. In our experiments, using the same mini-batch performs slightly worse than $\entropysgd$ although it is still better than SGD. Such an implementation is close to averaged SGD of~\citep{polyak1992acceleration,bottou2012stochastic} and worth further study.
 
-In our experiments, $\entropysgd$ results in a comparable generalization error as SGD, but always has a lower cross-entropy loss. Roughly speaking, wide valleys favored by $\entropysgd$ seem to have lower empirical loss than local minima discovered by SGD. Theoretical models of deep networks (cf.\@ Sec.~\ref{s:prior_work}) suggest multiple local minima with the same loss but there is an absence of results in literature about the local geometry at these minima.
+In our experiments, $\entropysgd$ results in a comparable generalization error as SGD, but always has a lower cross-entropy loss on the training set. Roughly speaking, wide valleys favored by $\entropysgd$ seem to have lower empirical loss than local minima discovered by SGD. Theoretical models of deep networks (cf.\@ Sec.~\ref{s:prior_work}) suggest multiple local minima with the same loss but there is an absence of results in literature about the local geometry at these minima.
 
 \section{Conclusions}
 \label{s:conclusions}
@@ -480,20 +486,20 @@ This work was supported by the Office of Naval Research (ONR), Air Force Office 
 Local entropy in Def.~\eqref{def:local_entropy} is an expectation over the entire configuration space $x \in \reals^n$ and is hard to compute, we can however approximate its gradient using Markov chain Monte-Carlo (MCMC) techniques. In this section, we briefly review stochastic gradient Langevin dynamics~\citep{welling2011bayesian} that is an MCMC algorithm designed to draw samples from a Bayesian posterior and scales to large datasets using mini-batch updates.
 
 For a parameter vector $x \in \reals^n$ with a prior distribution $p(x)$ and if the probability of generating a data item $\xi_k$ given a model parameterized by $x$ is $p(\xi_k \given x)$, the posterior distribution of the parameters based on $N$ data items can be written as
-\beq{
+\begin{equation}
     p\rbrac{x \given \xi_{\ k \leq N}}\ \propto\ p(x)\ \prod_{k=1}^N\ p\rbrac{\xi_k \given x}.
     \label{eq:bayesian_posterior}
-}
+\end{equation}
 Langevin dynamics~\citep{neal2011mcmc} injects Gaussian noise into maximum-a-posteriori (MAP) updates to prevent over-fitting the solution $x^*$ of the above equation. The updates can be written as
-\beq{
+\begin{equation}
     \Delta x_t = \f{\eta}{2}\ \rbrac{ \nabla \log p(x_t) + \sum_{k=1}^N\ \nabla p(\xi_k \given x_t)} + \sqrt{\eta}\ \e_t;
     \label{eq:langevin_bayesian}
-}
+\end{equation}
 where $\e_t \sim \trm{N}(0, 1)$ is Gaussian noise and $\eta$ is the learning rate. In this form, Langevin dynamics faces two major hurdles for applications to large datasets. First, computing the gradient $\sum_{k=1}^N\ \nabla p(\xi_k \given x_t)$ over all samples for each update $\Delta x_t$ becomes prohibitive. However, as~\citet{welling2011bayesian} show, one can instead simply use the average gradient over $m$ data samples (mini-batch) as follows:
-\beq{
+\begin{equation}
     \Delta x_t = \f{\eta_t}{2}\ \rbrac{ \nabla \log p(x_t) + \f{N}{m}\ \sum_{k=1}^m\ \nabla p(\xi_k \given x_t)} + \sqrt{\eta_t}\ \e_t.
     \label{eq:sgld_bayesian}
-}
+\end{equation}
 Secondly, Langevin dynamics in~\eqref{eq:langevin_bayesian} is the discrete-time approximation of a continuous-time stochastic differential equation~\citep{mandt2016variational} thereby necessitating a Metropolis-Hastings (MH) rejection step~\citep{roberts2002langevin} which again requires computing $p(\xi_k \given x)$ over the entire dataset. However, if the learning rate $\eta_t \to 0$, we can also forgo the MH step~\citep{chen2014stochastic}. \citet{welling2011bayesian} also argue that the sequence of samples $x_t$ generated by updating~\eqref{eq:sgld_bayesian} converges to the correct posterior~\eqref{eq:bayesian_posterior} and one can hence compute the statistics of any function $g(x)$ of the parameters using these samples. Concretely, the posterior expectation $\E\sqbrac{g(x)}$ is given by
 $
     \E\sqbrac{g(x)} \approx \f{\sum_{s=1}^t \eta_t\ g(x_t)}{\sum_{s=1}^t \eta_t};
@@ -507,23 +513,23 @@ Let us note that there is a variety of increasingly sophisticated MCMC algorithm
 
 \begin{proof}[Proof of Lemma~\ref{lem:smoothness_reduction}]
 The gradient $-\nabla F(x)$ is computed in Sec.~\ref{ss:grad_local_entropy} to be $\g\ \rbrac{x - \ag{x';\ \minibatch{\ell}}}$. Consider the term
-\aeqs{
+\begin{align*}
     x - \ag{x';\ x}
     &= x - Z_{x,\g}^{-1}\ \int_{x'}\ x'\ e^{-f(x') - \f{\g}{2}\ \norm{x-x'}^2}\ dx'\\
     &\approx x - Z_{x,\g}^{-1}\ \int_{s}\ (x + s)\ e^{-f(x) - \nabla f(x)^\top s - \f{1}{2}\ s^\top \rbrac{\g + \nabla^2 f(x)} s}\ ds\\
     &= x\rbrac{1 -  Z_{x,\g}^{-1}\ \int_{s}\ e^{-f(x) - \nabla f(x)^\top s - \f{1}{2}\ s^\top \rbrac{\g + \nabla^2 f(x)} s}\ ds} - Z_{x,\g}^{-1}\ \int_{s}\ s\ e^{-f(x) - \nabla f(x)^\top s - \f{1}{2}\ s^\top \rbrac{\g + \nabla^2 f(x)} s}\ ds\\
     &= -Z_{x,\g}^{-1}\ e^{-f(x)}\ \int_{s}\ s\ e^{-\nabla f(x)^\top s - \f{1}{2}\ s^\top \rbrac{\g + \nabla^2 f(x)} s}\ ds.
-}
+\end{align*}
 The above expression is the mean of a distribution $\propto e^{-\nabla f(x)^\top s - \f{1}{2}\ s^\top \rbrac{\g + \nabla^2 f(x)} s}$. We can approximate it using the saddle point method as the value of $s$ that minimizes the exponent to get
 $$
     x - \ag{x';\ x} \approx \rbrac{\nabla^2 f(x) + \g\ I}^{-1}\ \nabla f(x).
 $$
 Let us denote $A(x) := \rbrac{I + \g^{-1}\ \nabla^2 f(x)}^{-1}$. Plugging this into the condition for smoothness, we have
-\aeqs{
+\begin{align*}
     \norm{\nabla F(x, \g) - \nabla F(y, \g)}
     &= \norm{A(x)\ \nabla f(x) - A(y)\ \nabla f(y)}\\
     &\leq \rbrac{\sup_x\ \norm{A(x)}}\ \b\ \norm{x-y}.
-}
+\end{align*}
 Unfortunately, we can only get a uniform bound if we assume that for a small constant $c > 0$, no eigenvalue of $\nabla^2 f(x)$ lies in the set $[-2 \g -c, c]$. This gives
 $$
     \rbrac{\sup_x\ \norm{A(x)}} \leq \f{1}{1+\g^{-1}\ c}.
@@ -536,26 +542,26 @@ This shows that a smaller value of $\g$ results in a smoother energy landscape, 
 \label{s:app:spin_glass}
 
 As an pedagogical example of a local entropy based loss function, we first consider the optimization of a well-studied model in statistical physics known as a mixed spherical spin glass~\citep{talagrand2003spin}. For $J^2_{ijk},\ J^3_{ijk} \sim \trm{N}(0,1)$, the energy of a spin glass is given by
-\beq{
+\begin{equation}
     H(x) = \f{1}{10\ \sqrt{n}}\ \sum_{i,j=1}^n\ J^2_{ij}\ x_i\ x_j + \f{1}{n} \sum_{i,j,k=1}^n\ J^3_{ijk}\ x_i\ x_j\ x_k
     \label{eq:sg_hamiltonian}
-}
+\end{equation}
 where the parameter vector $x \in \reals^n$ is called the ``spin''. A spherical spin glass is a Gaussian field on the sphere, i.e., we have an additional constraint $\norm{x}^2_2 = n$ or $x \in S^{n-1}(\sqrt{n})$. We are interested in computing
-\beq{
+\begin{equation}
     x^*_H = \argmin_{x \in S^{n-1}(\sqrt{n})}\ H(x).
     \label{eq:3sg}
-}
+\end{equation}
 This is a non-convex problem and in general, hard; the number of local minima and saddle points of $H(x)$ scale exponentially in $n$~\citep{auffinger2013random}. However, using results from statistical physics, one can show that all local minima concentrate around the global minimum~\citep{panchenko2013sherrington}:
 $$
     \lim_{n \to \infty}\ \inf_{x \in S^{n-1}(\sqrt{n})}\ \f{H(x)}{n} \approx -1.8227.
 $$
 We have chosen a mixed spin glass in~\eqref{eq:sg_hamiltonian} to ensure that the Hamiltonian has both deep, narrow local minima belonging to the $3$-spin term $x_i x_j x_k$ and wide, shallower valleys resulting from the $2$-spin term $x_i x_j$ with a small curvature.
-%Moreover, since the Hamiltonian is isotropic, all local minima have an almost equivalent local geometry of the energy landscape, in particular, the Euclidean Hessian $\nabla^2 H(x) \in \reals^{(n-1) \times (n-1)}$ belongs to the Gaussian Orthogonal Ensemble (modulo a constant). 
+%Moreover, since the Hamiltonian is isotropic, all local minima have an almost equivalent local geometry of the energy landscape, in particular, the Euclidean Hessian $\nabla^2 H(x) \in \reals^{(n-1) \times (n-1)}$ belongs to the Gaussian Orthogonal Ensemble (modulo a constant).
 Our modified optimization problem with a negative local entropy term is given by
-\beq{
+\begin{equation}
     x^*_f = \argmin_{x \in S^{n-1}(\sqrt{n})}\ \rho H(x) - F(x, \g);
     \label{eq:3sg_modified}
-}
+\end{equation}
 with $\rho = 0.01$ and $\g = 10^{-4}$ and the local entropy $F(x, \g)$ is the log-partition function of
 $$
     \P(x';\ x, \g) \propto \exp \rbrac{-H(x') - \f{\g}{2}\ x^\top\ x'}
@@ -569,4 +575,4 @@ Fig.~\ref{fig:expt:sg} shows the results of this simulation. As expected, the so
 
 \end{appendices}
 
-\end{document}
+\end{document} 

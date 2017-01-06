@@ -68,3 +68,63 @@ One could argue that accuracy in the approximation of HVP does not matter in pra
 [LSP93] LeCun, Yann, Patrice Y. Simard, and Barak Pearlmutter. "Automatic learning rate maximization by on-line estimation of the Hessian’s eigenvectors." NIPS (1993).
 [P94] Pearlmutter, Barak A. "Fast exact multiplication by the Hessian." Neural computation 6.1 (1994): 147-160.
 [M10] Martens, James. "Deep learning via Hessian-free optimization." ICML (2010).
+
+
+-----------------------------------------------------------------------
+
+
+
+REBUTTAL
+ 
+We thank the Reviewers and others for their valuable feedback. We incorporated all specific comments into our current draft. We respond below to all reviewers with a general comment (all reviews and comments are also individually addressed by us):
+a) Smoothing the original loss function vs. local entropy
+- smoothing does not bias towards wide minima (e.g., many sharp minima that are close by will be unaffected), it might reduce the ruggedness of the landscape
+- Refer to Fig. 1, the local-entropy landscape is indeed smoother, but more importantly, it has a global minimum in a wide valley.
+- smoothing = local entropy only for a large \gamma
+
+b) [comment about the speed]
+
+c) eigenvalues
+[fix] Our generalization bound in Thm. 3 relies upon an assumption that requires the Hessian to not have eigenvalues in the set [-2 \gamma-c, c], where the constant c depends on both the dataset and the architecture; this is unfortunately quite unnatural. Our argument is indeed only a sketch and we will clarify this. It also uses Laplace's method to show that the modified loss function is smoother; this is valid only for large values of \gamma. We would however like to point out that one requires the bound to hold only during the optimization and not everywhere in the landscape (as Fig. 1 shows, this assumption is not true at the ~local minima themselves). A rigorous proof of such a statement however requires an analysis of the dynamics of SGD and is currently out of reach.
+
+
+------------------
+AnonReviewer4:
+
+(1) The confusion about the two claims is probably caused by the wording of our remark, which is a statement about the energy landscape based on our experimental results. We always get an equivalent or better generalization error using Entropy-SGD and a lower cross-entropy loss on the _training set_ (Fig. 5a). This suggests that there are wide local minima at lower energy levels in the energy landscape which Entropy-SGD manages to find.
+
+(2) Please see the updates above for additional experiments that demonstrate acceleration in wall-clock time with respect to SGD.
+
+(3) Please see the latest updates to the paper. We can now train all our networks with only the local entropy loss, i.e., rho = 0, using scoping on the parameter \gamma.
+
+(4) [fix] We have expanded the discussion on [HS97] in Sec. 2 to dwell upon the a few similarities. We agree that the Gibbs formalism to prove improved generalization of flat minima is a promising direction for further analysis. The Gibbs variant to averaging in weight space (Eqn. 33, pg. 22 of [HS97]) is similar to the averaging in Eqn. 7 of our paper.
+
+------------------
+Csaba Szepesvari:
+
+__Related work__: We have expanded the discussion regarding [Baldassi et. al. '16] in Sec. 2 and Sec. 3.
+
+------------------
+AnonReviewer1:
+
+Thanks, it should indeed be f(x') in Eqn. 8. 
+
+We have significantly expanded the experimental section and also added an experiment that trains an LSTM on the Penn Tree Bank corpus. Please see updates to the paper for more details.
+
+------------------
+AnonReviewer2:
+
+4. We set c from Thm. 3.12 of Hardt's paper to be 1 for clarity (c is the initial learning rate). Including it in the exponent does not change our analysis.
+
+------------------
+Areachair1 [Stefano should maybe edit and post that comment]:
+
+Re: You should make these connections clearer and more explicit
+We have discussed this in depth with sufficient technical details above. Using terms like "similar to motivations of Bayesian methods" and "using Bayesian methods in the inner loop" is generalizing to the point of absurdity.
+
+It is not accurate to term local entropy as "SVI with a moving prior" for a number of reasons. "SVI with a moving prior" has no theoretical basis. It is not connected to the log-likelihood of data, it is connected to local entropy instead. As we have discussed above, local entropy *resembles* SVI with a moving prior but only in an extremely non-rigorous and merely conceptual fashion.
+
+We have updated the experiments in our paper. We now plot the number of gradient evaluations on the x-axis and using scoping, we can in fact show that local entropy performs better in a smaller amount of time. As requested, we have also added a section comparing local-entropy with SGLD.
+
+Re: Exact Hessian-vector product is easy to compute
+We have discussed this above (see the comment regarding [P94]). Computing the "exact" HVP requires averaging over the entire dataset, i.e., ~4x the complexity of one epoch, which is expensive.
