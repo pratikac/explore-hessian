@@ -19,6 +19,7 @@
 \setlength{\belowdisplayskip}{0.05in}
 
 % notation goes here
+\newcommand\red[1]{{\color{red}#1}}
 \newcommand{\entropysgd}{\mathrm{Entropy}\textrm{-}\mathrm{SGD}}
 \newcommand{\minibatch}[1]{\Xi^{#1}}
 \newcommand{\mnistfc}{\textrm{mnistfc}}
@@ -29,8 +30,9 @@
 
 \title{Entropy-SGD: Biasing Gradient Descent Into Wide Valleys}
 
-\author{Pratik Chaudhari$^{1}$, Anna Choromanska$^{2}$, Stefano Soatto$^{1}$, Yann LeCun$^{2,3}$, Carlo Baldassi$^{4}$,\\[0.03in]
-\textbf{Christian Borgs$^{5}$, Jennifer Chayes$^{5}$, Riccardo Zecchina$^{4}$}\\[0.05in]
+\author{Pratik Chaudhari$^{1}$, Anna Choromanska$^{2}$, Stefano Soatto$^{1}$, Yann LeCun$^{2,3}$, \red{Carlo Baldassi$^{4}$},\\[0.03in]
+\red{\textbf{Christian Borgs$^{5}$, Jennifer Chayes$^{5}$, 
+Riccardo Zecchina$^{4}$}}\\[0.05in]
 $^{1}$ Computer Science, University of California, Los Angeles.\\
 $^{2}$ Courant Institute of Mathematical Sciences, New York University.\\
 $^{3}$ Facebook AI Research, New York.\\
@@ -45,6 +47,7 @@ Email:\ \href{mailto:pratikac@ucla.edu}{pratikac@ucla.edu},
 {\footnotesize
 \hspace{0.33in} \href{mailto:borgs@microsoft.com}{borgs@microsoft.com},
 \href{mailto:jchayes@microsoft.com}{jchayes@microsoft.com},
+\red{\href{mailto:leventsagun@gmail.com}{leventsagun@gmail.com},}
 \href{mailto:riccardo.zecchina@polito.it}{riccardo.zecchina@polito.it}
 }}
 
@@ -70,22 +73,26 @@ Email:\ \href{mailto:pratikac@ucla.edu}{pratikac@ucla.edu},
 \maketitle
 
 \begin{abstract}
-This paper proposes a new optimization algorithm called $\entropysgd$ for training deep neural networks that is motivated by the local geometry of the energy landscape. We construct a local-entropy-based objective function that favors well-generalizable solutions lying in large flat regions of the energy landscape, while avoiding poorly-generalizable solutions located in the sharp valleys. Our algorithm resembles two nested loops of SGD, where we use Langevin dynamics to compute the gradient of the local entropy at each update of the weights. We prove that incorporating the local entropy into the objective function results in a smoother energy landscape, and we use uniform stability to show improved generalization bounds over SGD. Our experiments on competitive baselines demonstrate that $\entropysgd$ alone leads to generalization performances that compare with state of the art techniques and has the potential to accelerate training.
+This paper proposes a new optimization algorithm called $\entropysgd$ for training deep neural networks that is motivated by the local geometry of the energy landscape. We construct a local-{\color{red}free-}entropy-based objective function that favors well-generalizable solutions lying in large flat regions of the energy landscape, while avoiding poorly-generalizable solutions located in the sharp valleys. Our algorithm resembles two nested loops of SGD, where we use Langevin dynamics to compute the gradient of the local-{\color{red}free-}entropy at each update of the weights. We prove that incorporating the local entropy into the objective function results in a smoother energy landscape, and we use uniform stability to show improved generalization bounds over SGD. Our experiments on competitive baselines demonstrate that $\entropysgd$ alone leads to generalization performances that compare with state of the art techniques and has the potential to accelerate training.
 \pc{}{We also perform a direct comparison between the information provided by the local entropy measure and the analysis of the Hessian in qualitatively different minima.}
 \end{abstract}
 
 \section{Introduction}
 \label{s:intro}
-This paper presents a new optimization tool for deep learning, designed to exploit the local geometrical properties of the objective function. Recent works on shallow networks with discrete weights~\citep{baldassi2015subdominant,baldassi2016unreasonable} have shown that the geometrical structure of the energy landscape is characterized by the existence of an exponentially large number of local minima, a large number of narrow isolated minima, and few very dense regions of minima. These dense states have been discovered analytically by adopting an appropriate local entropy measure, and have been shown to be both algorithmically accessible and to have good generalization properties in both random and real-world settings. The original analysis was done in the case of binary weights, and was later generalized by~\citet{baldassi2016multilevel} to the case of weights with an arbitrary number of precision bits. Here, we generalize this approach to the case of deep architectures and continuous weights, and develop a Langevin stochastic gradient descent algorithm based on the local entropy measure.
+This paper presents a new optimization tool for deep learning, designed to exploit the local geometrical properties of the objective function. \red{Recent works on shallow networks with discrete weights~\citep{baldassi2015subdominant,baldassi2016unreasonable} have shown that the geometrical structure of the energy landscape is characterized by the existence of an exponentially large number of local minima, a large number of narrow isolated minima, and few very dense regions of minima. These dense states have been discovered analytically by adopting an appropriate local entropy measure, and have been shown to be both algorithmically accessible and to have good generalization properties in both random and real-world settings. The original analysis was done in the case of binary weights, and was later generalized by~\citet{baldassi2016multilevel} to the case of weights with an arbitrary number of precision bits. Here, we generalize this approach to the case of deep architectures and continuous weights, and develop a Langevin stochastic gradient descent algorithm based on the local entropy measure.}
 
-The existence of wide minima in deep networks is also suggested by the spectral analysis of the Hessian. Consider the histogram in Fig.~\ref{fig:lenet_hessian}, showing the spectrum of the Hessian at the endpoint of the optimization performed by Adam~\citep{kingma2014adam} for a convolutional neural network on MNIST~\citep{lecun1998gradient} with about $47,000$ weights (cf.\@ Sec.~\ref{ss:expt:universality}). It is evident that:
+\red{The existence of wide minima in deep networks is also suggested by the spectral analysis of the Hessian~\citep{sagun2016singularity}.} Consider the histogram in Fig.~\ref{fig:lenet_hessian}, showing the spectrum of the Hessian at the endpoint of the optimization performed by Adam~\citep{kingma2014adam} for a convolutional neural network on MNIST~\citep{lecun1998gradient} with about $47,000$ weights (cf.\@ Sec.~\ref{ss:expt:universality}). It is evident that:
 \begin{enumerate}[(i)]
 \item a large number of directions ($\approx 94\%$) have near-zero eigenvalues (magnitude less than $10^{-4}$),
 \item positive eigenvalues (right inset) have a long tail with the largest one being almost $40$,
 \item negative eigenvalues (left inset), which are directions of descent that the optimizer missed, have a much faster decay (the largest negative eigenvalue is only $-0.4$).
 \end{enumerate}
-Interestingly, this trend is not unique to this particular network. Rather, its qualitative properties are shared across a variety of network architectures, sizes, datasets or optimization algorithms (see references in Sec.~\ref{s:prior_work}, and Sec.~\ref{s:expt} for more experiments). \pc{Local minima}{We are using the term ``local minima'' loosely here, since a few of the eigenvalues of the Hessian may be slightly negative} that generalize well and are discovered by gradient descent lie in "wide valleys" of the energy landscape, rather than in sharp isolated minima. For an intuitive understanding of this phenomenon, imagine a Bayesian prior concentrated at the minimizer of the expected loss, the likelihood of wide valleys under this prior is much higher than narrow, sharp valleys even if the latter are close to the global minimum in training loss.
-Almost-flat regions of the energy landscape are robust to data perturbations, noise in the activations, as well as perturbations of the parameters --- all of which are widely-used techniques to achieve good generalization. This suggests that wide valleys should result in better generalization and, indeed, standard optimization algorithms in deep learning --- without being explicitly tailored to do so --- seem to discover exactly that.
+Interestingly, this trend is not unique to this particular network. Rather, its qualitative properties are shared across a variety of network architectures, sizes, datasets or optimization algorithms (see references in Sec.~\ref{s:prior_work}, and Sec.~\ref{s:expt} for more experiments). \pc{Local minima}{We are using the term ``local minima'' loosely here, since a few of the eigenvalues of the Hessian may be slightly negative} that generalize well and are discovered by gradient descent lie in ``wide valleys'' of the energy landscape, rather than in sharp isolated minima. 
+\red{We are using the term ``local minima'' loosely here, since a few of the eigenvalues of the Hessian may be slightly negative and the norm of the gradient is slightly above zero.}
+
+For an intuitive understanding of this phenomenon, imagine a Bayesian prior concentrated at the minimizer of the expected loss, the likelihood of wide valleys under this prior is much higher than narrow, sharp valleys even if the latter are close to the global minimum in training loss.
+Almost-flat regions of the energy landscape are robust to data perturbations, noise in the activations, as well as perturbations of the parameters --- all of which are widely-used techniques to achieve good generalization. This suggests that wide valleys should result in better generalization and, indeed, standard optimization algorithms in deep learning --- without being explicitly tailored to do so --- seem to discover exactly that. \red{For a more detailed recent
+analysis of the Hessian, see the parallel work of~\citet{sagun2016singularity}.}
 
 \begin{figure}[tbh]
 % \vspace*{-0.1in}
@@ -95,13 +102,13 @@ Almost-flat regions of the energy landscape are robust to data perturbations, no
 \label{fig:lenet_hessian}
 \end{figure}
 
-Based on this understanding of how the local geometry looks at the end of optimization, can we modify SGD to actively seek such regions? Motivated by the work of~\citet{baldassi2015subdominant,baldassi2016unreasonable} on shallow networks, we propose to replace the original loss function $f(x)$ by:
+Based on this understanding of how the local geometry looks at the end of optimization, can we modify SGD to actively seek such regions? \red{Motivated by the work of~\citet{baldassi2015subdominant,baldassi2016unreasonable} on shallow networks,} we propose to replace the original loss function $f(x)$ by:
 $$	
 % \rho
 f(x) 
 - \log \int_{x' \in \reals^n}\ \exp \rbrac{-\b f(x') - \f{\b \g}{2}\ \norm{x-x'}^2_2}\ dx'.
 $$
-The second term measures both the depth of a valley at a location  $x \in \reals^n$, and its flatness through the entropy of $f(x')$;  we call it the {\it local free entropy} in analogy to the free entropy in statistical physics. The $\entropysgd$ algorithm presented in this paper employs a few iterations of stochastic gradient Langevin dynamics (SGLD) to approximate the second term before each update of the parameters using the back-propagated gradient. At a conceptual level, this algorithm resembles running two nested loops of SGD. We show that the above modified loss function results in a smoother energy landscape defined by the hyper-parameter $\g$ which we can think of as a ``scope'' that seeks out valleys of specific widths. Actively biasing towards wide valleys aids generalization, in fact, we can optimize solely the free energy term to obtain similar generalization error as SGD on the original loss function. Our experiments in Sec.~\ref{s:expt} on MNIST and CIFAR-10~\citep{krizhevsky2009learning} show that $\entropysgd$ scales to deep networks used in practice and in terms of the number of updates to the parameters, trains much more quickly than SGD.
+The second term measures both the depth of a valley at a location  $x \in \reals^n$, and its flatness through the entropy of $f(x')$;  \red{we call it the {\it local free entropy} in analogy to the free entropy in statistical physics.} The $\entropysgd$ algorithm presented in this paper employs a few iterations of stochastic gradient Langevin dynamics (SGLD) to approximate the second term before each update of the parameters using the back-propagated gradient. At a conceptual level, this algorithm resembles running two nested loops of SGD. We show that the above modified loss function results in a smoother energy landscape defined by the hyper-parameter $\g$ which we can think of as a ``scope'' that seeks out valleys of specific widths. Actively biasing towards wide valleys aids generalization, in fact, we can optimize solely the free energy term to obtain similar generalization error as SGD on the original loss function. Our experiments in Sec.~\ref{s:expt} on MNIST and CIFAR-10~\citep{krizhevsky2009learning} show that $\entropysgd$ scales to deep networks used in practice and in terms of the number of updates to the parameters, trains much more quickly than SGD.
 
 \section{Related work}
 \label{s:prior_work}
@@ -121,7 +128,7 @@ The authors in~\citet{hochreiter1997flat} introduce hard constraints on the widt
 
 In the sense that local entropy results in a smoother energy landscape (cf.\@ Sec.~\ref{ss:theoretical_properties}), it resembles continuation methods~\citep{allgower2012numerical} that convolve the loss function to solve sequentially refined optimization problems. These techniques however require a special class of loss functions where successively smaller convolutions result in minimizers that lie close to each other or closed-form expressions of smoothened loss functions~\citep{,DBLP:conf/icml/HazanLS16,mobahi2015link}; these may not be possible for deep networks with isolated minima and highly-nonlinear loss functions. Our modified objective instead weighs each location by the local entropy in its neighborhood and does not require stringent assumptions on the objective, it is also applicable to full-scale deep networks. %\pc{Let us also note that motivated from continuation,~\citet{gulcehre2016mollifying} insert annealed additive noise in the activation function to approximately convolve the original objective function.}{This paper is not related to our work, it is related to continuation. I don't see any reason to add this sentence}
 
-\section{Local free entropy}
+\section{Local \red{free} entropy}
 \label{s:local_entropy}
 
 We first provide a simple intuition for the concept of local free entropy of an energy landscape. Consider a cartoon energy landscape in Fig.~\ref{fig:scoping} where the x-axis denotes the configuration space of the parameters. We have constructed two local minima: a shallower although wider one at $x_{\trm{robust}}$ and a very sharp global minimum at $x_{\trm{non-robust}}$. Under a Bayesian prior on the parameters, say a Gaussian of a fixed variance at locations $x_{\trm{robust}}$ and $x_{\trm{non-robust}}$ respectively, the wider local minimum has a higher log-likelihood than the sharp valley on the right.
