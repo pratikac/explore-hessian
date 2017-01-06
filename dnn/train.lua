@@ -229,12 +229,11 @@ function learning_rate_schedule()
     if opt.LRD > 0 then
         lr = opt.LR*(1-opt.LRD)^epoch
     else
-        --local s = math.floor(epoch/opt.LRstep)
-        --lr = opt.LR*opt.LRratio^s
+        -- all-cnn-bn on cifar10
         local regimes = {
             {1,4,1},
-            {5,6,0.25},
-            {7,12,0.1}
+            {5,6,0.2},
+            {7,12,0.01}
         }
         for _,row in ipairs(regimes) do
             if epoch >= row[1] and epoch <= row[2] then
@@ -305,7 +304,7 @@ function main()
         local f = torch.load(opt.retrain)
         model, optim_state = f.model, f.optim_state
         optim_state.learningRate = opt.LR
-        epoch = f.epoch
+        epoch = f.epoch + 1
         print('Will stop logging...')
         opt.log = false
     end
