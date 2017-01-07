@@ -144,6 +144,8 @@ function optim.entropysgd(opfunc, x, config, state)
     local lrs = config.learningRates
     local wds = config.weightDecays
 
+    local hessian_stats = false
+
     -- averaging parameters
     local beta1 = config.beta1 or 0.9
     local beta2 = config.beta2 or 0.999
@@ -165,10 +167,12 @@ function optim.entropysgd(opfunc, x, config, state)
     local fx,dfdx = opfunc(x, false)
     state.evalCounter = state.evalCounter + 1
 
-    -- Exponential moving average of gradient values
-    state.m = state.m or x.new(dfdx:size()):zero()
-    -- Exponential moving average of squared gradient values
-    state.v = state.v or x.new(dfdx:size()):zero()
+    if hessian_stats then
+        -- Exponential moving average of gradient values
+        state.m = state.m or x.new(dfdx:size()):zero()
+        -- Exponential moving average of squared gradient values
+        state.v = state.v or x.new(dfdx:size()):zero()
+    end
 
     -- (2) weight decay with single or individual parameters
     if wd ~= 0 then
@@ -269,8 +273,11 @@ function optim.entropysgd(opfunc, x, config, state)
     x:copy(xc)
     dfdx:add(lparams.w)
 
-    state.m:mul(beta1):add(1-beta1, dfdx)
-    state.v:mul(beta2):addcmul(1-beta2, dfdx, dfdx)
+    if hessian_stats then
+        state.m:mul(beta1):add(1-beta1, dfdx)
+        state.v:mul(beta2):addcmul(1-beta2, dfdx, dfdx)
+    end
+
     x:add(-clr, dfdx)
 
     return x,{fx}

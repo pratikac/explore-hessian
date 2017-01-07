@@ -31,7 +31,7 @@ function mnist.split(val_frac, small_frac)
     test.label:narrow(1, stest, num_test)
 
     return  {data=X, labels=Y, size=num_train}, 
-    {data=Xval, labels=Yval, size=num_val},
+    {data=Xtest, labels=Ytest, size=num_test},
     {data=Xtest, labels=Ytest, size=num_test}
 end
 

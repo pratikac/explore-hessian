@@ -1,0 +1,628 @@
+lstm git:(master)  th main.lua warning: fbcunn not found. Falling back to cunn
+Using 2-th gpu
+Loading ./data/ptb.train.txt, size of data = 929589
+Loading ./data/ptb.valid.txt, size of data = 73760
+Loading ./data/ptb.test.txt, size of data = 82430
+Network parameters:
+{
+  max_grad_norm : 10
+  seq_length : 35
+  batch_size : 20
+  lr : 1
+  max_max_epoch : 55
+  rnn_size : 1500
+  init_weight : 0.04
+  decay : 1.15
+  dropout : 0.65
+  layers : 2
+  vocab_size : 10000
+  max_epoch : 14
+}
+Creating a RNN LSTM network.
+Starting training.
+epoch = 0.008, train perp. = 10460.885, wps = 2180, dw:norm() = 60.280, lr = 1.000, since beginning = 0 mins.
+epoch = 0.108, train perp. = 8645.820, wps = 2572, dw:norm() = 3.872, lr = 1.000, since beginning = 1 mins.
+epoch = 0.208, train perp. = 6667.409, wps = 2590, dw:norm() = 5.345, lr = 1.000, since beginning = 1 mins.
+epoch = 0.308, train perp. = 5059.810, wps = 2596, dw:norm() = 5.300, lr = 1.000, since beginning = 2 mins.
+epoch = 0.408, train perp. = 3790.844, wps = 2599, dw:norm() = 6.465, lr = 1.000, since beginning = 2 mins.
+epoch = 0.509, train perp. = 2794.294, wps = 2601, dw:norm() = 9.138, lr = 1.000, since beginning = 3 mins.
+epoch = 0.609, train perp. = 2020.446, wps = 2602, dw:norm() = 6.851, lr = 1.000, since beginning = 4 mins.
+epoch = 0.709, train perp. = 1448.720, wps = 2603, dw:norm() = 7.333, lr = 1.000, since beginning = 4 mins.
+epoch = 0.809, train perp. = 1027.301, wps = 2604, dw:norm() = 7.851, lr = 1.000, since beginning = 5 mins.
+epoch = 0.910, train perp. = 722.436, wps = 2604, dw:norm() = 8.103, lr = 1.000, since beginning = 5 mins.
+Validation set perplexity : 283.091
+epoch = 1.010, train perp. = 478.635, wps = 2542, dw:norm() = 9.283, lr = 1.000, since beginning = 6 mins.
+epoch = 1.110, train perp. = 407.008, wps = 2547, dw:norm() = 8.191, lr = 1.000, since beginning = 7 mins.
+epoch = 1.210, train perp. = 368.769, wps = 2552, dw:norm() = 8.555, lr = 1.000, since beginning = 7 mins.
+epoch = 1.310, train perp. = 335.553, wps = 2556, dw:norm() = 7.965, lr = 1.000, since beginning = 8 mins.
+epoch = 1.411, train perp. = 310.004, wps = 2559, dw:norm() = 8.797, lr = 1.000, since beginning = 9 mins.
+epoch = 1.511, train perp. = 289.720, wps = 2563, dw:norm() = 8.734, lr = 1.000, since beginning = 9 mins.
+epoch = 1.611, train perp. = 273.003, wps = 2565, dw:norm() = 9.226, lr = 1.000, since beginning = 10 mins.
+epoch = 1.711, train perp. = 259.363, wps = 2568, dw:norm() = 8.983, lr = 1.000, since beginning = 10 mins.
+epoch = 1.812, train perp. = 248.041, wps = 2570, dw:norm() = 8.925, lr = 1.000, since beginning = 11 mins.
+epoch = 1.912, train perp. = 237.765, wps = 2572, dw:norm() = 9.745, lr = 1.000, since beginning = 12 mins.
+Validation set perplexity : 189.618
+epoch = 2.012, train perp. = 229.155, wps = 2542, dw:norm() = 9.279, lr = 1.000, since beginning = 12 mins.
+epoch = 2.112, train perp. = 221.446, wps = 2545, dw:norm() = 8.696, lr = 1.000, since beginning = 13 mins.
+epoch = 2.213, train perp. = 215.109, wps = 2548, dw:norm() = 9.083, lr = 1.000, since beginning = 13 mins.
+epoch = 2.313, train perp. = 208.798, wps = 2550, dw:norm() = 9.633, lr = 1.000, since beginning = 14 mins.
+epoch = 2.413, train perp. = 203.158, wps = 2552, dw:norm() = 9.684, lr = 1.000, since beginning = 15 mins.
+epoch = 2.513, train perp. = 197.977, wps = 2554, dw:norm() = 9.701, lr = 1.000, since beginning = 15 mins.
+epoch = 2.613, train perp. = 193.329, wps = 2556, dw:norm() = 9.526, lr = 1.000, since beginning = 16 mins.
+epoch = 2.714, train perp. = 189.301, wps = 2558, dw:norm() = 9.928, lr = 1.000, since beginning = 16 mins.
+epoch = 2.814, train perp. = 185.593, wps = 2559, dw:norm() = 10.864, lr = 1.000, since beginning = 17 mins.
+epoch = 2.914, train perp. = 181.769, wps = 2560, dw:norm() = 10.778, lr = 1.000, since beginning = 18 mins.
+Validation set perplexity : 154.267
+epoch = 3.014, train perp. = 178.419, wps = 2540, dw:norm() = 12.345, lr = 1.000, since beginning = 18 mins.
+epoch = 3.115, train perp. = 175.211, wps = 2542, dw:norm() = 10.818, lr = 1.000, since beginning = 19 mins.
+epoch = 3.215, train perp. = 172.595, wps = 2544, dw:norm() = 9.697, lr = 1.000, since beginning = 20 mins.
+epoch = 3.315, train perp. = 169.647, wps = 2546, dw:norm() = 10.323, lr = 1.000, since beginning = 20 mins.
+epoch = 3.415, train perp. = 166.796, wps = 2547, dw:norm() = 11.030, lr = 1.000, since beginning = 21 mins.
+epoch = 3.515, train perp. = 164.048, wps = 2549, dw:norm() = 11.157, lr = 1.000, since beginning = 21 mins.
+epoch = 3.616, train perp. = 161.553, wps = 2550, dw:norm() = 11.087, lr = 1.000, since beginning = 22 mins.
+epoch = 3.716, train perp. = 159.521, wps = 2552, dw:norm() = 10.571, lr = 1.000, since beginning = 23 mins.
+epoch = 3.816, train perp. = 157.380, wps = 2553, dw:norm() = 11.890, lr = 1.000, since beginning = 23 mins.
+epoch = 3.916, train perp. = 155.150, wps = 2554, dw:norm() = 10.840, lr = 1.000, since beginning = 24 mins.
+Validation set perplexity : 138.824
+epoch = 4.017, train perp. = 153.203, wps = 2540, dw:norm() = 11.311, lr = 1.000, since beginning = 24 mins.
+epoch = 4.117, train perp. = 151.177, wps = 2541, dw:norm() = 11.068, lr = 1.000, since beginning = 25 mins.
+epoch = 4.217, train perp. = 149.483, wps = 2543, dw:norm() = 10.643, lr = 1.000, since beginning = 26 mins.
+epoch = 4.317, train perp. = 147.634, wps = 2544, dw:norm() = 12.477, lr = 1.000, since beginning = 26 mins.
+epoch = 4.417, train perp. = 146.055, wps = 2546, dw:norm() = 11.595, lr = 1.000, since beginning = 27 mins.
+epoch = 4.518, train perp. = 144.447, wps = 2547, dw:norm() = 11.477, lr = 1.000, since beginning = 27 mins.
+epoch = 4.618, train perp. = 142.963, wps = 2548, dw:norm() = 11.647, lr = 1.000, since beginning = 28 mins.
+epoch = 4.718, train perp. = 141.404, wps = 2549, dw:norm() = 11.157, lr = 1.000, since beginning = 29 mins.
+epoch = 4.818, train perp. = 140.085, wps = 2550, dw:norm() = 12.000, lr = 1.000, since beginning = 29 mins.
+epoch = 4.919, train perp. = 138.669, wps = 2551, dw:norm() = 11.350, lr = 1.000, since beginning = 30 mins.
+Validation set perplexity : 126.811
+epoch = 5.019, train perp. = 137.315, wps = 2540, dw:norm() = 12.468, lr = 1.000, since beginning = 31 mins.
+epoch = 5.119, train perp. = 136.083, wps = 2541, dw:norm() = 11.339, lr = 1.000, since beginning = 31 mins.
+epoch = 5.219, train perp. = 134.923, wps = 2542, dw:norm() = 11.971, lr = 1.000, since beginning = 32 mins.
+epoch = 5.320, train perp. = 133.649, wps = 2543, dw:norm() = 12.020, lr = 1.000, since beginning = 32 mins.
+epoch = 5.420, train perp. = 132.475, wps = 2545, dw:norm() = 12.593, lr = 1.000, since beginning = 33 mins.
+epoch = 5.520, train perp. = 131.418, wps = 2546, dw:norm() = 11.820, lr = 1.000, since beginning = 34 mins.
+epoch = 5.620, train perp. = 130.360, wps = 2547, dw:norm() = 12.049, lr = 1.000, since beginning = 34 mins.
+epoch = 5.720, train perp. = 129.360, wps = 2548, dw:norm() = 12.170, lr = 1.000, since beginning = 35 mins.
+epoch = 5.821, train perp. = 128.452, wps = 2549, dw:norm() = 13.271, lr = 1.000, since beginning = 35 mins.
+epoch = 5.921, train perp. = 127.483, wps = 2550, dw:norm() = 13.111, lr = 1.000, since beginning = 36 mins.
+Validation set perplexity : 118.477
+epoch = 6.021, train perp. = 126.549, wps = 2540, dw:norm() = 12.853, lr = 1.000, since beginning = 37 mins.
+epoch = 6.121, train perp. = 125.569, wps = 2541, dw:norm() = 11.587, lr = 1.000, since beginning = 37 mins.
+epoch = 6.222, train perp. = 124.618, wps = 2542, dw:norm() = 13.769, lr = 1.000, since beginning = 38 mins.
+epoch = 6.322, train perp. = 123.666, wps = 2543, dw:norm() = 12.459, lr = 1.000, since beginning = 38 mins.
+epoch = 6.422, train perp. = 122.907, wps = 2544, dw:norm() = 12.446, lr = 1.000, since beginning = 39 mins.
+epoch = 6.522, train perp. = 122.023, wps = 2545, dw:norm() = 12.308, lr = 1.000, since beginning = 40 mins.
+epoch = 6.622, train perp. = 121.195, wps = 2546, dw:norm() = 12.815, lr = 1.000, since beginning = 40 mins.
+epoch = 6.723, train perp. = 120.438, wps = 2547, dw:norm() = 12.104, lr = 1.000, since beginning = 41 mins.
+epoch = 6.823, train perp. = 119.638, wps = 2547, dw:norm() = 13.830, lr = 1.000, since beginning = 41 mins.
+epoch = 6.923, train perp. = 118.893, wps = 2548, dw:norm() = 12.666, lr = 1.000, since beginning = 42 mins.
+Validation set perplexity : 112.524
+epoch = 7.023, train perp. = 118.206, wps = 2540, dw:norm() = 12.561, lr = 1.000, since beginning = 43 mins.
+epoch = 7.124, train perp. = 117.522, wps = 2541, dw:norm() = 12.564, lr = 1.000, since beginning = 43 mins.
+epoch = 7.224, train perp. = 116.957, wps = 2542, dw:norm() = 12.478, lr = 1.000, since beginning = 44 mins.
+epoch = 7.324, train perp. = 116.325, wps = 2543, dw:norm() = 12.929, lr = 1.000, since beginning = 45 mins.
+epoch = 7.424, train perp. = 115.670, wps = 2544, dw:norm() = 12.875, lr = 1.000, since beginning = 45 mins.
+epoch = 7.524, train perp. = 115.086, wps = 2544, dw:norm() = 13.175, lr = 1.000, since beginning = 46 mins.
+epoch = 7.625, train perp. = 114.502, wps = 2545, dw:norm() = 13.268, lr = 1.000, since beginning = 46 mins.
+epoch = 7.725, train perp. = 113.948, wps = 2546, dw:norm() = 12.875, lr = 1.000, since beginning = 47 mins.
+epoch = 7.825, train perp. = 113.323, wps = 2547, dw:norm() = 12.869, lr = 1.000, since beginning = 48 mins.
+epoch = 7.925, train perp. = 112.713, wps = 2547, dw:norm() = 13.386, lr = 1.000, since beginning = 48 mins.
+Validation set perplexity : 108.378
+epoch = 8.026, train perp. = 112.152, wps = 2540, dw:norm() = 13.949, lr = 1.000, since beginning = 49 mins.
+epoch = 8.126, train perp. = 111.583, wps = 2541, dw:norm() = 12.242, lr = 1.000, since beginning = 49 mins.
+epoch = 8.226, train perp. = 111.067, wps = 2542, dw:norm() = 12.918, lr = 1.000, since beginning = 50 mins.
+epoch = 8.326, train perp. = 110.493, wps = 2543, dw:norm() = 12.743, lr = 1.000, since beginning = 51 mins.
+epoch = 8.427, train perp. = 109.907, wps = 2543, dw:norm() = 12.679, lr = 1.000, since beginning = 51 mins.
+epoch = 8.527, train perp. = 109.336, wps = 2544, dw:norm() = 13.317, lr = 1.000, since beginning = 52 mins.
+epoch = 8.627, train perp. = 108.774, wps = 2545, dw:norm() = 12.768, lr = 1.000, since beginning = 52 mins.
+epoch = 8.727, train perp. = 108.327, wps = 2545, dw:norm() = 11.980, lr = 1.000, since beginning = 53 mins.
+epoch = 8.827, train perp. = 107.865, wps = 2546, dw:norm() = 13.003, lr = 1.000, since beginning = 54 mins.
+epoch = 8.928, train perp. = 107.297, wps = 2547, dw:norm() = 13.326, lr = 1.000, since beginning = 54 mins.
+Validation set perplexity : 104.503
+epoch = 9.028, train perp. = 106.850, wps = 2540, dw:norm() = 13.482, lr = 1.000, since beginning = 55 mins.
+epoch = 9.128, train perp. = 106.422, wps = 2541, dw:norm() = 12.380, lr = 1.000, since beginning = 56 mins.
+epoch = 9.228, train perp. = 105.896, wps = 2542, dw:norm() = 12.671, lr = 1.000, since beginning = 56 mins.
+epoch = 9.329, train perp. = 105.418, wps = 2542, dw:norm() = 12.692, lr = 1.000, since beginning = 57 mins.
+epoch = 9.429, train perp. = 104.926, wps = 2543, dw:norm() = 13.884, lr = 1.000, since beginning = 57 mins.
+epoch = 9.529, train perp. = 104.497, wps = 2544, dw:norm() = 12.563, lr = 1.000, since beginning = 58 mins.
+epoch = 9.629, train perp. = 104.017, wps = 2544, dw:norm() = 12.592, lr = 1.000, since beginning = 59 mins.
+epoch = 9.729, train perp. = 103.546, wps = 2545, dw:norm() = 12.143, lr = 1.000, since beginning = 59 mins.
+epoch = 9.830, train perp. = 103.112, wps = 2545, dw:norm() = 13.595, lr = 1.000, since beginning = 60 mins.
+epoch = 9.930, train perp. = 102.740, wps = 2546, dw:norm() = 13.551, lr = 1.000, since beginning = 60 mins.
+Validation set perplexity : 101.114
+epoch = 10.030, train perp. = 102.302, wps = 2540, dw:norm() = 12.616, lr = 1.000, since beginning = 61 mins.
+epoch = 10.130, train perp. = 101.830, wps = 2541, dw:norm() = 12.723, lr = 1.000, since beginning = 62 mins.
+epoch = 10.231, train perp. = 101.446, wps = 2542, dw:norm() = 14.583, lr = 1.000, since beginning = 62 mins.
+epoch = 10.331, train perp. = 101.090, wps = 2542, dw:norm() = 13.200, lr = 1.000, since beginning = 63 mins.
+epoch = 10.431, train perp. = 100.648, wps = 2543, dw:norm() = 14.162, lr = 1.000, since beginning = 63 mins.
+epoch = 10.531, train perp. = 100.233, wps = 2543, dw:norm() = 13.027, lr = 1.000, since beginning = 64 mins.
+epoch = 10.631, train perp. = 99.773, wps = 2544, dw:norm() = 13.920, lr = 1.000, since beginning = 65 mins.
+epoch = 10.732, train perp. = 99.387, wps = 2544, dw:norm() = 13.050, lr = 1.000, since beginning = 65 mins.
+epoch = 10.832, train perp. = 99.027, wps = 2545, dw:norm() = 12.787, lr = 1.000, since beginning = 66 mins.
+epoch = 10.932, train perp. = 98.656, wps = 2546, dw:norm() = 13.416, lr = 1.000, since beginning = 66 mins.
+Validation set perplexity : 98.375
+epoch = 11.032, train perp. = 98.278, wps = 2540, dw:norm() = 12.331, lr = 1.000, since beginning = 67 mins.
+epoch = 11.133, train perp. = 97.883, wps = 2541, dw:norm() = 13.388, lr = 1.000, since beginning = 68 mins.
+epoch = 11.233, train perp. = 97.585, wps = 2541, dw:norm() = 13.807, lr = 1.000, since beginning = 68 mins.
+epoch = 11.333, train perp. = 97.097, wps = 2542, dw:norm() = 13.262, lr = 1.000, since beginning = 69 mins.
+epoch = 11.433, train perp. = 96.731, wps = 2543, dw:norm() = 13.730, lr = 1.000, since beginning = 70 mins.
+epoch = 11.534, train perp. = 96.357, wps = 2543, dw:norm() = 13.260, lr = 1.000, since beginning = 70 mins.
+epoch = 11.634, train perp. = 95.996, wps = 2544, dw:norm() = 12.708, lr = 1.000, since beginning = 71 mins.
+epoch = 11.734, train perp. = 95.670, wps = 2544, dw:norm() = 12.502, lr = 1.000, since beginning = 71 mins.
+epoch = 11.834, train perp. = 95.364, wps = 2545, dw:norm() = 13.053, lr = 1.000, since beginning = 72 mins.
+epoch = 11.934, train perp. = 94.992, wps = 2545, dw:norm() = 12.893, lr = 1.000, since beginning = 73 mins.
+Validation set perplexity : 97.476
+epoch = 12.035, train perp. = 94.619, wps = 2540, dw:norm() = 13.240, lr = 1.000, since beginning = 73 mins.
+epoch = 12.135, train perp. = 94.318, wps = 2541, dw:norm() = 13.189, lr = 1.000, since beginning = 74 mins.
+epoch = 12.235, train perp. = 93.917, wps = 2541, dw:norm() = 14.108, lr = 1.000, since beginning = 75 mins.
+epoch = 12.335, train perp. = 93.628, wps = 2542, dw:norm() = 12.770, lr = 1.000, since beginning = 75 mins.
+epoch = 12.436, train perp. = 93.353, wps = 2542, dw:norm() = 13.878, lr = 1.000, since beginning = 76 mins.
+epoch = 12.536, train perp. = 92.975, wps = 2543, dw:norm() = 13.079, lr = 1.000, since beginning = 76 mins.
+epoch = 12.636, train perp. = 92.724, wps = 2543, dw:norm() = 13.340, lr = 1.000, since beginning = 77 mins.
+epoch = 12.736, train perp. = 92.531, wps = 2544, dw:norm() = 12.997, lr = 1.000, since beginning = 77 mins.
+epoch = 12.836, train perp. = 92.185, wps = 2544, dw:norm() = 12.919, lr = 1.000, since beginning = 78 mins.
+epoch = 12.937, train perp. = 91.885, wps = 2545, dw:norm() = 13.187, lr = 1.000, since beginning = 79 mins.
+Validation set perplexity : 94.951
+epoch = 13.037, train perp. = 91.609, wps = 2540, dw:norm() = 13.276, lr = 1.000, since beginning = 79 mins.
+epoch = 13.137, train perp. = 91.313, wps = 2541, dw:norm() = 12.798, lr = 1.000, since beginning = 80 mins.
+epoch = 13.237, train perp. = 91.009, wps = 2541, dw:norm() = 12.845, lr = 1.000, since beginning = 81 mins.
+epoch = 13.338, train perp. = 90.690, wps = 2542, dw:norm() = 13.639, lr = 1.000, since beginning = 81 mins.
+epoch = 13.438, train perp. = 90.374, wps = 2542, dw:norm() = 13.357, lr = 1.000, since beginning = 82 mins.
+epoch = 13.538, train perp. = 90.121, wps = 2543, dw:norm() = 13.673, lr = 1.000, since beginning = 82 mins.
+epoch = 13.638, train perp. = 89.834, wps = 2543, dw:norm() = 13.178, lr = 1.000, since beginning = 83 mins.
+epoch = 13.739, train perp. = 89.543, wps = 2544, dw:norm() = 13.506, lr = 1.000, since beginning = 84 mins.
+epoch = 13.839, train perp. = 89.224, wps = 2544, dw:norm() = 13.307, lr = 1.000, since beginning = 84 mins.
+epoch = 13.939, train perp. = 89.016, wps = 2544, dw:norm() = 13.260, lr = 1.000, since beginning = 85 mins.
+Validation set perplexity : 93.168
+epoch = 14.039, train perp. = 88.758, wps = 2540, dw:norm() = 12.997, lr = 1.000, since beginning = 86 mins.
+epoch = 14.139, train perp. = 88.488, wps = 2541, dw:norm() = 12.574, lr = 1.000, since beginning = 86 mins.
+epoch = 14.240, train perp. = 88.222, wps = 2541, dw:norm() = 13.190, lr = 1.000, since beginning = 87 mins.
+epoch = 14.340, train perp. = 87.888, wps = 2542, dw:norm() = 13.198, lr = 1.000, since beginning = 87 mins.
+epoch = 14.440, train perp. = 87.593, wps = 2542, dw:norm() = 13.363, lr = 1.000, since beginning = 88 mins.
+epoch = 14.540, train perp. = 87.286, wps = 2543, dw:norm() = 13.529, lr = 1.000, since beginning = 89 mins.
+epoch = 14.641, train perp. = 87.058, wps = 2543, dw:norm() = 13.062, lr = 1.000, since beginning = 89 mins.
+epoch = 14.741, train perp. = 86.783, wps = 2543, dw:norm() = 13.483, lr = 1.000, since beginning = 90 mins.
+epoch = 14.841, train perp. = 86.554, wps = 2544, dw:norm() = 12.595, lr = 1.000, since beginning = 90 mins.
+epoch = 14.941, train perp. = 86.229, wps = 2544, dw:norm() = 13.380, lr = 1.000, since beginning = 91 mins.
+Validation set perplexity : 92.125
+epoch = 15.041, train perp. = 85.956, wps = 2540, dw:norm() = 13.336, lr = 0.870, since beginning = 92 mins.
+epoch = 15.142, train perp. = 85.595, wps = 2541, dw:norm() = 12.963, lr = 0.870, since beginning = 92 mins.
+epoch = 15.242, train perp. = 85.136, wps = 2541, dw:norm() = 12.796, lr = 0.870, since beginning = 93 mins.
+epoch = 15.342, train perp. = 84.648, wps = 2542, dw:norm() = 13.588, lr = 0.870, since beginning = 93 mins.
+epoch = 15.442, train perp. = 84.210, wps = 2542, dw:norm() = 13.001, lr = 0.870, since beginning = 94 mins.
+epoch = 15.543, train perp. = 83.773, wps = 2542, dw:norm() = 14.456, lr = 0.870, since beginning = 95 mins.
+epoch = 15.643, train perp. = 83.172, wps = 2543, dw:norm() = 12.689, lr = 0.870, since beginning = 95 mins.
+epoch = 15.743, train perp. = 82.588, wps = 2543, dw:norm() = 13.265, lr = 0.870, since beginning = 96 mins.
+epoch = 15.843, train perp. = 82.064, wps = 2544, dw:norm() = 12.791, lr = 0.870, since beginning = 96 mins.
+epoch = 15.943, train perp. = 81.514, wps = 2544, dw:norm() = 14.099, lr = 0.870, since beginning = 97 mins.
+Validation set perplexity : 90.532
+epoch = 16.044, train perp. = 80.947, wps = 2540, dw:norm() = 12.701, lr = 0.756, since beginning = 98 mins.
+epoch = 16.144, train perp. = 80.384, wps = 2541, dw:norm() = 12.946, lr = 0.756, since beginning = 98 mins.
+epoch = 16.244, train perp. = 79.938, wps = 2541, dw:norm() = 12.497, lr = 0.756, since beginning = 99 mins.
+epoch = 16.344, train perp. = 79.442, wps = 2541, dw:norm() = 13.526, lr = 0.756, since beginning = 100 mins.
+epoch = 16.445, train perp. = 78.939, wps = 2542, dw:norm() = 13.113, lr = 0.756, since beginning = 100 mins.
+epoch = 16.545, train perp. = 78.361, wps = 2542, dw:norm() = 12.377, lr = 0.756, since beginning = 101 mins.
+epoch = 16.645, train perp. = 77.876, wps = 2543, dw:norm() = 13.005, lr = 0.756, since beginning = 101 mins.
+epoch = 16.745, train perp. = 77.388, wps = 2543, dw:norm() = 12.534, lr = 0.756, since beginning = 102 mins.
+epoch = 16.846, train perp. = 76.796, wps = 2543, dw:norm() = 12.749, lr = 0.756, since beginning = 103 mins.
+epoch = 16.946, train perp. = 76.243, wps = 2544, dw:norm() = 13.746, lr = 0.756, since beginning = 103 mins.
+Validation set perplexity : 88.002
+epoch = 17.046, train perp. = 75.757, wps = 2540, dw:norm() = 13.414, lr = 0.658, since beginning = 104 mins.
+epoch = 17.146, train perp. = 75.351, wps = 2541, dw:norm() = 12.462, lr = 0.658, since beginning = 104 mins.
+epoch = 17.246, train perp. = 74.883, wps = 2541, dw:norm() = 13.035, lr = 0.658, since beginning = 105 mins.
+epoch = 17.347, train perp. = 74.458, wps = 2541, dw:norm() = 12.796, lr = 0.658, since beginning = 106 mins.
+epoch = 17.447, train perp. = 73.952, wps = 2542, dw:norm() = 13.058, lr = 0.658, since beginning = 106 mins.
+epoch = 17.547, train perp. = 73.539, wps = 2542, dw:norm() = 13.616, lr = 0.658, since beginning = 107 mins.
+epoch = 17.647, train perp. = 73.077, wps = 2543, dw:norm() = 12.401, lr = 0.658, since beginning = 107 mins.
+epoch = 17.748, train perp. = 72.619, wps = 2543, dw:norm() = 12.885, lr = 0.658, since beginning = 108 mins.
+epoch = 17.848, train perp. = 72.188, wps = 2543, dw:norm() = 14.873, lr = 0.658, since beginning = 109 mins.
+epoch = 17.948, train perp. = 71.722, wps = 2544, dw:norm() = 12.438, lr = 0.658, since beginning = 109 mins.
+Validation set perplexity : 86.997
+epoch = 18.048, train perp. = 71.260, wps = 2540, dw:norm() = 13.040, lr = 0.572, since beginning = 110 mins.
+epoch = 18.148, train perp. = 70.818, wps = 2541, dw:norm() = 12.217, lr = 0.572, since beginning = 111 mins.
+epoch = 18.249, train perp. = 70.393, wps = 2541, dw:norm() = 12.910, lr = 0.572, since beginning = 111 mins.
+epoch = 18.349, train perp. = 69.928, wps = 2541, dw:norm() = 12.956, lr = 0.572, since beginning = 112 mins.
+epoch = 18.449, train perp. = 69.517, wps = 2542, dw:norm() = 13.471, lr = 0.572, since beginning = 112 mins.
+epoch = 18.549, train perp. = 69.104, wps = 2542, dw:norm() = 13.115, lr = 0.572, since beginning = 113 mins.
+epoch = 18.650, train perp. = 68.695, wps = 2542, dw:norm() = 13.255, lr = 0.572, since beginning = 114 mins.
+epoch = 18.750, train perp. = 68.297, wps = 2543, dw:norm() = 12.482, lr = 0.572, since beginning = 114 mins.
+epoch = 18.850, train perp. = 67.887, wps = 2543, dw:norm() = 14.285, lr = 0.572, since beginning = 115 mins.
+epoch = 18.950, train perp. = 67.435, wps = 2543, dw:norm() = 13.674, lr = 0.572, since beginning = 115 mins.
+Validation set perplexity : 85.154
+epoch = 19.050, train perp. = 67.065, wps = 2540, dw:norm() = 12.921, lr = 0.497, since beginning = 116 mins.
+epoch = 19.151, train perp. = 66.728, wps = 2541, dw:norm() = 12.459, lr = 0.497, since beginning = 117 mins.
+epoch = 19.251, train perp. = 66.368, wps = 2541, dw:norm() = 12.534, lr = 0.497, since beginning = 117 mins.
+epoch = 19.351, train perp. = 66.029, wps = 2541, dw:norm() = 13.789, lr = 0.497, since beginning = 118 mins.
+epoch = 19.451, train perp. = 65.727, wps = 2542, dw:norm() = 12.604, lr = 0.497, since beginning = 118 mins.
+epoch = 19.552, train perp. = 65.360, wps = 2542, dw:norm() = 13.394, lr = 0.497, since beginning = 119 mins.
+epoch = 19.652, train perp. = 64.996, wps = 2542, dw:norm() = 13.324, lr = 0.497, since beginning = 120 mins.
+epoch = 19.752, train perp. = 64.648, wps = 2543, dw:norm() = 12.868, lr = 0.497, since beginning = 120 mins.
+epoch = 19.852, train perp. = 64.241, wps = 2543, dw:norm() = 12.365, lr = 0.497, since beginning = 121 mins.
+epoch = 19.953, train perp. = 63.855, wps = 2543, dw:norm() = 12.645, lr = 0.497, since beginning = 121 mins.
+Validation set perplexity : 83.859
+epoch = 20.053, train perp. = 63.501, wps = 2540, dw:norm() = 12.746, lr = 0.432, since beginning = 122 mins.
+epoch = 20.153, train perp. = 63.204, wps = 2541, dw:norm() = 12.726, lr = 0.432, since beginning = 123 mins.
+epoch = 20.253, train perp. = 62.869, wps = 2541, dw:norm() = 12.802, lr = 0.432, since beginning = 123 mins.
+epoch = 20.353, train perp. = 62.515, wps = 2541, dw:norm() = 12.887, lr = 0.432, since beginning = 124 mins.
+epoch = 20.454, train perp. = 62.150, wps = 2542, dw:norm() = 13.526, lr = 0.432, since beginning = 125 mins.
+epoch = 20.554, train perp. = 61.821, wps = 2542, dw:norm() = 12.753, lr = 0.432, since beginning = 125 mins.
+epoch = 20.654, train perp. = 61.490, wps = 2542, dw:norm() = 13.169, lr = 0.432, since beginning = 126 mins.
+epoch = 20.754, train perp. = 61.194, wps = 2543, dw:norm() = 12.484, lr = 0.432, since beginning = 126 mins.
+epoch = 20.855, train perp. = 60.917, wps = 2543, dw:norm() = 13.422, lr = 0.432, since beginning = 127 mins.
+epoch = 20.955, train perp. = 60.657, wps = 2543, dw:norm() = 13.115, lr = 0.432, since beginning = 128 mins.
+Validation set perplexity : 83.404
+epoch = 21.055, train perp. = 60.348, wps = 2540, dw:norm() = 13.473, lr = 0.376, since beginning = 128 mins.
+epoch = 21.155, train perp. = 60.042, wps = 2541, dw:norm() = 13.173, lr = 0.376, since beginning = 129 mins.
+epoch = 21.255, train perp. = 59.761, wps = 2541, dw:norm() = 13.694, lr = 0.376, since beginning = 129 mins.
+epoch = 21.356, train perp. = 59.483, wps = 2541, dw:norm() = 13.268, lr = 0.376, since beginning = 130 mins.
+epoch = 21.456, train perp. = 59.153, wps = 2542, dw:norm() = 14.113, lr = 0.376, since beginning = 131 mins.
+epoch = 21.556, train perp. = 58.871, wps = 2542, dw:norm() = 13.224, lr = 0.376, since beginning = 131 mins.
+epoch = 21.656, train perp. = 58.559, wps = 2542, dw:norm() = 13.327, lr = 0.376, since beginning = 132 mins.
+epoch = 21.757, train perp. = 58.288, wps = 2542, dw:norm() = 13.608, lr = 0.376, since beginning = 132 mins.
+epoch = 21.857, train perp. = 57.976, wps = 2543, dw:norm() = 13.516, lr = 0.376, since beginning = 133 mins.
+epoch = 21.957, train perp. = 57.650, wps = 2543, dw:norm() = 13.888, lr = 0.376, since beginning = 134 mins.
+Validation set perplexity : 82.807
+epoch = 22.057, train perp. = 57.395, wps = 2540, dw:norm() = 13.803, lr = 0.327, since beginning = 134 mins.
+epoch = 22.157, train perp. = 57.154, wps = 2541, dw:norm() = 13.739, lr = 0.327, since beginning = 135 mins.
+^[epoch = 22.258, train perp. = 56.931, wps = 2541, dw:norm() = 13.709, lr = 0.327, since beginning = 136 mins.
+epoch = 22.358, train perp. = 56.685, wps = 2541, dw:norm() = 13.777, lr = 0.327, since beginning = 136 mins.
+epoch = 22.458, train perp. = 56.468, wps = 2542, dw:norm() = 13.496, lr = 0.327, since beginning = 137 mins.
+epoch = 22.558, train perp. = 56.214, wps = 2542, dw:norm() = 13.009, lr = 0.327, since beginning = 137 mins.
+epoch = 22.659, train perp. = 55.999, wps = 2542, dw:norm() = 13.134, lr = 0.327, since beginning = 138 mins.
+epoch = 22.759, train perp. = 55.746, wps = 2542, dw:norm() = 13.095, lr = 0.327, since beginning = 139 mins.
+epoch = 22.859, train perp. = 55.502, wps = 2543, dw:norm() = 14.221, lr = 0.327, since beginning = 139 mins.
+epoch = 22.959, train perp. = 55.260, wps = 2543, dw:norm() = 12.939, lr = 0.327, since beginning = 140 mins.
+Validation set perplexity : 82.132
+epoch = 23.060, train perp. = 54.997, wps = 2540, dw:norm() = 13.506, lr = 0.284, since beginning = 140 mins.
+epoch = 23.160, train perp. = 54.767, wps = 2541, dw:norm() = 12.987, lr = 0.284, since beginning = 141 mins.
+epoch = 23.260, train perp. = 54.571, wps = 2541, dw:norm() = 13.546, lr = 0.284, since beginning = 142 mins.
+epoch = 23.360, train perp. = 54.355, wps = 2541, dw:norm() = 12.975, lr = 0.284, since beginning = 142 mins.
+epoch = 23.460, train perp. = 54.158, wps = 2542, dw:norm() = 13.421, lr = 0.284, since beginning = 143 mins.
+epoch = 23.561, train perp. = 53.919, wps = 2542, dw:norm() = 12.728, lr = 0.284, since beginning = 143 mins.
+epoch = 23.661, train perp. = 53.696, wps = 2542, dw:norm() = 12.557, lr = 0.284, since beginning = 144 mins.
+epoch = 23.761, train perp. = 53.484, wps = 2542, dw:norm() = 13.063, lr = 0.284, since beginning = 145 mins.
+epoch = 23.861, train perp. = 53.290, wps = 2543, dw:norm() = 13.492, lr = 0.284, since beginning = 145 mins.
+epoch = 23.962, train perp. = 53.089, wps = 2543, dw:norm() = 13.185, lr = 0.284, since beginning = 146 mins.
+Validation set perplexity : 81.977
+epoch = 24.062, train perp. = 52.915, wps = 2540, dw:norm() = 12.902, lr = 0.247, since beginning = 147 mins.
+epoch = 24.162, train perp. = 52.736, wps = 2541, dw:norm() = 13.239, lr = 0.247, since beginning = 147 mins.
+epoch = 24.262, train perp. = 52.537, wps = 2541, dw:norm() = 13.761, lr = 0.247, since beginning = 148 mins.
+epoch = 24.362, train perp. = 52.345, wps = 2541, dw:norm() = 14.024, lr = 0.247, since beginning = 148 mins.
+epoch = 24.463, train perp. = 52.142, wps = 2542, dw:norm() = 13.896, lr = 0.247, since beginning = 149 mins.
+epoch = 24.563, train perp. = 51.958, wps = 2542, dw:norm() = 12.796, lr = 0.247, since beginning = 150 mins.
+epoch = 24.663, train perp. = 51.730, wps = 2542, dw:norm() = 12.844, lr = 0.247, since beginning = 150 mins.
+epoch = 24.763, train perp. = 51.534, wps = 2542, dw:norm() = 13.209, lr = 0.247, since beginning = 151 mins.
+epoch = 24.864, train perp. = 51.337, wps = 2543, dw:norm() = 13.371, lr = 0.247, since beginning = 151 mins.
+epoch = 24.964, train perp. = 51.155, wps = 2543, dw:norm() = 13.945, lr = 0.247, since beginning = 152 mins.
+Validation set perplexity : 81.801
+epoch = 25.064, train perp. = 50.958, wps = 2541, dw:norm() = 13.055, lr = 0.215, since beginning = 153 mins.
+epoch = 25.164, train perp. = 50.802, wps = 2541, dw:norm() = 12.923, lr = 0.215, since beginning = 153 mins.
+epoch = 25.265, train perp. = 50.589, wps = 2541, dw:norm() = 13.872, lr = 0.215, since beginning = 154 mins.
+epoch = 25.365, train perp. = 50.432, wps = 2541, dw:norm() = 13.817, lr = 0.215, since beginning = 154 mins.
+epoch = 25.465, train perp. = 50.297, wps = 2542, dw:norm() = 14.381, lr = 0.215, since beginning = 155 mins.
+epoch = 25.565, train perp. = 50.147, wps = 2542, dw:norm() = 13.021, lr = 0.215, since beginning = 156 mins.
+epoch = 25.665, train perp. = 50.007, wps = 2542, dw:norm() = 13.355, lr = 0.215, since beginning = 156 mins.
+epoch = 25.766, train perp. = 49.848, wps = 2542, dw:norm() = 13.424, lr = 0.215, since beginning = 157 mins.
+epoch = 25.866, train perp. = 49.707, wps = 2542, dw:norm() = 13.763, lr = 0.215, since beginning = 157 mins.
+epoch = 25.966, train perp. = 49.538, wps = 2543, dw:norm() = 14.100, lr = 0.215, since beginning = 158 mins.
+Validation set perplexity : 81.604
+epoch = 26.066, train perp. = 49.381, wps = 2541, dw:norm() = 13.682, lr = 0.187, since beginning = 159 mins.
+epoch = 26.167, train perp. = 49.239, wps = 2541, dw:norm() = 14.525, lr = 0.187, since beginning = 159 mins.
+epoch = 26.267, train perp. = 49.119, wps = 2541, dw:norm() = 14.593, lr = 0.187, since beginning = 160 mins.
+epoch = 26.367, train perp. = 48.984, wps = 2541, dw:norm() = 13.311, lr = 0.187, since beginning = 161 mins.
+epoch = 26.467, train perp. = 48.827, wps = 2541, dw:norm() = 13.154, lr = 0.187, since beginning = 161 mins.
+epoch = 26.567, train perp. = 48.697, wps = 2542, dw:norm() = 13.778, lr = 0.187, since beginning = 162 mins.
+epoch = 26.668, train perp. = 48.574, wps = 2542, dw:norm() = 13.749, lr = 0.187, since beginning = 162 mins.
+epoch = 26.768, train perp. = 48.452, wps = 2542, dw:norm() = 14.480, lr = 0.187, since beginning = 163 mins.
+epoch = 26.868, train perp. = 48.275, wps = 2542, dw:norm() = 13.767, lr = 0.187, since beginning = 164 mins.
+epoch = 26.968, train perp. = 48.129, wps = 2543, dw:norm() = 14.327, lr = 0.187, since beginning = 164 mins.
+Validation set perplexity : 81.435
+epoch = 27.069, train perp. = 48.020, wps = 2541, dw:norm() = 13.897, lr = 0.163, since beginning = 165 mins.
+epoch = 27.169, train perp. = 47.899, wps = 2541, dw:norm() = 12.724, lr = 0.163, since beginning = 166 mins.
+epoch = 27.269, train perp. = 47.783, wps = 2541, dw:norm() = 13.501, lr = 0.163, since beginning = 166 mins.
+epoch = 27.369, train perp. = 47.617, wps = 2541, dw:norm() = 13.695, lr = 0.163, since beginning = 167 mins.
+epoch = 27.469, train perp. = 47.477, wps = 2541, dw:norm() = 12.925, lr = 0.163, since beginning = 167 mins.
+epoch = 27.570, train perp. = 47.345, wps = 2542, dw:norm() = 14.113, lr = 0.163, since beginning = 168 mins.
+epoch = 27.670, train perp. = 47.180, wps = 2542, dw:norm() = 13.416, lr = 0.163, since beginning = 168 mins.
+epoch = 27.770, train perp. = 47.041, wps = 2542, dw:norm() = 14.686, lr = 0.163, since beginning = 169 mins.
+epoch = 27.870, train perp. = 46.940, wps = 2542, dw:norm() = 14.083, lr = 0.163, since beginning = 170 mins.
+epoch = 27.971, train perp. = 46.812, wps = 2543, dw:norm() = 13.264, lr = 0.163, since beginning = 170 mins.
+Validation set perplexity : 81.284
+epoch = 28.071, train perp. = 46.713, wps = 2541, dw:norm() = 13.607, lr = 0.141, since beginning = 171 mins.
+epoch = 28.171, train perp. = 46.615, wps = 2541, dw:norm() = 14.275, lr = 0.141, since beginning = 172 mins.
+epoch = 28.271, train perp. = 46.496, wps = 2541, dw:norm() = 13.873, lr = 0.141, since beginning = 172 mins.
+epoch = 28.372, train perp. = 46.385, wps = 2541, dw:norm() = 13.828, lr = 0.141, since beginning = 173 mins.
+epoch = 28.472, train perp. = 46.277, wps = 2541, dw:norm() = 14.149, lr = 0.141, since beginning = 173 mins.
+epoch = 28.572, train perp. = 46.178, wps = 2542, dw:norm() = 13.709, lr = 0.141, since beginning = 174 mins.
+epoch = 28.672, train perp. = 46.106, wps = 2542, dw:norm() = 14.018, lr = 0.141, since beginning = 175 mins.
+epoch = 28.772, train perp. = 46.006, wps = 2542, dw:norm() = 13.076, lr = 0.141, since beginning = 175 mins.
+epoch = 28.873, train perp. = 45.872, wps = 2542, dw:norm() = 13.810, lr = 0.141, since beginning = 176 mins.
+epoch = 28.973, train perp. = 45.771, wps = 2542, dw:norm() = 14.328, lr = 0.141, since beginning = 176 mins.
+Validation set perplexity : 81.024
+epoch = 29.073, train perp. = 45.659, wps = 2541, dw:norm() = 13.259, lr = 0.123, since beginning = 177 mins.
+epoch = 29.173, train perp. = 45.535, wps = 2541, dw:norm() = 13.398, lr = 0.123, since beginning = 178 mins.
+epoch = 29.274, train perp. = 45.465, wps = 2541, dw:norm() = 14.016, lr = 0.123, since beginning = 178 mins.
+epoch = 29.374, train perp. = 45.382, wps = 2541, dw:norm() = 14.670, lr = 0.123, since beginning = 179 mins.
+epoch = 29.474, train perp. = 45.316, wps = 2541, dw:norm() = 13.603, lr = 0.123, since beginning = 180 mins.
+epoch = 29.574, train perp. = 45.234, wps = 2542, dw:norm() = 13.393, lr = 0.123, since beginning = 180 mins.
+epoch = 29.674, train perp. = 45.132, wps = 2542, dw:norm() = 13.292, lr = 0.123, since beginning = 181 mins.
+epoch = 29.775, train perp. = 45.028, wps = 2542, dw:norm() = 14.063, lr = 0.123, since beginning = 181 mins.
+epoch = 29.875, train perp. = 44.935, wps = 2542, dw:norm() = 13.930, lr = 0.123, since beginning = 182 mins.
+epoch = 29.975, train perp. = 44.834, wps = 2542, dw:norm() = 14.462, lr = 0.123, since beginning = 182 mins.
+Validation set perplexity : 81.050
+epoch = 30.075, train perp. = 44.747, wps = 2541, dw:norm() = 13.637, lr = 0.107, since beginning = 183 mins.
+epoch = 30.176, train perp. = 44.650, wps = 2541, dw:norm() = 13.709, lr = 0.107, since beginning = 184 mins.
+epoch = 30.276, train perp. = 44.566, wps = 2541, dw:norm() = 14.539, lr = 0.107, since beginning = 184 mins.
+epoch = 30.376, train perp. = 44.474, wps = 2541, dw:norm() = 14.289, lr = 0.107, since beginning = 185 mins.
+epoch = 30.476, train perp. = 44.367, wps = 2541, dw:norm() = 14.166, lr = 0.107, since beginning = 186 mins.
+epoch = 30.576, train perp. = 44.315, wps = 2542, dw:norm() = 14.169, lr = 0.107, since beginning = 186 mins.
+epoch = 30.677, train perp. = 44.244, wps = 2542, dw:norm() = 13.731, lr = 0.107, since beginning = 187 mins.
+epoch = 30.777, train perp. = 44.159, wps = 2542, dw:norm() = 13.345, lr = 0.107, since beginning = 187 mins.
+epoch = 30.877, train perp. = 44.045, wps = 2542, dw:norm() = 14.286, lr = 0.107, since beginning = 188 mins.
+epoch = 30.977, train perp. = 43.966, wps = 2542, dw:norm() = 13.988, lr = 0.107, since beginning = 189 mins.
+Validation set perplexity : 81.238
+epoch = 31.078, train perp. = 43.892, wps = 2540, dw:norm() = 14.140, lr = 0.093, since beginning = 189 mins.
+epoch = 31.178, train perp. = 43.842, wps = 2541, dw:norm() = 13.895, lr = 0.093, since beginning = 190 mins.
+epoch = 31.278, train perp. = 43.778, wps = 2541, dw:norm() = 14.044, lr = 0.093, since beginning = 191 mins.
+epoch = 31.378, train perp. = 43.731, wps = 2541, dw:norm() = 14.674, lr = 0.093, since beginning = 191 mins.
+epoch = 31.479, train perp. = 43.627, wps = 2541, dw:norm() = 14.596, lr = 0.093, since beginning = 192 mins.
+epoch = 31.579, train perp. = 43.516, wps = 2541, dw:norm() = 14.412, lr = 0.093, since beginning = 192 mins.
+epoch = 31.679, train perp. = 43.454, wps = 2542, dw:norm() = 13.687, lr = 0.093, since beginning = 193 mins.
+epoch = 31.779, train perp. = 43.398, wps = 2542, dw:norm() = 13.384, lr = 0.093, since beginning = 194 mins.
+epoch = 31.879, train perp. = 43.361, wps = 2542, dw:norm() = 14.443, lr = 0.093, since beginning = 194 mins.
+epoch = 31.980, train perp. = 43.286, wps = 2542, dw:norm() = 13.937, lr = 0.093, since beginning = 195 mins.
+Validation set perplexity : 81.378
+epoch = 32.080, train perp. = 43.242, wps = 2540, dw:norm() = 14.363, lr = 0.081, since beginning = 195 mins.
+epoch = 32.180, train perp. = 43.180, wps = 2541, dw:norm() = 13.047, lr = 0.081, since beginning = 196 mins.
+epoch = 32.280, train perp. = 43.081, wps = 2541, dw:norm() = 14.724, lr = 0.081, since beginning = 197 mins.
+epoch = 32.381, train perp. = 43.033, wps = 2541, dw:norm() = 13.730, lr = 0.081, since beginning = 197 mins.
+epoch = 32.481, train perp. = 42.979, wps = 2541, dw:norm() = 14.651, lr = 0.081, since beginning = 198 mins.
+epoch = 32.581, train perp. = 42.940, wps = 2541, dw:norm() = 14.087, lr = 0.081, since beginning = 198 mins.
+epoch = 32.681, train perp. = 42.845, wps = 2542, dw:norm() = 12.720, lr = 0.081, since beginning = 199 mins.
+epoch = 32.781, train perp. = 42.780, wps = 2542, dw:norm() = 13.668, lr = 0.081, since beginning = 200 mins.
+epoch = 32.882, train perp. = 42.724, wps = 2542, dw:norm() = 14.557, lr = 0.081, since beginning = 200 mins.
+epoch = 32.982, train perp. = 42.638, wps = 2542, dw:norm() = 13.801, lr = 0.081, since beginning = 201 mins.
+Validation set perplexity : 81.083
+epoch = 33.082, train perp. = 42.568, wps = 2540, dw:norm() = 14.002, lr = 0.070, since beginning = 202 mins.
+epoch = 33.182, train perp. = 42.483, wps = 2541, dw:norm() = 13.754, lr = 0.070, since beginning = 202 mins.
+epoch = 33.283, train perp. = 42.434, wps = 2541, dw:norm() = 14.897, lr = 0.070, since beginning = 203 mins.
+epoch = 33.383, train perp. = 42.363, wps = 2541, dw:norm() = 13.987, lr = 0.070, since beginning = 203 mins.
+epoch = 33.483, train perp. = 42.336, wps = 2541, dw:norm() = 14.388, lr = 0.070, since beginning = 204 mins.
+epoch = 33.583, train perp. = 42.299, wps = 2541, dw:norm() = 14.657, lr = 0.070, since beginning = 205 mins.
+epoch = 33.683, train perp. = 42.268, wps = 2542, dw:norm() = 13.934, lr = 0.070, since beginning = 205 mins.
+epoch = 33.784, train perp. = 42.228, wps = 2542, dw:norm() = 13.351, lr = 0.070, since beginning = 206 mins.
+epoch = 33.884, train perp. = 42.165, wps = 2542, dw:norm() = 15.327, lr = 0.070, since beginning = 206 mins.
+epoch = 33.984, train perp. = 42.116, wps = 2542, dw:norm() = 14.034, lr = 0.070, since beginning = 207 mins.
+Validation set perplexity : 81.283
+epoch = 34.084, train perp. = 42.040, wps = 2540, dw:norm() = 14.061, lr = 0.061, since beginning = 208 mins.
+epoch = 34.185, train perp. = 41.998, wps = 2541, dw:norm() = 13.755, lr = 0.061, since beginning = 208 mins.
+epoch = 34.285, train perp. = 41.952, wps = 2541, dw:norm() = 14.570, lr = 0.061, since beginning = 209 mins.
+epoch = 34.385, train perp. = 41.929, wps = 2541, dw:norm() = 14.546, lr = 0.061, since beginning = 209 mins.
+epoch = 34.485, train perp. = 41.859, wps = 2541, dw:norm() = 14.846, lr = 0.061, since beginning = 210 mins.
+epoch = 34.586, train perp. = 41.802, wps = 2541, dw:norm() = 14.183, lr = 0.061, since beginning = 211 mins.
+epoch = 34.686, train perp. = 41.761, wps = 2541, dw:norm() = 13.315, lr = 0.061, since beginning = 211 mins.
+epoch = 34.786, train perp. = 41.697, wps = 2542, dw:norm() = 13.973, lr = 0.061, since beginning = 212 mins.
+epoch = 34.886, train perp. = 41.713, wps = 2542, dw:norm() = 14.417, lr = 0.061, since beginning = 212 mins.
+epoch = 34.986, train perp. = 41.692, wps = 2542, dw:norm() = 14.986, lr = 0.061, since beginning = 213 mins.
+Validation set perplexity : 81.195
+epoch = 35.087, train perp. = 41.659, wps = 2540, dw:norm() = 14.341, lr = 0.053, since beginning = 214 mins.
+epoch = 35.187, train perp. = 41.649, wps = 2541, dw:norm() = 13.832, lr = 0.053, since beginning = 214 mins.
+epoch = 35.287, train perp. = 41.636, wps = 2541, dw:norm() = 14.097, lr = 0.053, since beginning = 215 mins.
+epoch = 35.387, train perp. = 41.579, wps = 2541, dw:norm() = 14.000, lr = 0.053, since beginning = 216 mins.
+epoch = 35.488, train perp. = 41.571, wps = 2541, dw:norm() = 15.144, lr = 0.053, since beginning = 216 mins.
+epoch = 35.588, train perp. = 41.509, wps = 2541, dw:norm() = 14.842, lr = 0.053, since beginning = 217 mins.
+epoch = 35.688, train perp. = 41.464, wps = 2541, dw:norm() = 14.319, lr = 0.053, since beginning = 217 mins.
+epoch = 35.788, train perp. = 41.440, wps = 2542, dw:norm() = 14.330, lr = 0.053, since beginning = 218 mins.
+epoch = 35.888, train perp. = 41.358, wps = 2542, dw:norm() = 14.699, lr = 0.053, since beginning = 219 mins.
+epoch = 35.989, train perp. = 41.310, wps = 2542, dw:norm() = 13.766, lr = 0.053, since beginning = 219 mins.
+Validation set perplexity : 81.246
+epoch = 36.089, train perp. = 41.285, wps = 2540, dw:norm() = 14.429, lr = 0.046, since beginning = 220 mins.
+epoch = 36.189, train perp. = 41.248, wps = 2541, dw:norm() = 14.667, lr = 0.046, since beginning = 220 mins.
+epoch = 36.289, train perp. = 41.194, wps = 2541, dw:norm() = 14.388, lr = 0.046, since beginning = 221 mins.
+epoch = 36.390, train perp. = 41.167, wps = 2541, dw:norm() = 14.406, lr = 0.046, since beginning = 222 mins.
+epoch = 36.490, train perp. = 41.133, wps = 2541, dw:norm() = 14.695, lr = 0.046, since beginning = 222 mins.
+epoch = 36.590, train perp. = 41.110, wps = 2541, dw:norm() = 14.666, lr = 0.046, since beginning = 223 mins.
+epoch = 36.690, train perp. = 41.068, wps = 2541, dw:norm() = 13.692, lr = 0.046, since beginning = 223 mins.
+epoch = 36.791, train perp. = 41.035, wps = 2542, dw:norm() = 14.935, lr = 0.046, since beginning = 224 mins.
+epoch = 36.891, train perp. = 40.976, wps = 2542, dw:norm() = 14.211, lr = 0.046, since beginning = 225 mins.
+epoch = 36.991, train perp. = 40.948, wps = 2542, dw:norm() = 14.751, lr = 0.046, since beginning = 225 mins.
+Validation set perplexity : 81.286
+epoch = 37.091, train perp. = 40.921, wps = 2540, dw:norm() = 14.901, lr = 0.040, since beginning = 226 mins.
+epoch = 37.191, train perp. = 40.890, wps = 2541, dw:norm() = 14.254, lr = 0.040, since beginning = 227 mins.
+epoch = 37.292, train perp. = 40.848, wps = 2541, dw:norm() = 14.531, lr = 0.040, since beginning = 227 mins.
+epoch = 37.392, train perp. = 40.815, wps = 2541, dw:norm() = 14.210, lr = 0.040, since beginning = 228 mins.
+epoch = 37.492, train perp. = 40.779, wps = 2541, dw:norm() = 14.981, lr = 0.040, since beginning = 228 mins.
+epoch = 37.592, train perp. = 40.735, wps = 2541, dw:norm() = 14.499, lr = 0.040, since beginning = 229 mins.
+epoch = 37.693, train perp. = 40.687, wps = 2541, dw:norm() = 15.564, lr = 0.040, since beginning = 230 mins.
+epoch = 37.793, train perp. = 40.630, wps = 2542, dw:norm() = 14.603, lr = 0.040, since beginning = 230 mins.
+epoch = 37.893, train perp. = 40.611, wps = 2542, dw:norm() = 14.554, lr = 0.040, since beginning = 231 mins.
+epoch = 37.993, train perp. = 40.587, wps = 2542, dw:norm() = 14.258, lr = 0.040, since beginning = 231 mins.
+Validation set perplexity : 81.304
+epoch = 38.093, train perp. = 40.576, wps = 2540, dw:norm() = 15.470, lr = 0.035, since beginning = 232 mins.
+epoch = 38.194, train perp. = 40.525, wps = 2541, dw:norm() = 15.178, lr = 0.035, since beginning = 233 mins.
+epoch = 38.294, train perp. = 40.482, wps = 2541, dw:norm() = 14.496, lr = 0.035, since beginning = 233 mins.
+epoch = 38.394, train perp. = 40.481, wps = 2541, dw:norm() = 14.245, lr = 0.035, since beginning = 234 mins.
+epoch = 38.494, train perp. = 40.435, wps = 2541, dw:norm() = 14.952, lr = 0.035, since beginning = 234 mins.
+epoch = 38.595, train perp. = 40.414, wps = 2541, dw:norm() = 13.866, lr = 0.035, since beginning = 235 mins.
+epoch = 38.695, train perp. = 40.433, wps = 2541, dw:norm() = 13.782, lr = 0.035, since beginning = 236 mins.
+epoch = 38.795, train perp. = 40.407, wps = 2542, dw:norm() = 14.920, lr = 0.035, since beginning = 236 mins.
+epoch = 38.895, train perp. = 40.389, wps = 2542, dw:norm() = 13.923, lr = 0.035, since beginning = 237 mins.
+epoch = 38.995, train perp. = 40.355, wps = 2542, dw:norm() = 14.526, lr = 0.035, since beginning = 237 mins.
+Validation set perplexity : 81.280
+epoch = 39.096, train perp. = 40.350, wps = 2540, dw:norm() = 14.618, lr = 0.030, since beginning = 238 mins.
+epoch = 39.196, train perp. = 40.329, wps = 2541, dw:norm() = 14.161, lr = 0.030, since beginning = 239 mins.
+epoch = 39.296, train perp. = 40.309, wps = 2541, dw:norm() = 14.602, lr = 0.030, since beginning = 239 mins.
+epoch = 39.396, train perp. = 40.261, wps = 2541, dw:norm() = 14.142, lr = 0.030, since beginning = 240 mins.
+epoch = 39.497, train perp. = 40.248, wps = 2541, dw:norm() = 14.661, lr = 0.030, since beginning = 241 mins.
+epoch = 39.597, train perp. = 40.234, wps = 2541, dw:norm() = 14.435, lr = 0.030, since beginning = 241 mins.
+epoch = 39.697, train perp. = 40.190, wps = 2541, dw:norm() = 13.619, lr = 0.030, since beginning = 242 mins.
+epoch = 39.797, train perp. = 40.165, wps = 2542, dw:norm() = 14.664, lr = 0.030, since beginning = 242 mins.
+epoch = 39.898, train perp. = 40.132, wps = 2542, dw:norm() = 14.593, lr = 0.030, since beginning = 243 mins.
+epoch = 39.998, train perp. = 40.109, wps = 2542, dw:norm() = 14.261, lr = 0.030, since beginning = 244 mins.
+Validation set perplexity : 81.196
+epoch = 40.098, train perp. = 40.047, wps = 2540, dw:norm() = 15.110, lr = 0.026, since beginning = 244 mins.
+epoch = 40.198, train perp. = 40.035, wps = 2541, dw:norm() = 14.845, lr = 0.026, since beginning = 245 mins.
+epoch = 40.298, train perp. = 40.028, wps = 2541, dw:norm() = 14.667, lr = 0.026, since beginning = 246 mins.
+epoch = 40.399, train perp. = 40.001, wps = 2541, dw:norm() = 14.245, lr = 0.026, since beginning = 246 mins.
+epoch = 40.499, train perp. = 39.974, wps = 2541, dw:norm() = 14.733, lr = 0.026, since beginning = 247 mins.
+epoch = 40.599, train perp. = 39.947, wps = 2541, dw:norm() = 14.197, lr = 0.026, since beginning = 247 mins.
+epoch = 40.699, train perp. = 39.927, wps = 2541, dw:norm() = 14.042, lr = 0.026, since beginning = 248 mins.
+epoch = 40.800, train perp. = 39.920, wps = 2542, dw:norm() = 15.163, lr = 0.026, since beginning = 248 mins.
+epoch = 40.900, train perp. = 39.926, wps = 2542, dw:norm() = 14.184, lr = 0.026, since beginning = 249 mins.
+epoch = 41.000, train perp. = 39.900, wps = 2542, dw:norm() = 14.916, lr = 0.026, since beginning = 250 mins.
+Validation set perplexity : 81.294
+epoch = 41.100, train perp. = 39.884, wps = 2540, dw:norm() = 14.466, lr = 0.023, since beginning = 250 mins.
+epoch = 41.200, train perp. = 39.866, wps = 2541, dw:norm() = 14.168, lr = 0.023, since beginning = 251 mins.
+epoch = 41.301, train perp. = 39.830, wps = 2541, dw:norm() = 14.089, lr = 0.023, since beginning = 252 mins.
+epoch = 41.401, train perp. = 39.840, wps = 2541, dw:norm() = 14.642, lr = 0.023, since beginning = 252 mins.
+epoch = 41.501, train perp. = 39.830, wps = 2541, dw:norm() = 14.591, lr = 0.023, since beginning = 253 mins.
+epoch = 41.601, train perp. = 39.780, wps = 2541, dw:norm() = 14.657, lr = 0.023, since beginning = 253 mins.
+epoch = 41.702, train perp. = 39.781, wps = 2541, dw:norm() = 14.925, lr = 0.023, since beginning = 254 mins.
+epoch = 41.802, train perp. = 39.783, wps = 2541, dw:norm() = 14.086, lr = 0.023, since beginning = 255 mins.
+epoch = 41.902, train perp. = 39.742, wps = 2542, dw:norm() = 14.851, lr = 0.023, since beginning = 255 mins.
+Validation set perplexity : 81.267
+epoch = 42.002, train perp. = 39.705, wps = 2540, dw:norm() = 14.395, lr = 0.020, since beginning = 256 mins.
+epoch = 42.102, train perp. = 39.681, wps = 2540, dw:norm() = 15.131, lr = 0.020, since beginning = 257 mins.
+epoch = 42.203, train perp. = 39.676, wps = 2541, dw:norm() = 14.838, lr = 0.020, since beginning = 257 mins.
+epoch = 42.303, train perp. = 39.688, wps = 2541, dw:norm() = 14.399, lr = 0.020, since beginning = 258 mins.
+epoch = 42.403, train perp. = 39.680, wps = 2541, dw:norm() = 14.465, lr = 0.020, since beginning = 258 mins.
+epoch = 42.503, train perp. = 39.672, wps = 2541, dw:norm() = 14.667, lr = 0.020, since beginning = 259 mins.
+epoch = 42.604, train perp. = 39.650, wps = 2541, dw:norm() = 14.304, lr = 0.020, since beginning = 260 mins.
+epoch = 42.704, train perp. = 39.621, wps = 2541, dw:norm() = 13.924, lr = 0.020, since beginning = 260 mins.
+epoch = 42.804, train perp. = 39.605, wps = 2541, dw:norm() = 13.884, lr = 0.020, since beginning = 261 mins.
+epoch = 42.904, train perp. = 39.602, wps = 2542, dw:norm() = 14.273, lr = 0.020, since beginning = 261 mins.
+Validation set perplexity : 81.268
+epoch = 43.005, train perp. = 39.583, wps = 2540, dw:norm() = 13.842, lr = 0.017, since beginning = 262 mins.
+epoch = 43.105, train perp. = 39.574, wps = 2540, dw:norm() = 14.851, lr = 0.017, since beginning = 263 mins.
+epoch = 43.205, train perp. = 39.560, wps = 2541, dw:norm() = 14.508, lr = 0.017, since beginning = 263 mins.
+epoch = 43.305, train perp. = 39.541, wps = 2541, dw:norm() = 13.898, lr = 0.017, since beginning = 264 mins.
+epoch = 43.405, train perp. = 39.520, wps = 2541, dw:norm() = 14.490, lr = 0.017, since beginning = 264 mins.
+epoch = 43.506, train perp. = 39.521, wps = 2541, dw:norm() = 14.455, lr = 0.017, since beginning = 265 mins.
+epoch = 43.606, train perp. = 39.532, wps = 2541, dw:norm() = 14.256, lr = 0.017, since beginning = 266 mins.
+epoch = 43.706, train perp. = 39.526, wps = 2541, dw:norm() = 13.930, lr = 0.017, since beginning = 266 mins.
+epoch = 43.806, train perp. = 39.478, wps = 2541, dw:norm() = 14.139, lr = 0.017, since beginning = 267 mins.
+epoch = 43.907, train perp. = 39.444, wps = 2542, dw:norm() = 14.853, lr = 0.017, since beginning = 267 mins.
+Validation set perplexity : 81.206
+epoch = 44.007, train perp. = 39.441, wps = 2540, dw:norm() = 13.933, lr = 0.015, since beginning = 268 mins.
+epoch = 44.107, train perp. = 39.421, wps = 2540, dw:norm() = 15.098, lr = 0.015, since beginning = 269 mins.
+epoch = 44.207, train perp. = 39.390, wps = 2541, dw:norm() = 14.229, lr = 0.015, since beginning = 269 mins.
+epoch = 44.307, train perp. = 39.383, wps = 2541, dw:norm() = 14.653, lr = 0.015, since beginning = 270 mins.
+epoch = 44.408, train perp. = 39.363, wps = 2541, dw:norm() = 15.199, lr = 0.015, since beginning = 271 mins.
+epoch = 44.508, train perp. = 39.358, wps = 2541, dw:norm() = 14.975, lr = 0.015, since beginning = 271 mins.
+epoch = 44.608, train perp. = 39.332, wps = 2541, dw:norm() = 14.535, lr = 0.015, since beginning = 272 mins.
+epoch = 44.708, train perp. = 39.307, wps = 2541, dw:norm() = 13.731, lr = 0.015, since beginning = 272 mins.
+epoch = 44.809, train perp. = 39.294, wps = 2541, dw:norm() = 14.978, lr = 0.015, since beginning = 273 mins.
+epoch = 44.909, train perp. = 39.297, wps = 2542, dw:norm() = 14.253, lr = 0.015, since beginning = 274 mins.
+Validation set perplexity : 81.221
+epoch = 45.009, train perp. = 39.284, wps = 2540, dw:norm() = 14.066, lr = 0.013, since beginning = 274 mins.
+epoch = 45.109, train perp. = 39.273, wps = 2540, dw:norm() = 14.208, lr = 0.013, since beginning = 275 mins.
+epoch = 45.209, train perp. = 39.260, wps = 2541, dw:norm() = 14.014, lr = 0.013, since beginning = 275 mins.
+epoch = 45.310, train perp. = 39.249, wps = 2541, dw:norm() = 15.001, lr = 0.013, since beginning = 276 mins.
+epoch = 45.410, train perp. = 39.256, wps = 2541, dw:norm() = 14.101, lr = 0.013, since beginning = 277 mins.
+epoch = 45.510, train perp. = 39.234, wps = 2541, dw:norm() = 14.841, lr = 0.013, since beginning = 277 mins.
+epoch = 45.610, train perp. = 39.235, wps = 2541, dw:norm() = 14.420, lr = 0.013, since beginning = 278 mins.
+epoch = 45.711, train perp. = 39.251, wps = 2541, dw:norm() = 13.768, lr = 0.013, since beginning = 278 mins.
+epoch = 45.811, train perp. = 39.256, wps = 2541, dw:norm() = 14.070, lr = 0.013, since beginning = 279 mins.
+epoch = 45.911, train perp. = 39.253, wps = 2542, dw:norm() = 14.221, lr = 0.013, since beginning = 280 mins.
+Validation set perplexity : 81.215
+epoch = 46.011, train perp. = 39.233, wps = 2540, dw:norm() = 13.666, lr = 0.011, since beginning = 280 mins.
+epoch = 46.112, train perp. = 39.235, wps = 2540, dw:norm() = 14.734, lr = 0.011, since beginning = 281 mins.
+epoch = 46.212, train perp. = 39.211, wps = 2541, dw:norm() = 14.782, lr = 0.011, since beginning = 282 mins.
+epoch = 46.312, train perp. = 39.198, wps = 2541, dw:norm() = 14.126, lr = 0.011, since beginning = 282 mins.
+epoch = 46.412, train perp. = 39.168, wps = 2541, dw:norm() = 14.693, lr = 0.011, since beginning = 283 mins.
+epoch = 46.512, train perp. = 39.130, wps = 2541, dw:norm() = 15.261, lr = 0.011, since beginning = 283 mins.
+epoch = 46.613, train perp. = 39.113, wps = 2541, dw:norm() = 14.506, lr = 0.011, since beginning = 284 mins.
+epoch = 46.713, train perp. = 39.066, wps = 2541, dw:norm() = 13.920, lr = 0.011, since beginning = 285 mins.
+epoch = 46.813, train perp. = 39.059, wps = 2541, dw:norm() = 14.522, lr = 0.011, since beginning = 285 mins.
+epoch = 46.913, train perp. = 39.056, wps = 2542, dw:norm() = 14.415, lr = 0.011, since beginning = 286 mins.
+Validation set perplexity : 81.119
+epoch = 47.014, train perp. = 39.081, wps = 2540, dw:norm() = 14.453, lr = 0.010, since beginning = 286 mins.
+epoch = 47.114, train perp. = 39.070, wps = 2540, dw:norm() = 14.711, lr = 0.010, since beginning = 287 mins.
+epoch = 47.214, train perp. = 39.094, wps = 2541, dw:norm() = 14.971, lr = 0.010, since beginning = 288 mins.
+epoch = 47.314, train perp. = 39.074, wps = 2541, dw:norm() = 14.803, lr = 0.010, since beginning = 288 mins.
+epoch = 47.414, train perp. = 39.116, wps = 2541, dw:norm() = 15.800, lr = 0.010, since beginning = 289 mins.
+epoch = 47.515, train perp. = 39.122, wps = 2541, dw:norm() = 14.338, lr = 0.010, since beginning = 289 mins.
+epoch = 47.615, train perp. = 39.084, wps = 2541, dw:norm() = 14.740, lr = 0.010, since beginning = 290 mins.
+epoch = 47.715, train perp. = 39.063, wps = 2541, dw:norm() = 14.621, lr = 0.010, since beginning = 291 mins.
+epoch = 47.815, train perp. = 39.038, wps = 2541, dw:norm() = 14.842, lr = 0.010, since beginning = 291 mins.
+epoch = 47.916, train perp. = 39.014, wps = 2542, dw:norm() = 13.818, lr = 0.010, since beginning = 292 mins.
+Validation set perplexity : 81.127
+epoch = 48.016, train perp. = 38.965, wps = 2540, dw:norm() = 14.398, lr = 0.009, since beginning = 293 mins.
+epoch = 48.116, train perp. = 38.956, wps = 2541, dw:norm() = 14.594, lr = 0.009, since beginning = 293 mins.
+epoch = 48.216, train perp. = 38.930, wps = 2541, dw:norm() = 14.812, lr = 0.009, since beginning = 294 mins.
+epoch = 48.317, train perp. = 38.957, wps = 2541, dw:norm() = 14.166, lr = 0.009, since beginning = 294 mins.
+epoch = 48.417, train perp. = 38.932, wps = 2541, dw:norm() = 14.576, lr = 0.009, since beginning = 295 mins.
+epoch = 48.517, train perp. = 38.961, wps = 2541, dw:norm() = 14.404, lr = 0.009, since beginning = 296 mins.
+epoch = 48.617, train perp. = 38.996, wps = 2541, dw:norm() = 14.351, lr = 0.009, since beginning = 296 mins.
+epoch = 48.717, train perp. = 39.014, wps = 2541, dw:norm() = 14.803, lr = 0.009, since beginning = 297 mins.
+epoch = 48.818, train perp. = 39.020, wps = 2541, dw:norm() = 14.166, lr = 0.009, since beginning = 297 mins.
+epoch = 48.918, train perp. = 39.007, wps = 2542, dw:norm() = 14.206, lr = 0.009, since beginning = 298 mins.
+Validation set perplexity : 81.142
+epoch = 49.018, train perp. = 39.009, wps = 2540, dw:norm() = 14.724, lr = 0.008, since beginning = 299 mins.
+epoch = 49.118, train perp. = 39.014, wps = 2541, dw:norm() = 14.644, lr = 0.008, since beginning = 299 mins.
+epoch = 49.219, train perp. = 38.972, wps = 2541, dw:norm() = 14.350, lr = 0.008, since beginning = 300 mins.
+epoch = 49.319, train perp. = 38.955, wps = 2541, dw:norm() = 15.208, lr = 0.008, since beginning = 300 mins.
+epoch = 49.419, train perp. = 38.926, wps = 2541, dw:norm() = 14.789, lr = 0.008, since beginning = 301 mins.
+epoch = 49.519, train perp. = 38.917, wps = 2541, dw:norm() = 14.448, lr = 0.008, since beginning = 302 mins.
+epoch = 49.619, train perp. = 38.901, wps = 2541, dw:norm() = 14.430, lr = 0.008, since beginning = 302 mins.
+epoch = 49.720, train perp. = 38.906, wps = 2541, dw:norm() = 14.230, lr = 0.008, since beginning = 303 mins.
+epoch = 49.820, train perp. = 38.919, wps = 2541, dw:norm() = 15.239, lr = 0.008, since beginning = 303 mins.
+epoch = 49.920, train perp. = 38.879, wps = 2542, dw:norm() = 14.655, lr = 0.008, since beginning = 304 mins.
+Validation set perplexity : 81.138
+epoch = 50.020, train perp. = 38.898, wps = 2540, dw:norm() = 14.698, lr = 0.007, since beginning = 305 mins.
+epoch = 50.121, train perp. = 38.913, wps = 2541, dw:norm() = 14.744, lr = 0.007, since beginning = 305 mins.
+epoch = 50.221, train perp. = 38.920, wps = 2541, dw:norm() = 14.300, lr = 0.007, since beginning = 306 mins.
+epoch = 50.321, train perp. = 38.907, wps = 2541, dw:norm() = 14.457, lr = 0.007, since beginning = 307 mins.
+epoch = 50.421, train perp. = 38.908, wps = 2541, dw:norm() = 14.485, lr = 0.007, since beginning = 307 mins.
+epoch = 50.521, train perp. = 38.918, wps = 2541, dw:norm() = 14.593, lr = 0.007, since beginning = 308 mins.
+epoch = 50.622, train perp. = 38.915, wps = 2541, dw:norm() = 14.219, lr = 0.007, since beginning = 308 mins.
+epoch = 50.722, train perp. = 38.901, wps = 2541, dw:norm() = 14.633, lr = 0.007, since beginning = 309 mins.
+epoch = 50.822, train perp. = 38.904, wps = 2541, dw:norm() = 14.764, lr = 0.007, since beginning = 310 mins.
+epoch = 50.922, train perp. = 38.918, wps = 2542, dw:norm() = 14.458, lr = 0.007, since beginning = 310 mins.
+Validation set perplexity : 81.132
+epoch = 51.023, train perp. = 38.889, wps = 2540, dw:norm() = 14.553, lr = 0.006, since beginning = 311 mins.
+epoch = 51.123, train perp. = 38.845, wps = 2541, dw:norm() = 14.700, lr = 0.006, since beginning = 311 mins.
+epoch = 51.223, train perp. = 38.843, wps = 2541, dw:norm() = 14.303, lr = 0.006, since beginning = 312 mins.
+epoch = 51.323, train perp. = 38.838, wps = 2541, dw:norm() = 15.064, lr = 0.006, since beginning = 313 mins.
+epoch = 51.424, train perp. = 38.827, wps = 2541, dw:norm() = 14.847, lr = 0.006, since beginning = 313 mins.
+epoch = 51.524, train perp. = 38.770, wps = 2541, dw:norm() = 14.963, lr = 0.006, since beginning = 314 mins.
+epoch = 51.624, train perp. = 38.765, wps = 2541, dw:norm() = 14.331, lr = 0.006, since beginning = 314 mins.
+epoch = 51.724, train perp. = 38.767, wps = 2541, dw:norm() = 14.609, lr = 0.006, since beginning = 315 mins.
+epoch = 51.824, train perp. = 38.737, wps = 2541, dw:norm() = 14.824, lr = 0.006, since beginning = 316 mins.
+epoch = 51.925, train perp. = 38.753, wps = 2542, dw:norm() = 14.485, lr = 0.006, since beginning = 316 mins.
+Validation set perplexity : 81.117
+epoch = 52.025, train perp. = 38.754, wps = 2540, dw:norm() = 15.206, lr = 0.005, since beginning = 317 mins.
+epoch = 52.125, train perp. = 38.740, wps = 2541, dw:norm() = 15.118, lr = 0.005, since beginning = 318 mins.
+epoch = 52.225, train perp. = 38.761, wps = 2541, dw:norm() = 14.662, lr = 0.005, since beginning = 318 mins.
+epoch = 52.326, train perp. = 38.790, wps = 2541, dw:norm() = 15.824, lr = 0.005, since beginning = 319 mins.
+epoch = 52.426, train perp. = 38.812, wps = 2541, dw:norm() = 14.623, lr = 0.005, since beginning = 319 mins.
+epoch = 52.526, train perp. = 38.848, wps = 2541, dw:norm() = 14.503, lr = 0.005, since beginning = 320 mins.
+epoch = 52.626, train perp. = 38.857, wps = 2541, dw:norm() = 15.080, lr = 0.005, since beginning = 321 mins.
+epoch = 52.726, train perp. = 38.857, wps = 2541, dw:norm() = 14.306, lr = 0.005, since beginning = 321 mins.
+epoch = 52.827, train perp. = 38.852, wps = 2541, dw:norm() = 14.344, lr = 0.005, since beginning = 322 mins.
+epoch = 52.927, train perp. = 38.831, wps = 2541, dw:norm() = 14.690, lr = 0.005, since beginning = 322 mins.
+Validation set perplexity : 81.127
+epoch = 53.027, train perp. = 38.821, wps = 2540, dw:norm() = 14.762, lr = 0.004, since beginning = 323 mins.
+epoch = 53.127, train perp. = 38.847, wps = 2541, dw:norm() = 15.501, lr = 0.004, since beginning = 324 mins.
+epoch = 53.228, train perp. = 38.841, wps = 2541, dw:norm() = 14.789, lr = 0.004, since beginning = 324 mins.
+epoch = 53.328, train perp. = 38.801, wps = 2541, dw:norm() = 14.828, lr = 0.004, since beginning = 325 mins.
+epoch = 53.428, train perp. = 38.749, wps = 2541, dw:norm() = 15.044, lr = 0.004, since beginning = 325 mins.
+epoch = 53.528, train perp. = 38.708, wps = 2541, dw:norm() = 14.723, lr = 0.004, since beginning = 326 mins.
+epoch = 53.628, train perp. = 38.677, wps = 2541, dw:norm() = 14.624, lr = 0.004, since beginning = 327 mins.
+epoch = 53.729, train perp. = 38.681, wps = 2541, dw:norm() = 14.936, lr = 0.004, since beginning = 327 mins.
+epoch = 53.829, train perp. = 38.664, wps = 2541, dw:norm() = 13.884, lr = 0.004, since beginning = 328 mins.
+epoch = 53.929, train perp. = 38.709, wps = 2541, dw:norm() = 14.561, lr = 0.004, since beginning = 328 mins.
+Validation set perplexity : 81.103
+epoch = 54.029, train perp. = 38.739, wps = 2540, dw:norm() = 15.061, lr = 0.004, since beginning = 329 mins.
+epoch = 54.130, train perp. = 38.696, wps = 2541, dw:norm() = 14.769, lr = 0.004, since beginning = 330 mins.
+epoch = 54.230, train perp. = 38.677, wps = 2541, dw:norm() = 14.246, lr = 0.004, since beginning = 330 mins.
+epoch = 54.330, train perp. = 38.683, wps = 2541, dw:norm() = 14.881, lr = 0.004, since beginning = 331 mins.
+epoch = 54.430, train perp. = 38.705, wps = 2541, dw:norm() = 14.254, lr = 0.004, since beginning = 332 mins.
+epoch = 54.531, train perp. = 38.736, wps = 2541, dw:norm() = 14.521, lr = 0.004, since beginning = 332 mins.
+epoch = 54.631, train perp. = 38.760, wps = 2541, dw:norm() = 14.990, lr = 0.004, since beginning = 333 mins.
+epoch = 54.731, train perp. = 38.764, wps = 2541, dw:norm() = 15.143, lr = 0.004, since beginning = 333 mins.
+epoch = 54.831, train perp. = 38.801, wps = 2541, dw:norm() = 14.151, lr = 0.004, since beginning = 334 mins.
+epoch = 54.931, train perp. = 38.775, wps = 2541, dw:norm() = 14.622, lr = 0.004, since beginning = 335 mins.
+Validation set perplexity : 81.125
+Test set perplexity : 78.232
+Training is over.

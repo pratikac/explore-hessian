@@ -1,4 +1,5 @@
 require 'resnet'
+require 'rnn'
 
 local models = {}
 local b = cudnn
@@ -266,14 +267,14 @@ function models.ptb()
     local m, p
     local n,layers = 1500,2
     local vocab_size = 10000
-
+    local d = 0.65
     local function net()
         local r = nn.Sequential()
             :add(nn.LookupTable(vocab_size, n))
-            :add(nn.LSTM(n,n))
-            :add(nn.Dropout(opt.dropout))
-            :add(nn.LSTM(n,vocab_size))
-            :add(nn.Dropout(opt.dropout))
+            :add(nn.SeqLSTM(n,n))
+            :add(nn.Dropout(d))
+            :add(nn.SeqLSTM(n,vocab_size))
+            :add(nn.Dropout(d))
             :add(nn.LogSoftMax())
         return nn.Sequencer(r)
     end
@@ -284,11 +285,14 @@ function models.ptb()
         assert('Unknown model: ' .. opt.model)
     end
     
+    p = {}
     local w, dw = m:getParameters()
+    print('Num parameters: ' .. w:size(1))
+    p.p = 2
     p.n = math.sqrt(w:numel()/p.p)
     p.classes = torch.totable(torch.LongTensor():range(1,vocab_size))
 
-    local cost_function = nn.ClassNLLCriterion()
+    local cost_function = nn.SequencerCriterion(nn.ClassNLLCriterion(),true)
     return m:cuda(), cost_function:cuda(), p
 end
 
