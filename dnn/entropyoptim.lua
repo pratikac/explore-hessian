@@ -321,7 +321,7 @@ function optim.sgdld(opfunc, x, config, state)
     -- update gradient
     state.eta:normal()
 
-    if opt.verbose and state.t % 10 == 1 then
+    if opt.verbose and state.t % 10 == 0 then
         local debug_stats = {df=torch.norm(dfdx),
         eta = torch.norm(state.eta*noise/math.sqrt(0.5*clr))}
         print(cjson.encode(debug_stats))

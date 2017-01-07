@@ -13,14 +13,14 @@ local ptb = require('data')
 require '../dnn/entropyoptim'
 
 opt = lapp[[
--g,--gpu            (default 2)                 GPU id
--e,--max_epochs     (default 10)
+-g,--gpu            (default 2)                 GPU idx
+-e,--max_epochs     (default 12)
 --LR                (default 1)                 Learning rate
---L                 (default 5)                 Num. Langevin iterations
--s,--seed           (default 42)
+--L                 (default 0)                 Num. Langevin iterations
+-s,--seed           (default 1)
 --gamma             (default 1e-5)              Langevin gamma coefficient
---scoping           (default 1e-3)              Scoping parameter \gamma*(1+scoping)^t
---noise             (default 5e-5)              Langevin dynamics additive noise factor (*stepSize)
+--scoping           (default 0)                 Scoping parameter \gamma*(1+scoping)^t
+--noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -v,--verbose                                    Show gradient statistics
 -h,--help                                       Print this message
 ]]
@@ -240,11 +240,10 @@ function main()
     end
     setup()
 
-    optim_state = optim_state or { learningRate= opt.LR,
-    momentum = 0.9,
-    nesterov = true,
+    optim_state = { learningRate= opt.LR,
+    momentum = 0,
+    nesterov = false,
     dampening = 0,
-    rho=opt.rho,
     gamma=opt.gamma,
     scoping=opt.scoping,
     L=opt.L,
@@ -256,30 +255,38 @@ function main()
     local beginning_time = torch.tic()
     local start_time = torch.tic()
 
-    print("Starting training.")
     local epoch_size = torch.floor(state_train.data:size(1) / opt.T)
+    print("Starting training, epoch_size: " .. epoch_size)
     local perps
     while epoch < opt.max_max_epoch do
+        collectgarbage()
+        local perp = 0
         -- closure for optim
-        local function feval(_w)
+        local function feval(_w, dry)
+            local dry = dry or false
             if w ~= _w then w:copy(_w) end
 
             -- compute fp and bp
-            local perp = fp(state_train)
-            if perps == nil then
-                perps = torch.zeros(epoch_size):add(perp)
-            end
-            perps[step % epoch_size + 1] = perp
-            step = step + 1
+            local f = fp(state_train)
             bp(state_train)
+            cutorch.synchronize()
 
-            return perp, dw
+            if dry == false then
+                perp = perp + f
+            end
+            return f, dw
         end
         optim.entropysgd(feval, w, optim_state)
 
+        if perps == nil then
+            perps = torch.zeros(epoch_size):add(perp)
+        end
+        step = step + 1
+        perps[step % epoch_size + 1] = perp
+
         total_cases = total_cases + opt.T * opt.batch_size
         epoch = step / epoch_size
-        if step % torch.round(epoch_size / 10) == 10 then
+        if step % torch.round(epoch_size / 10) == 0 then
             local since_beginning = g_d(torch.toc(beginning_time) / 60)
             print('epoch = ' .. g_f3(epoch) ..
             ', train perp. = ' .. g_f3(torch.exp(perps:mean())) ..
@@ -295,8 +302,6 @@ function main()
             end
         end
 
-        cutorch.synchronize()
-        collectgarbage()
     end
     run_test()
     print("Training is over.")
