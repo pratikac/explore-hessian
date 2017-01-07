@@ -1,12 +1,8 @@
---
-----  Copyright (c) 2014, Facebook, Inc.
-----  All rights reserved.
-----
-----  This source code is licensed under the Apache 2 license found in the
-----  LICENSE file in the root directory of this source tree. 
-----
+local lapp = require 'pl.lapp'
+lapp.slack = true
+local colors = sys.COLORS
+paths = require 'paths'
 
-local arg = {2}
 
 require('cunn')
 LookupTable = nn.LookupTable
@@ -16,47 +12,53 @@ require('base')
 local ptb = require('data')
 require '../dnn/entropyoptim'
 
+opt = lapp[[
+-g,--gpu            (default 2)                 GPU id
+-e,--max_epochs     (default 10)
+--LR                (default 1)                 Learning rate
+--L                 (default 5)                 Num. Langevin iterations
+-s,--seed           (default 42)
+--gamma             (default 1e-5)              Langevin gamma coefficient
+--scoping           (default 1e-3)              Scoping parameter \gamma*(1+scoping)^t
+--noise             (default 5e-5)              Langevin dynamics additive noise factor (*stepSize)
+-v,--verbose                                    Show gradient statistics
+-h,--help                                       Print this message
+]]
+
 --[[
 -- Train 1 day and gives 82 perplexity.
-local opt = {batch_size=20,
+local params = {batch_size=20,
 T=35,
-layers=2,
 decay=1.15,
 hdim=1500,
 dropout=0.65,
 init_weight=0.04,
-lr=1,
 vocab_size=10000,
 max_epoch=14,
 max_max_epoch=55,
 max_grad_norm=10,
-L=20,
-rho=0,
-gamma=0.1,
-scoping=1e-3,
-noise=1e-4,
-verbose=true}
+}
 --]]
 
 -- Trains 1h and gives test 115 perplexity.
-opt = {batch_size=20,
+local params = {batch_size=20,
 T=20,
-layers=2,
 decay=2,
 hdim=200,
 dropout=0,
 init_weight=0.1,
-lr=1,
-vocab_size=10000,
 max_epoch=4,
 max_max_epoch=13,
 max_grad_norm=5,
-L=20,
-rho=0,
-gamma=0.1,
-scoping=1e-3,
-noise=1e-4,
-verbose=true}
+}
+
+for k,v in pairs(params) do opt[k] = v end
+print(opt)
+if opt.help then
+    os.exit()
+end
+opt.vocab_size = 10000
+opt.layers = 2
 
 local function transfer_data(x)
     return x:cuda()
@@ -224,17 +226,13 @@ local function run_test()
     g_enable_dropout(model.rnns)
 end
 
-
 function main()
-    g_init_gpu(arg)
+    g_init_gpu({opt.gpu})
 
     print('Loading PTB')
     state_train = {data=transfer_data(ptb.traindataset(opt.batch_size))}
     state_valid =  {data=transfer_data(ptb.validdataset(opt.batch_size))}
     state_test =  {data=transfer_data(ptb.testdataset(opt.batch_size))}
-
-    print('opt:')
-    print(opt)
 
     local states = {state_train, state_valid, state_test}
     for _, state in pairs(states) do
@@ -242,7 +240,7 @@ function main()
     end
     setup()
 
-    optim_state = optim_state or { learningRate= opt.lr,
+    optim_state = optim_state or { learningRate= opt.LR,
     momentum = 0.9,
     nesterov = true,
     dampening = 0,
@@ -262,22 +260,22 @@ function main()
     local epoch_size = torch.floor(state_train.data:size(1) / opt.T)
     local perps
     while epoch < opt.max_max_epoch do
-
-        -- compute fp and bp
-        local perp = fp(state_train)
-        if perps == nil then
-            perps = torch.zeros(epoch_size):add(perp)
-        end
-        perps[step % epoch_size + 1] = perp
-        step = step + 1
-        bp(state_train)
-
         -- closure for optim
         local function feval(_w)
             if w ~= _w then w:copy(_w) end
+
+            -- compute fp and bp
+            local perp = fp(state_train)
+            if perps == nil then
+                perps = torch.zeros(epoch_size):add(perp)
+            end
+            perps[step % epoch_size + 1] = perp
+            step = step + 1
+            bp(state_train)
+
             return perp, dw
         end
-        optim.sgd(feval, w, optim_state)
+        optim.entropysgd(feval, w, optim_state)
 
         total_cases = total_cases + opt.T * opt.batch_size
         epoch = step / epoch_size
