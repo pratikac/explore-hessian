@@ -68,7 +68,7 @@ function optim.entropyadam(opfunc, x, config, state)
         --lparams.cgamma = gamma*(1 - math.exp(-state.t*scoping))
         lparams.cgamma = gamma*(1+scoping)^state.t
 
-        local lstepSize = 0.1
+        local lstepSize = config.lclr or 0.1
 
         for i=1,config.L do
             local lfx,ldfdx = opfunc(lx, true)
@@ -215,7 +215,7 @@ function optim.entropysgd(opfunc, x, config, state)
     lparams.w = lparams.w or x.new(dfdx:size()):zero()
     lparams.w:zero()
 
-    local lclr = 0.1
+    local lclr = config.lclr or 0.1
 
     if config.L > 0 then
         local lx = lparams.lx
@@ -240,7 +240,7 @@ function optim.entropysgd(opfunc, x, config, state)
             -- bias term
             eta:normal()
             ldfdx:add(-cgamma, xc-lx):add(wd,lx):add(noise/math.sqrt(0.5*lclr), eta)
-
+            
             -- update and average
             lx:add(-lclr, ldfdx)
 
@@ -269,6 +269,7 @@ function optim.entropysgd(opfunc, x, config, state)
         -- also multiply dfdx by rho
         dfdx:mul(rho)
     end
+
 
     x:copy(xc)
     dfdx:add(lparams.w)

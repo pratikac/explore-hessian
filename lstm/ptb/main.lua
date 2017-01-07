@@ -3,19 +3,22 @@ lapp.slack = true
 local colors = sys.COLORS
 paths = require 'paths'
 
-
 require('cunn')
 LookupTable = nn.LookupTable
 
 require('nngraph')
 require('base')
-local ptb = require('data')
 require '../dnn/entropyoptim'
+require '../dnn/exptutils'
+local ptb = require('data')
 
 opt = lapp[[
+--model             (default 'lstm')            Used inside entropy-optim
 -g,--gpu            (default 2)                 GPU idx
 -e,--max_epochs     (default 12)
 --LR                (default 1)                 Learning rate
+--lclr              (default 1)                 SGLD step size
+--gnorm             (default 5)                 Max. grad norm
 --L                 (default 0)                 Num. Langevin iterations
 -s,--seed           (default 1)
 --gamma             (default 1e-5)              Langevin gamma coefficient
@@ -24,6 +27,8 @@ opt = lapp[[
 -v,--verbose                                    Show gradient statistics
 -h,--help                                       Print this message
 ]]
+
+local fname = build_file_name(opt)
 
 --[[
 -- Train 1 day and gives 82 perplexity.
@@ -49,7 +54,7 @@ dropout=0,
 init_weight=0.1,
 max_epoch=4,
 max_max_epoch=13,
-max_grad_norm=5,
+max_grad_norm=opt.gnorm,
 }
 
 for k,v in pairs(params) do opt[k] = v end
@@ -247,7 +252,8 @@ function main()
     gamma=opt.gamma,
     scoping=opt.scoping,
     L=opt.L,
-    noise = opt.noise}
+    noise = opt.noise,
+    lclr=1}
 
     local step = 0
     local epoch = 0
@@ -287,12 +293,12 @@ function main()
         total_cases = total_cases + opt.T * opt.batch_size
         epoch = step / epoch_size
         if step % torch.round(epoch_size / 10) == 0 then
-            local since_beginning = g_d(torch.toc(beginning_time) / 60)
+            local dt = g_d(torch.toc(beginning_time) / 60)
             print('epoch = ' .. g_f3(epoch) ..
             ', train perp. = ' .. g_f3(torch.exp(perps:mean())) ..
             ', dw:norm() = ' .. g_f3(model.norm_dw) ..
             ', lr = ' ..  g_f3(optim_state.learningRate) ..
-            ', since beginning = ' .. since_beginning .. ' mins.')
+            ', dt = ' .. dt .. ' [m]')
         end
 
         if step % epoch_size == 0 then
