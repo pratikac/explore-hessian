@@ -19,20 +19,20 @@ local opt = cmd:parse(arg)
 -- Set up GPU stuff
 local dtype = 'torch.FloatTensor'
 if opt.gpu >= 0 and opt.gpu_backend == 'cuda' then
-  require 'cutorch'
-  require 'cunn'
-  cutorch.setDevice(opt.gpu + 1)
-  dtype = 'torch.CudaTensor'
-  print(string.format('Running with CUDA on GPU %d', opt.gpu))
+    require 'cutorch'
+    require 'cunn'
+    cutorch.setDevice(opt.gpu + 1)
+    dtype = 'torch.CudaTensor'
+    print(string.format('Running with CUDA on GPU %d', opt.gpu))
 elseif opt.gpu >= 0 and opt.gpu_backend == 'opencl' then
-  require 'cltorch'
-  require 'clnn'
-  cltorch.setDevice(opt.gpu + 1)
-  dtype = torch.Tensor():cl():type()
-  print(string.format('Running with OpenCL on GPU %d', opt.gpu))
+    require 'cltorch'
+    require 'clnn'
+    cltorch.setDevice(opt.gpu + 1)
+    dtype = torch.Tensor():cl():type()
+    print(string.format('Running with OpenCL on GPU %d', opt.gpu))
 else
-  -- Memory benchmarking is only supported in CUDA mode
-  print 'Running in CPU mode'
+    -- Memory benchmarking is only supported in CUDA mode
+    print 'Running in CPU mode'
 end
 
 -- Load the checkpoint and model
@@ -51,12 +51,12 @@ model:resetStates()
 local num = loader.split_sizes[opt.split]
 local loss = 0
 for i = 1, num do
-  print(string.format('%s batch %d / %d', opt.split, i, num))
-  local x, y = loader:nextBatch(opt.split)
-  x = x:type(dtype)
-  y = y:type(dtype):view(N * T)
-  local scores = model:forward(x):view(N * T, -1)
-  loss = loss + crit:forward(scores, y)
+    print(string.format('%s batch %d / %d', opt.split, i, num))
+    local x, y = loader:nextBatch(opt.split)
+    x = x:type(dtype)
+    y = y:type(dtype):view(N * T)
+    local scores = model:forward(x):view(N * T, -1)
+    loss = loss + crit:forward(scores, y)
 end
 loss = loss / num
 print(string.format('%s loss = %f', opt.split, loss))

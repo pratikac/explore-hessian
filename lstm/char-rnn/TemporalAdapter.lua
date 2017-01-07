@@ -19,26 +19,25 @@ local layer, parent = torch.class('nn.TemporalAdapter', 'nn.Module')
 
 
 function layer:__init(module)
-  self.view_in = nn.View(1, -1):setNumInputDims(3)
-  self.view_out = nn.View(1, -1):setNumInputDims(2)
-  self.net = nn.Sequential()
-  self.net:add(self.view_in)
-  self.net:add(module)
-  self.net:add(self.view_out)
+    self.view_in = nn.View(1, -1):setNumInputDims(3)
+    self.view_out = nn.View(1, -1):setNumInputDims(2)
+    self.net = nn.Sequential()
+    self.net:add(self.view_in)
+    self.net:add(module)
+    self.net:add(self.view_out)
 end
 
 
 function layer:updateOutput(input)
-  local N, T = input:size(1), input:size(2)
-  self.view_in:resetSize(N * T, -1)
-  self.view_out:resetSize(N, T, -1)
-  self.output = self.net:forward(input)
-  return self.output
+    local N, T = input:size(1), input:size(2)
+    self.view_in:resetSize(N * T, -1)
+    self.view_out:resetSize(N, T, -1)
+    self.output = self.net:forward(input)
+    return self.output
 end
 
 
 function layer:updateGradInput(input, gradOutput)
-  self.gradInput = self.net:updateGradInput(input, gradOutput)
-  return self.gradInput
+    self.gradInput = self.net:updateGradInput(input, gradOutput)
+    return self.gradInput
 end
-

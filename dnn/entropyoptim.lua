@@ -12,8 +12,9 @@ function optim.entropyadam(opfunc, x, config, state)
     local beta2 = config.beta2 or 0.999
     local epsilon = config.epsilon or 1e-8
     local wd = config.weightDecay or 0
-    local mom = 0.9
-    local nesterov = true
+    local mom = config.momentum or 0
+    local nesterov = config.nesterov or false
+    local damp = config.dampening or mom
 
     local rho = config.rho or 0
     local gamma = config.gamma or 0

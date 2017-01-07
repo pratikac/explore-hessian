@@ -5,14 +5,17 @@ require 'optim'
 require 'LanguageModel'
 require 'util.DataLoader'
 
+require '../../dnn/entropyoptim'
+require '../../dnn/exptutils'
+
 local utils = require 'util.utils'
 local unpack = unpack or table.unpack
 
 local cmd = torch.CmdLine()
 
 -- Dataset options
-cmd:option('-input_h5', 'data/tiny-shakespeare.h5')
-cmd:option('-input_json', 'data/tiny-shakespeare.json')
+cmd:option('-input_h5', 'data/shakespeare.h5')
+cmd:option('-input_json', 'data/shakespeare.json')
 cmd:option('-batch_size', 50)
 cmd:option('-seq_length', 50)
 
@@ -21,7 +24,7 @@ cmd:option('-init_from', '')
 cmd:option('-reset_iterations', 1)
 cmd:option('-model_type', 'lstm')
 cmd:option('-wordvec_size', 64)
-cmd:option('-rnn_size', 128)
+cmd:option('-rnn_size', 256)
 cmd:option('-num_layers', 2)
 cmd:option('-dropout', 0)
 cmd:option('-batchnorm', 1)
@@ -33,42 +36,36 @@ cmd:option('-grad_clip', 5)
 cmd:option('-lr_decay_every', 5)
 cmd:option('-lr_decay_factor', 0.5)
 
--- Output options
-cmd:option('-print_every', 10)
-cmd:option('-checkpoint_every', 50000)
-cmd:option('-checkpoint_name', 'cv/checkpoint')
+-- local entropy
+cmd:option('-L',0)
+cmd:option('-gamma',1e-3)
+cmd:option('-scoping',0)
+cmd:option('-noise',2e-6)
 
--- Benchmark options
-cmd:option('-speed_benchmark', 0)
-cmd:option('-memory_benchmark', 0)
+-- Output options
+cmd:option('-verbose', 0)
+cmd:option('-checkpoint_every', 20000)
 
 -- Backend options
 cmd:option('-gpu', 1)
-cmd:option('-gpu_backend', 'cuda')
 
-local opt = cmd:parse(arg)
+opt = cmd:parse(arg)
 
+--[[
+local fname = build_file_name(opt, {'checkpoint_every','grad_clip',
+                'lr_decay_factor','lr_decay_every',
+                'wordvec_size','rnn_size','num_layers','batchnorm',
+                'input_h5','input_json','batch_size','seq_length'})
+--]]
 
 -- Set up GPU stuff
 local dtype = 'torch.FloatTensor'
-if opt.gpu >= 0 and opt.gpu_backend == 'cuda' then
+if opt.gpu >= 0 then
     require 'cutorch'
     require 'cunn'
-    cutorch.setDevice(opt.gpu + 1)
+    cutorch.setDevice(opt.gpu)
     dtype = 'torch.CudaTensor'
     print(string.format('Running with CUDA on GPU %d', opt.gpu))
-elseif opt.gpu >= 0 and opt.gpu_backend == 'opencl' then
-    -- Memory benchmarking is only supported in CUDA mode
-    -- TODO: Time benchmarking is probably wrong in OpenCL mode.
-    require 'cltorch'
-    require 'clnn'
-    cltorch.setDevice(opt.gpu + 1)
-    dtype = torch.Tensor():cl():type()
-    print(string.format('Running with OpenCL on GPU %d', opt.gpu))
-else
-    -- Memory benchmarking is only supported in CUDA mode
-    opt.memory_benchmark = 0
-    print 'Running in CPU mode'
 end
 
 
@@ -104,29 +101,15 @@ local train_loss_history = {}
 local val_loss_history = {}
 local val_loss_history_it = {}
 local forward_backward_times = {}
-local init_memory_usage, memory_usage = nil, {}
-
-if opt.memory_benchmark == 1 then
-    -- This should only be enabled in GPU mode
-    assert(cutorch)
-    cutorch.synchronize()
-    local free, total = cutorch.getMemoryUsage(cutorch.getDevice())
-    init_memory_usage = total - free
-end
 
 -- Loss function that we pass to an optim method
 local function f(w)
-    assert(w == params)
+    if params ~= w then params:copy(w) end
     grad_params:zero()
 
     -- Get a minibatch and run the model forward, maybe timing it
-    local timer
     local x, y = loader:nextBatch('train')
     x, y = x:type(dtype), y:type(dtype)
-    if opt.speed_benchmark == 1 then
-        if cutorch then cutorch.synchronize() end
-        timer = torch.Timer()
-    end
     local scores = model:forward(x)
 
     -- Use the Criterion to compute loss; we need to reshape the scores to be
@@ -138,23 +121,6 @@ local function f(w)
     -- Run the Criterion and model backward to compute gradients, maybe timing it
     local grad_scores = crit:backward(scores_view, y_view):view(N, T, -1)
     model:backward(x, grad_scores)
-    if timer then
-        if cutorch then cutorch.synchronize() end
-        local time = timer:time().real
-        print('Forward / Backward pass took ', time)
-        table.insert(forward_backward_times, time)
-    end
-
-    -- Maybe record memory usage
-    if opt.memory_benchmark == 1 then
-        assert(cutorch)
-        if cutorch then cutorch.synchronize() end
-        local free, total = cutorch.getMemoryUsage(cutorch.getDevice())
-        local memory_used = total - free - init_memory_usage
-        local memory_used_mb = memory_used / 1024 / 1024
-        print(string.format('Using %dMB of memory', memory_used_mb))
-        table.insert(memory_usage, memory_used)
-    end
 
     if opt.grad_clip > 0 then
         grad_params:clamp(-opt.grad_clip, opt.grad_clip)
@@ -164,7 +130,12 @@ local function f(w)
 end
 
 -- Train the model!
-local optim_config = {learningRate = opt.learning_rate}
+print('Start training...')
+local optim_config = {learningRate = opt.learning_rate,
+L=opt.L,
+scoping=opt.scoping,
+noise=opt.noise,
+gamma=opt.gamma}
 local num_train = loader.split_sizes['train']
 local num_iterations = opt.max_epochs * num_train
 model:training()
@@ -177,16 +148,14 @@ for i = start_i + 1, num_iterations do
 
         -- Maybe decay learning rate
         if epoch % opt.lr_decay_every == 0 then
-            local old_lr = optim_config.learningRate
-            optim_config = {learningRate = old_lr * opt.lr_decay_factor}
+            optim_config.learningRate = optim_config.learningRate * opt.lr_decay_factor
         end
     end
 
     -- Take a gradient step and maybe print
-    -- Note that adam returns a singleton array of losses
-    local _, loss = optim.adam(f, params, optim_config)
+    local _, loss = optim.entropyadam(f, params, optim_config)
     table.insert(train_loss_history, loss[1])
-    if opt.print_every > 0 and i % opt.print_every == 0 then
+    if opt.verbose > 0 and i % 100 == 0 then
         local float_epoch = i / num_train + 1
         local msg = 'Epoch %.2f / %d, i = %d / %d, loss = %f'
         local args = {msg, float_epoch, opt.max_epochs, i, num_iterations, loss[1]}
