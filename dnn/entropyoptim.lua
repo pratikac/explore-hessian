@@ -12,13 +12,14 @@ function optim.entropyadam(opfunc, x, config, state)
     local beta2 = config.beta2 or 0.999
     local epsilon = config.epsilon or 1e-8
     local wd = config.weightDecay or 0
+
     local mom = config.momentum or 0
     local nesterov = config.nesterov or false
     local damp = config.dampening or mom
 
     local rho = config.rho or 0
     local gamma = config.gamma or 0
-    local scoping = config.scoping or 1e32
+    local scoping = config.scoping or 0
     local noise = config.noise or 1e-3
 
     state.lparams = state.lparams or {beta1=0.75}
@@ -60,7 +61,8 @@ function optim.entropyadam(opfunc, x, config, state)
     lparams.w = lparams.w or x.new(dfdx:size()):zero()
     lparams.w:zero()
 
-    local lstepSize = config.lclr or clr
+    local lstepSize = stepSize
+
     if config.L > 0 then
         local lx = lparams.lx
         local lmx = lparams.lmx
@@ -73,6 +75,7 @@ function optim.entropyadam(opfunc, x, config, state)
         for i=1,config.L do
             local lfx,ldfdx = opfunc(lx, true)
 
+            --[[
             if mom ~= 0 then
                 mdfdx:mul(mom):add(1-damp, ldfdx)
             end
@@ -81,10 +84,11 @@ function optim.entropyadam(opfunc, x, config, state)
             else
                 ldfdx = mdfdx
             end
+            --]]
 
             -- bias term
             eta:normal()
-            ldfdx:add(-lparams.cgamma, xc-lx):add(noise/math.sqrt(0.5*lstepSize), eta)
+            ldfdx:add(-lparams.cgamma, xc-lx):add(wd,lx):add(noise/math.sqrt(0.5*lstepSize), eta)
 
             -- update and average
             lx:add(-lstepSize, ldfdx)
@@ -153,7 +157,7 @@ function optim.entropysgd(opfunc, x, config, state)
 
     local rho = config.rho or 0
     local gamma = config.gamma or 0
-    local scoping = config.scoping or 1e32
+    local scoping = config.scoping or 0
     local noise = config.noise or 1e-3
     state.lparams = state.lparams or {beta1=0.75}
     local lparams = state.lparams

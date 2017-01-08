@@ -39,7 +39,7 @@ cmd:option('-lr_decay_factor', 0.5)
 cmd:option('-L',0)
 cmd:option('-gamma',1e-3)
 cmd:option('-scoping',0)
-cmd:option('-noise',2e-6)
+cmd:option('-noise',1e-4)
 
 -- Output options
 cmd:option('-verbose', 0)
@@ -130,7 +130,9 @@ L=opt.L,
 scoping=opt.scoping,
 noise=opt.noise,
 gamma=opt.gamma,
-lclr = opt.learning_rate}
+rho = 0}
+
+
 local num_train = loader.split_sizes['train']
 local num_iterations = opt.max_epochs * num_train
 model:training()
