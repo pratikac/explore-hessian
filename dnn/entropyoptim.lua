@@ -75,7 +75,6 @@ function optim.entropyadam(opfunc, x, config, state)
         for i=1,config.L do
             local lfx,ldfdx = opfunc(lx, true)
 
-            --[[
             if mom ~= 0 then
                 mdfdx:mul(mom):add(1-damp, ldfdx)
             end
@@ -84,7 +83,6 @@ function optim.entropyadam(opfunc, x, config, state)
             else
                 ldfdx = mdfdx
             end
-            --]]
 
             -- bias term
             eta:normal()

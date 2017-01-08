@@ -1,0 +1,16 @@
+warpeace
+    vanilla adam: 1.221 @35 epochs
+    
+    th train.lua -L 5 -g 1 --max_epochs 10 --gamma 1e-2 -v --noise 1e-4 --lr 1e-2
+    *adam(beta1=0.75), mom+nesterov in inner loop (no scoping)
+        - 1.220 @4 epochs, lrratio = 0.5 @ drop=3
+    *adam(beta1=0.5), mom+nesterov in inner loop (no scoping)
+        - 1.219 @4 epochs, lrratio = 0.5 @ drop=3
+        - 1.216 @3 / 1.214 @4 / 1.213 @5 epochs, lrratio = 0.5 @ drop=1
+
+tiny-shakespeare
+    vanilla adam: 1.50 @50
+
+shakespeare
+    vanilla adam:1.445 @50
+

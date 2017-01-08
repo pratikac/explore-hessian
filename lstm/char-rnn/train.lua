@@ -19,25 +19,27 @@ local cmd = torch.CmdLine()
 
 opt = lapp[[
 --output            (default "/local2/pratikac/results/")
---input             (default 'tiny-shakespeare')
---batch_size        (default 50)
+--input             (default 'warpeace')
+--batch_size        (default 128)
 --seq_length        (default 50)
 --max_epochs        (default 10)
 --model_type        (default 'lstm')
---wordvec_size      (default 64)
---rnn_size          (default 256)
+--wordvec_size      (default 85)
+--rnn_size          (default 128)
 --num_layers        (default 2)
---dropout           (default 0.5)
+--dropout           (default 0)
 --lr                (default 1e-2)
+--lclr              (default 1)
 --lrstep            (default 3)
---lrratio           (default 0.5)
+--lrratio           (default 0.1)
+--beta1             (default 0.5)
 --grad_clip         (default 5)
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
---gamma             (default 1e-3)              Langevin gamma coefficient
+--gamma             (default 1e-2)              Langevin gamma coefficient
 --scoping           (default 0)                 Scoping parameter \gamma*(1+scoping)^t
 --noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
--g,--gpu            (default 2)                 GPU id
+-g,--gpu            (default 2)                 GPU idx
 -f,--full                                       Use all data
 -s,--seed           (default 42)
 -l,--log                                        Log statistics
@@ -47,12 +49,13 @@ opt = lapp[[
 
 opt.input_h5 = 'data/' .. opt.input .. '.h5'
 opt.batchnorm = 1
+if opt.input == 'warpeace' then opt.wordvec_size = 85 end
+if opt.input == 'tiny-shakespeare' then opt.wordvec_size = 68 end
 print(opt)
 
 logger = nil
-local symbols = {'tv', 'epoch', 'iter', 'loss'}
-local blacklist = { 'input', 'rnn_size', 'seq_length',
-'model_type', 'num_layers', 'wordvec_size', 'grad_clip',
+local symbols = {'tv', 'epoch', 'batch', 'loss'}
+local blacklist = {'rnn_size', 'seq_length', 'num_layers', 'wordvec_size', 'grad_clip',
 'input_h5', 'batchnorm'}
 if opt.log then
     logger, logfname = setup_logger(opt, symbols, blacklist)
@@ -119,12 +122,16 @@ end
 -- Train the model!
 print('Start training...')
 local optim_config = {learningRate = opt.lr,
+beta1=opt.beta1,
+momentum=0.9,
+nesterov=true,
+dampening = 0,
 L=opt.L,
 scoping=opt.scoping,
 noise=opt.noise,
 gamma=opt.gamma,
-rho = 0,
-lclr=0.1}
+rho = opt.rho,
+lclr=opt.lclr}
 
 
 local num_train = loader.split_sizes['train']
@@ -134,6 +141,7 @@ print('Num train: ' .. num_train)
 local num_iterations = opt.max_epochs * num_train
 model:training()
 
+local timer = torch.Timer()
 local train_loss = 0
 for i = 1, num_iterations do
     local epoch = math.ceil(i / num_train)
@@ -141,14 +149,14 @@ for i = 1, num_iterations do
     -- check if we are at the end of an epoch
     if i % num_train == 0 then
         train_loss = train_loss/num_train
-        print((colors.blue .. '++[%d] %.3f'):format(epoch, train_loss))
-        local s = {tv=1, iter=0, epoch=epoch, loss=train_loss}
+        print((colors.blue .. '++[%d] %.3f [%.3fs]'):format(epoch, train_loss, timer:time().real))
+        local s = {tv=1, batch=0, epoch=epoch, loss=train_loss}
         logger_add(logger, s)
         train_loss = 0
 
         if epoch % opt.lrstep == 0 then
             optim_config.learningRate = optim_config.learningRate * opt.lrratio
-            print(('[LR] %.3f'):format(optim_config.learningRate))
+            print(('[LR] %.5f'):format(optim_config.learningRate))
         end
 
         -- evaluate model
@@ -164,20 +172,20 @@ for i = 1, num_iterations do
         val_loss = val_loss/num_val
 
         print((colors.red .. '**[%d] %.3f'):format(epoch, val_loss))
-        local s = {tv=0, iter=0, epoch=epoch, loss=val_loss}
+        local s = {tv=0, batch=0, epoch=epoch, loss=val_loss}
         logger_add(logger, s)
 
         model:training()
-
+        timer:reset()
     else
 
         -- take a gradient step and maybe print
         local _, loss = optim.entropyadam(feval, params, optim_config)
         train_loss = train_loss + loss[1]
-        local s = {tv=1, iter=i%num_train, epoch=epoch, loss=train_loss/(i%num_train)}
+        local s = {tv=1, batch=i%num_train, epoch=epoch, loss=train_loss/(i%num_train)}
         logger_add(logger, s)
 
-        if i % 50 == 0 then
+        if (i%num_train) % 50 == 0 then
             print((colors.blue .. '[%2d][%3d/%3d] %.2f'):format(epoch,i%num_train,num_train,train_loss/(i%num_train)))
         end
     end
