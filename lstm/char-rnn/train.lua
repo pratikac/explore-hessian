@@ -25,9 +25,9 @@ opt = lapp[[
 --max_epochs        (default 10)
 --model_type        (default 'lstm')
 --wordvec_size      (default 64)
---rnn_size          (default 128)
+--rnn_size          (default 256)
 --num_layers        (default 2)
---dropout           (default 0)
+--dropout           (default 0.5)
 --lr                (default 1e-2)
 --lrstep            (default 3)
 --lrratio           (default 0.5)
@@ -52,8 +52,8 @@ print(opt)
 logger = nil
 local symbols = {'tv', 'epoch', 'iter', 'loss'}
 local blacklist = { 'input', 'rnn_size', 'seq_length',
-                    'model_type', 'num_layers', 'wordvec_size', 'grad_clip',
-                    'input_h5', 'batchnorm'}
+'model_type', 'num_layers', 'wordvec_size', 'grad_clip',
+'input_h5', 'batchnorm'}
 if opt.log then
     logger, logfname = setup_logger(opt, symbols, blacklist)
 end
@@ -141,6 +141,7 @@ for i = 1, num_iterations do
     -- check if we are at the end of an epoch
     if i % num_train == 0 then
         train_loss = train_loss/num_train
+        print((colors.blue .. '++[%d] %.3f'):format(epoch, train_loss))
         local s = {tv=1, iter=0, epoch=epoch, loss=train_loss}
         logger_add(logger, s)
         train_loss = 0
@@ -162,20 +163,22 @@ for i = 1, num_iterations do
         end
         val_loss = val_loss/num_val
 
-        print((colors.red .. '[%d] %.3f'):format(epoch, val_loss))
+        print((colors.red .. '**[%d] %.3f'):format(epoch, val_loss))
         local s = {tv=0, iter=0, epoch=epoch, loss=val_loss}
         logger_add(logger, s)
 
         model:training()
-    end
 
-    -- take a gradient step and maybe print
-    local _, loss = optim.entropyadam(feval, params, optim_config)
-    train_loss = train_loss + loss[1]
-    local s = {tv=1, iter=i%num_train, epoch=epoch, loss=loss[1]}
-    logger_add(logger, s)
-    
-    if i % 10 == 0 then
-        print((colors.blue .. '[%2d][%3d/%3d] %.2f'):format(epoch,i%num_train,num_train,loss[1]))
+    else
+
+        -- take a gradient step and maybe print
+        local _, loss = optim.entropyadam(feval, params, optim_config)
+        train_loss = train_loss + loss[1]
+        local s = {tv=1, iter=i%num_train, epoch=epoch, loss=train_loss/(i%num_train)}
+        logger_add(logger, s)
+
+        if i % 50 == 0 then
+            print((colors.blue .. '[%2d][%3d/%3d] %.2f'):format(epoch,i%num_train,num_train,train_loss/(i%num_train)))
+        end
     end
 end
