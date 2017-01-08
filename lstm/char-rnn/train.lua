@@ -31,7 +31,7 @@ opt = lapp[[
 --lr                (default 1e-2)
 --lclr              (default 1)
 --lrstep            (default 3)
---lrratio           (default 0.1)
+--lrratio           (default 0.5)
 --beta1             (default 0.5)
 --grad_clip         (default 5)
 --L                 (default 0)                 Num. Langevin iterations
