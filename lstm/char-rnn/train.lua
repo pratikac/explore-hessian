@@ -1,6 +1,7 @@
 require 'torch'
 require 'nn'
 require 'optim'
+local colors = sys.COLORS
 
 require 'LanguageModel'
 require 'util.DataLoader'
@@ -17,45 +18,56 @@ lapp.slack = true
 local cmd = torch.CmdLine()
 
 opt = lapp[[
+--output            (default "/local2/pratikac/results/")
 --input             (default 'tiny-shakespeare')
 --batch_size        (default 50)
 --seq_length        (default 50)
+--max_epochs        (default 50)
 --model_type        (default 'lstm')
 --wordvec_size      (default 64)
 --rnn_size          (default 128)
 --num_layers        (default 2)
 --dropout           (default 0)
---batchnorm         (default 1)
---max_epochs        (default 50)
---learning_rate     (default 2e-3)
+--lr                (default 1e-2)
+--lrstep            (default 2)
+--lrratio           (default 0.5)
 --grad_clip         (default 5)
---lr_decay_every    (default 5)
---lr_decay_factor   (default 0.5)
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
---gamma             (default 1e-4)              Langevin gamma coefficient
---scoping           (default 1e-3)              Scoping parameter \gamma*(1+scoping)^t
+--gamma             (default 1e-3)              Langevin gamma coefficient
+--scoping           (default 0)                 Scoping parameter \gamma*(1+scoping)^t
 --noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 2)                 GPU id
 -f,--full                                       Use all data
 -s,--seed           (default 42)
+-l,--log                                        Log statistics
 -v,--verbose                                    Show gradient statistics
 -h,--help                                       Print this message
 ]]
 
 opt.input_h5 = 'data/' .. opt.input .. '.h5'
+opt.batchnorm = 1
 print(opt)
 
--- Set up GPU stuff
-local dtype = 'torch.FloatTensor'
-if opt.gpu >= 0 then
-    require 'cutorch'
-    require 'cunn'
-    cutorch.setDevice(opt.gpu)
-    dtype = 'torch.CudaTensor'
-    print(string.format('Running with CUDA on GPU %d', opt.gpu))
+logger = nil
+local symbols = {'tv', 'epoch', 'iter', 'loss'}
+local blacklist = { 'input', 'rnn_size', 'seq_length',
+                    'model_type', 'num_layers', 'wordvec_size', 'grad_clip',
+                    'input_h5', 'batchnorm'}
+if opt.log then
+    logger, logfname = setup_logger(opt, symbols, blacklist)
 end
 
+-- Set up GPU stuff
+require 'cutorch'
+require 'cunn'
+cutorch.setDevice(opt.gpu)
+local dtype = 'torch.CudaTensor'
+print(string.format('Running with CUDA on GPU %d', opt.gpu))
+
+-- setup seed
+torch.manualSeed(opt.seed)
+cutorch.manualSeedAll(opt.seed)
 
 -- Initialize the DataLoader and vocabulary
 local loader = DataLoader(opt)
@@ -69,21 +81,16 @@ end
 local opt_clone = torch.deserialize(torch.serialize(opt))
 opt_clone.idx_to_token = idx_to_token
 local model = nil
-local start_i = 0
 model = nn.LanguageModel(opt_clone):type(dtype)
 
 local params, grad_params = model:getParameters()
+print('Num params: ' .. params:size(1))
 local crit = nn.CrossEntropyCriterion():type(dtype)
 
 -- Set up some variables we will use below
 local N, T = opt.batch_size, opt.seq_length
-local train_loss_history = {}
-local val_loss_history = {}
-local val_loss_history_it = {}
-local forward_backward_times = {}
 
--- Loss function that we pass to an optim method
-local function f(w)
+local function feval(w)
     if params ~= w then params:copy(w) end
     grad_params:zero()
 
@@ -111,7 +118,7 @@ end
 
 -- Train the model!
 print('Start training...')
-local optim_config = {learningRate = opt.learning_rate,
+local optim_config = {learningRate = opt.lr,
 L=opt.L,
 scoping=opt.scoping,
 noise=opt.noise,
@@ -121,83 +128,47 @@ lclr=0.1}
 
 
 local num_train = loader.split_sizes['train']
+local num_val = loader.split_sizes['val']
+print('Num train: ' .. num_train)
+
 local num_iterations = opt.max_epochs * num_train
 model:training()
-for i = start_i + 1, num_iterations do
-    local epoch = math.floor(i / num_train) + 1
 
-    -- Check if we are at the end of an epoch
+for i = 1, num_iterations do
+    local epoch = math.ceil(i / num_train)
+
+    -- check if we are at the end of an epoch
     if i % num_train == 0 then
-        model:resetStates() -- Reset hidden states
 
-        -- Maybe decay learning rate
-        if epoch % opt.lr_decay_every == 0 then
-            optim_config.learningRate = optim_config.learningRate * opt.lr_decay_factor
+        if epoch % opt.lrstep == 0 then
+            optim_config.learningRate = optim_config.learningRate * opt.lrratio
             print(('[LR] %.3f'):format(optim_config.learningRate))
         end
-    end
 
-    -- Take a gradient step and maybe print
-    local _, loss = optim.entropyadam(f, params, optim_config)
-    table.insert(train_loss_history, loss[1])
-    if i % 10 == 0 then
-        local float_epoch = i / num_train + 1
-        local msg = '[%.2f/%d][%4d/%4d] loss = %2.2f'
-        local args = {msg, float_epoch, opt.max_epochs, i, num_iterations, loss[1]}
-        print(string.format(unpack(args)))
-    end
-
-    --[[
-    -- Maybe save a checkpoint
-    local check_every = opt.checkpoint_every
-    if (check_every > 0 and i % check_every == 0) or i == num_iterations then
-        -- Evaluate loss on the validation set. Note that we reset the state of
-        -- the model; this might happen in the middle of an epoch, but that
-        -- shouldn't cause too much trouble.
+        -- evaluate model
         model:evaluate()
         model:resetStates()
-        local num_val = loader.split_sizes['val']
         local val_loss = 0
-        for j = 1, num_val do
-            local xv, yv = loader:nextBatch('val')
-            xv = xv:type(dtype)
-            yv = yv:type(dtype):view(N * T)
-            local scores = model:forward(xv):view(N * T, -1)
-            val_loss = val_loss + crit:forward(scores, yv)
+        for j=1,num_val do
+            local x,y = loader:nextBatch('val')
+            x,y = x:type(dtype), y:type(dtype)
+            local f = model:forward(x):view(N*T, -1)
+            val_loss = val_loss + crit:forward(f, y:view(N*T))
         end
-        val_loss = val_loss / num_val
-        print('val_loss = ', val_loss)
-        table.insert(val_loss_history, val_loss)
-        table.insert(val_loss_history_it, i)
-        model:resetStates()
+        val_loss = val_loss/num_val
+        print((colors.red .. '[%d] %.3f'):format(epoch, val_loss))
+        local s = {tv=0, iter=0, epoch=epoch, loss=val_loss}
+        logger_add(logger, s)
+
         model:training()
-
-        -- First save a JSON checkpoint, excluding the model
-        local checkpoint = {
-            opt = opt,
-            train_loss_history = train_loss_history,
-            val_loss_history = val_loss_history,
-            val_loss_history_it = val_loss_history_it,
-            forward_backward_times = forward_backward_times,
-            memory_usage = memory_usage,
-            i = i
-        }
-        local filename = string.format('%s_%d.json', opt.checkpoint_name, i)
-        -- Make sure the output directory exists before we try to write it
-        paths.mkdir(paths.dirname(filename))
-        utils.write_json(filename, checkpoint)
-
-        -- Now save a torch checkpoint with the model
-        -- Cast the model to float before saving so it can be used on CPU
-        model:clearState()
-        model:float()
-        checkpoint.model = model
-        local filename = string.format('%s_%d.t7', opt.checkpoint_name, i)
-        paths.mkdir(paths.dirname(filename))
-        torch.save(filename, checkpoint)
-        model:type(dtype)
-        params, grad_params = model:getParameters()
-        collectgarbage()
     end
-    --]]
+
+    -- take a gradient step and maybe print
+    local _, loss = optim.entropyadam(feval, params, optim_config)
+    local s = {tv=1, iter=i, epoch=epoch, loss=loss[1]}
+    logger_add(logger, s)
+    
+    if i % 10 == 0 then
+        print((colors.blue .. '[%2d][%3d/%3d] %.2f'):format(epoch,i,num_train,loss[1]))
+    end
 end

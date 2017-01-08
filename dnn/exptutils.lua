@@ -1,15 +1,17 @@
 local cjson = require 'cjson'
-local tablex = require 'pl.tablex'
 
 function build_file_name(opt, blacklist)
-    local bl = tablex.union(blacklist or {},
-    {'backend', 'output', 'full', 'log', 'help', 'gpu',
+    local blacklist = blacklist or {}
+    local tmp = {'backend', 'output', 'full', 'log', 'help', 'gpu',
     'max_epochs', 'batch_size', 'backend_name',
     'retrain', 'verbose', 'dataset', 'augment',
-    'estimateF','rho'})
+    'estimateF','rho'}
+    for k,v in pairs(tmp) do
+        blacklist[#blacklist+1] = v
+    end
 
-    local _opt = tablex.deepcopy(opt)
-    for k,v in ipairs(bl) do _opt[v] = nil end
+    local _opt = torch.deserialize(torch.serialize(opt))
+    for k,v in ipairs(blacklist) do _opt[v] = nil end
 
     local t = os.date('%b_%d_%a_%H_%M_%S')
     local s = cjson.encode(_opt)
@@ -36,9 +38,9 @@ function get_gitrev()
     return {sha=sha, diff=diff, status=status}
 end
 
-function setup_logger(opt, symbols)
+function setup_logger(opt, symbols, blacklist)
     local logger
-    local fname = build_file_name(opt)
+    local fname = build_file_name(opt, blacklist)
     logger = optim.Logger(opt.output .. fname .. '.log')
     logger:setNames(symbols)
 
