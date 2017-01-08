@@ -147,6 +147,7 @@ for i = start_i + 1, num_iterations do
         -- Maybe decay learning rate
         if epoch % opt.lr_decay_every == 0 then
             optim_config.learningRate = optim_config.learningRate * opt.lr_decay_factor
+            print(('[LR] %.3f'):format(optim_config.learningRate))
         end
     end
 
