@@ -61,7 +61,7 @@ function optim.entropyadam(opfunc, x, config, state)
     lparams.w = lparams.w or x.new(dfdx:size()):zero()
     lparams.w:zero()
 
-    local lstepSize = stepSize
+    local lstepSize = config.lclr or stepSize
 
     if config.L > 0 then
         local lx = lparams.lx

@@ -130,7 +130,8 @@ L=opt.L,
 scoping=opt.scoping,
 noise=opt.noise,
 gamma=opt.gamma,
-rho = 0}
+rho = 0,
+lclr=0.1}
 
 
 local num_train = loader.split_sizes['train']
