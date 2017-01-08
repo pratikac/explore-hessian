@@ -60,6 +60,7 @@ function optim.entropyadam(opfunc, x, config, state)
     lparams.w = lparams.w or x.new(dfdx:size()):zero()
     lparams.w:zero()
 
+    local lstepSize = config.lclr or clr
     if config.L > 0 then
         local lx = lparams.lx
         local lmx = lparams.lmx
@@ -68,8 +69,6 @@ function optim.entropyadam(opfunc, x, config, state)
 
         --lparams.cgamma = gamma*(1 - math.exp(-state.t*scoping))
         lparams.cgamma = gamma*(1+scoping)^state.t
-
-        local lstepSize = config.lclr or 0.1
 
         for i=1,config.L do
             local lfx,ldfdx = opfunc(lx, true)
@@ -103,7 +102,7 @@ function optim.entropyadam(opfunc, x, config, state)
         local debug_stats = {df=torch.norm(dfdx),
         dF=torch.norm(lparams.w),
         dfdF = torch.dot(dfdx/torch.norm(dfdx), lparams.w/(torch.norm(lparams.w)+1e-6)),
-        eta = torch.norm(lparams.eta*noise/math.sqrt(0.5*stepSize)),
+        eta = torch.norm(lparams.eta*noise/math.sqrt(0.5*lstepSize)),
         xxpd = lparams.xxpd,
         g = lparams.cgamma}
         print(cjson.encode(debug_stats))

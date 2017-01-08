@@ -14,8 +14,7 @@ local unpack = unpack or table.unpack
 local cmd = torch.CmdLine()
 
 -- Dataset options
-cmd:option('-input_h5', 'data/shakespeare.h5')
-cmd:option('-input_json', 'data/shakespeare.json')
+cmd:option('-input', 'tiny-shakespeare')
 cmd:option('-batch_size', 50)
 cmd:option('-seq_length', 50)
 
@@ -24,7 +23,7 @@ cmd:option('-init_from', '')
 cmd:option('-reset_iterations', 1)
 cmd:option('-model_type', 'lstm')
 cmd:option('-wordvec_size', 64)
-cmd:option('-rnn_size', 256)
+cmd:option('-rnn_size', 128)
 cmd:option('-num_layers', 2)
 cmd:option('-dropout', 0)
 cmd:option('-batchnorm', 1)
@@ -50,13 +49,8 @@ cmd:option('-checkpoint_every', 20000)
 cmd:option('-gpu', 1)
 
 opt = cmd:parse(arg)
-
---[[
-local fname = build_file_name(opt, {'checkpoint_every','grad_clip',
-                'lr_decay_factor','lr_decay_every',
-                'wordvec_size','rnn_size','num_layers','batchnorm',
-                'input_h5','input_json','batch_size','seq_length'})
---]]
+opt.input_h5 = 'data/' .. opt.input .. '.h5'
+print(opt)
 
 -- Set up GPU stuff
 local dtype = 'torch.FloatTensor'
@@ -71,7 +65,7 @@ end
 
 -- Initialize the DataLoader and vocabulary
 local loader = DataLoader(opt)
-local vocab = utils.read_json(opt.input_json)
+local vocab = utils.read_json('data/' .. opt.input .. '.json')
 local idx_to_token = {}
 for k, v in pairs(vocab.idx_to_token) do
     idx_to_token[tonumber(k)] = v
@@ -135,7 +129,8 @@ local optim_config = {learningRate = opt.learning_rate,
 L=opt.L,
 scoping=opt.scoping,
 noise=opt.noise,
-gamma=opt.gamma}
+gamma=opt.gamma,
+lclr = opt.learning_rate}
 local num_train = loader.split_sizes['train']
 local num_iterations = opt.max_epochs * num_train
 model:training()
@@ -155,13 +150,14 @@ for i = start_i + 1, num_iterations do
     -- Take a gradient step and maybe print
     local _, loss = optim.entropyadam(f, params, optim_config)
     table.insert(train_loss_history, loss[1])
-    if opt.verbose > 0 and i % 100 == 0 then
+    if i % 10 == 0 then
         local float_epoch = i / num_train + 1
-        local msg = 'Epoch %.2f / %d, i = %d / %d, loss = %f'
+        local msg = '[%.2f/%d][%4d/%4d] loss = %2.2f'
         local args = {msg, float_epoch, opt.max_epochs, i, num_iterations, loss[1]}
         print(string.format(unpack(args)))
     end
 
+    --[[
     -- Maybe save a checkpoint
     local check_every = opt.checkpoint_every
     if (check_every > 0 and i % check_every == 0) or i == num_iterations then
@@ -213,4 +209,5 @@ for i = start_i + 1, num_iterations do
         params, grad_params = model:getParameters()
         collectgarbage()
     end
+    --]]
 end
