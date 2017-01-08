@@ -11,44 +11,38 @@ require '../../dnn/exptutils'
 local utils = require 'util.utils'
 local unpack = unpack or table.unpack
 
+local lapp = require 'pl.lapp'
+lapp.slack = true
+
 local cmd = torch.CmdLine()
 
--- Dataset options
-cmd:option('-input', 'tiny-shakespeare')
-cmd:option('-batch_size', 50)
-cmd:option('-seq_length', 50)
+opt = lapp[[
+--input             (default 'tiny-shakespeare')
+--batch_size        (default 50)
+--seq_length        (default 50)
+--model_type        (default 'lstm')
+--wordvec_size      (default 64)
+--rnn_size          (default 128)
+--num_layers        (default 2)
+--dropout           (default 0)
+--batchnorm         (default 1)
+--max_epochs        (default 50)
+--learning_rate     (default 2e-3)
+--grad_clip         (default 5)
+--lr_decay_every    (default 5)
+--lr_decay_factor   (default 0.5)
+--L                 (default 0)                 Num. Langevin iterations
+-r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
+--gamma             (default 1e-4)              Langevin gamma coefficient
+--scoping           (default 1e-3)              Scoping parameter \gamma*(1+scoping)^t
+--noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
+-g,--gpu            (default 2)                 GPU id
+-f,--full                                       Use all data
+-s,--seed           (default 42)
+-v,--verbose                                    Show gradient statistics
+-h,--help                                       Print this message
+]]
 
--- Model options
-cmd:option('-init_from', '')
-cmd:option('-reset_iterations', 1)
-cmd:option('-model_type', 'lstm')
-cmd:option('-wordvec_size', 64)
-cmd:option('-rnn_size', 128)
-cmd:option('-num_layers', 2)
-cmd:option('-dropout', 0)
-cmd:option('-batchnorm', 1)
-
--- Optimization options
-cmd:option('-max_epochs', 50)
-cmd:option('-learning_rate', 2e-3)
-cmd:option('-grad_clip', 5)
-cmd:option('-lr_decay_every', 5)
-cmd:option('-lr_decay_factor', 0.5)
-
--- local entropy
-cmd:option('-L',0)
-cmd:option('-gamma',1e-3)
-cmd:option('-scoping',0)
-cmd:option('-noise',1e-4)
-
--- Output options
-cmd:option('-verbose', 0)
-cmd:option('-checkpoint_every', 20000)
-
--- Backend options
-cmd:option('-gpu', 1)
-
-opt = cmd:parse(arg)
 opt.input_h5 = 'data/' .. opt.input .. '.h5'
 print(opt)
 
@@ -76,16 +70,8 @@ local opt_clone = torch.deserialize(torch.serialize(opt))
 opt_clone.idx_to_token = idx_to_token
 local model = nil
 local start_i = 0
-if opt.init_from ~= '' then
-    print('Initializing from ', opt.init_from)
-    local checkpoint = torch.load(opt.init_from)
-    model = checkpoint.model:type(dtype)
-    if opt.reset_iterations == 0 then
-        start_i = checkpoint.i
-    end
-else
-    model = nn.LanguageModel(opt_clone):type(dtype)
-end
+model = nn.LanguageModel(opt_clone):type(dtype)
+
 local params, grad_params = model:getParameters()
 local crit = nn.CrossEntropyCriterion():type(dtype)
 
