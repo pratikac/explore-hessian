@@ -22,14 +22,14 @@ opt = lapp[[
 --input             (default 'tiny-shakespeare')
 --batch_size        (default 50)
 --seq_length        (default 50)
---max_epochs        (default 50)
+--max_epochs        (default 10)
 --model_type        (default 'lstm')
 --wordvec_size      (default 64)
 --rnn_size          (default 128)
 --num_layers        (default 2)
 --dropout           (default 0)
 --lr                (default 1e-2)
---lrstep            (default 2)
+--lrstep            (default 3)
 --lrratio           (default 0.5)
 --grad_clip         (default 5)
 --L                 (default 0)                 Num. Langevin iterations
@@ -134,11 +134,16 @@ print('Num train: ' .. num_train)
 local num_iterations = opt.max_epochs * num_train
 model:training()
 
+local train_loss = 0
 for i = 1, num_iterations do
     local epoch = math.ceil(i / num_train)
 
     -- check if we are at the end of an epoch
     if i % num_train == 0 then
+        train_loss = train_loss/num_train
+        local s = {tv=1, iter=0, epoch=epoch, loss=train_loss}
+        logger_add(logger, s)
+        train_loss = 0
 
         if epoch % opt.lrstep == 0 then
             optim_config.learningRate = optim_config.learningRate * opt.lrratio
@@ -156,6 +161,7 @@ for i = 1, num_iterations do
             val_loss = val_loss + crit:forward(f, y:view(N*T))
         end
         val_loss = val_loss/num_val
+
         print((colors.red .. '[%d] %.3f'):format(epoch, val_loss))
         local s = {tv=0, iter=0, epoch=epoch, loss=val_loss}
         logger_add(logger, s)
@@ -165,10 +171,11 @@ for i = 1, num_iterations do
 
     -- take a gradient step and maybe print
     local _, loss = optim.entropyadam(feval, params, optim_config)
-    local s = {tv=1, iter=i, epoch=epoch, loss=loss[1]}
+    train_loss = train_loss + loss[1]
+    local s = {tv=1, iter=i%num_train, epoch=epoch, loss=loss[1]}
     logger_add(logger, s)
     
     if i % 10 == 0 then
-        print((colors.blue .. '[%2d][%3d/%3d] %.2f'):format(epoch,i,num_train,loss[1]))
+        print((colors.blue .. '[%2d][%3d/%3d] %.2f'):format(epoch,i%num_train,num_train,loss[1]))
     end
 end
