@@ -60,13 +60,13 @@ f, s,_ = smooth(0, 1e-3)
 f = f + 1
 s = s - s.min()
 
-fig = plt.figure(1, figsize=(7,8))
+fig = plt.figure(1, figsize=(9,8))
 plt.clf()
 ax = fig.add_subplot(111)
 plt.plot(f, 'k-', label=r'$\mathrm{Original\ landscape}$', lw=1)
 plt.plot(s, 'indianred', label=r'$\mathrm{Negative\ local\ entropy}:\ \gamma = 0.001$', lw=2)
 plt.legend(loc=2)
-plt.title(r'$\mathrm{Scoping\ out\ dense\ clusters}$')
+#plt.title(r'$\mathrm{Local\ entropy\ energy\ landscape}$')
 plt.xticks([], [])
 plt.plot([576.73,340.52,811.8], [0.938, 0.005, 0.228], 'o', c='indianred', markersize=10)
 
@@ -78,4 +78,4 @@ ax.text(835.8, 0.2, r'$x_{\mathrm{non}\textrm{-}\mathrm{robust}}$', fontsize=fon
         verticalalignment='center')
 
 if opt['save']:
-    plt.savefig('../../doc/fig/scoping.pdf', bbox_inches='tight')
+    plt.savefig('../doc/fig/entropyfig.pdf', bbox_inches='tight')
