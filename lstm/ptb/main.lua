@@ -14,11 +14,11 @@ local ptb = require('data')
 
 opt = lapp[[
 --output            (default "/local2/pratikac/results/")
+--input             (default 'ptb')
 --model             (default 'lstm')            Used inside entropy-optim
 -g,--gpu            (default 2)                 GPU idx
--e,--max_epochs     (default 12)
---dropout           (default 0)
---lr                (default 1e-2)
+-e,--max_epochs     (default 13)
+--lr                (default 1)
 --lclr              (default 1)
 --lrstep            (default 3)
 --lrratio           (default 0.5)
@@ -31,7 +31,7 @@ opt = lapp[[
 --noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 2)                 GPU idx
 -f,--full                                       Use all data
--s,--seed           (default 42)
+-s,--seed           (default 1)
 -l,--log                                        Log statistics
 -v,--verbose                                    Show gradient statistics
 -h,--help                                       Print this message
@@ -41,27 +41,23 @@ opt = lapp[[
 -- Train 1 day and gives 82 perplexity.
 local params = {batch_size=20,
 T=35,
-decay=1.15,
 hdim=1500,
 dropout=0.65,
 init_weight=0.04,
 vocab_size=10000,
 max_epoch=14,
 max_max_epoch=55,
-max_grad_norm=10,
 }
 --]]
 
 -- Trains 1h and gives test 115 perplexity.
 local params = {batch_size=20,
 T=20,
-decay=2,
 hdim=200,
 dropout=0,
 init_weight=0.1,
 max_epoch=4,
 max_max_epoch=13,
-max_grad_norm=opt.grad_clip
 }
 
 for k,v in pairs(params) do opt[k] = v end
@@ -74,7 +70,7 @@ opt.layers = 2
 
 logger = nil
 local symbols = {'tv', 'epoch', 'batch', 'loss'}
-local blacklist = {'decay', 'hdim', 'init_weight', 'max_epoch', 'max_max_epoch', 'max_grad_norm'}
+local blacklist = {'hdim', 'init_weight', 'max_epoch', 'max_max_epoch', 'grad_clip'}
 if opt.log then
     logger, logfname = setup_logger(opt, symbols, blacklist)
 end
@@ -154,8 +150,8 @@ local function bp(state)
     state.pos = state.pos + opt.T
 
     model.norm_dw = dw:norm()
-    if model.norm_dw > opt.max_grad_norm then
-        local shrink_factor = opt.max_grad_norm / model.norm_dw
+    if model.norm_dw > opt.grad_clip then
+        local shrink_factor = opt.grad_clip / model.norm_dw
         dw:mul(shrink_factor)
     end
 end
@@ -205,8 +201,8 @@ function main()
 
     optim_state = { learningRate= opt.lr,
     beta1=opt.beta1,
-    momentum = 0.9,
-    nesterov = true,
+    momentum = 0,
+    nesterov = false,
     dampening = 0,
     gamma=opt.gamma,
     scoping=opt.scoping,
@@ -238,7 +234,7 @@ function main()
             end
             return f, dw
         end
-        optim.entropysgd(feval, w, optim_state)
+        optim.sgd(feval, w, optim_state)
         
         local epoch = math.ceil(i/num_train)
         local b = i%num_train
@@ -246,11 +242,7 @@ function main()
         local s = {tv=1, batch=b, epoch=epoch, loss=torch.exp(train_loss/b)}
         logger_add(logger, s)
 
-        if b % 50 == 0 then
-            print((colors.blue .. '[%2d][%3d/%3d] %.2f'):format(epoch,b,num_train,torch.exp(train_loss/b)))
-        end
-
-        if (i%num_train) == 0 then
+        if b == 0 then
             train_loss = torch.exp(train_loss/num_train)
             print((colors.blue .. '++[%d] %.3f [%.3fs]'):format(epoch, train_loss, timer:time().real))
             local s = {tv=1, batch=0, epoch=epoch, loss=train_loss}
@@ -265,9 +257,11 @@ function main()
             timer:reset()
 
             if epoch > opt.max_epoch then
-                optim_state.learningRate = optim_state.learningRate / opt.decay
+                optim_state.learningRate = optim_state.learningRate*opt.lrratio
                 print(('[LR] %.5f'):format(optim_state.learningRate))
             end
+        elseif b % 50 == 0 then
+            print((colors.blue .. '[%2d][%3d/%3d] %.2f'):format(epoch,b,num_train,torch.exp(train_loss/b)))
         end
     end
     local test_loss = run_test()
