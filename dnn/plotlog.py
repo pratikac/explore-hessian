@@ -9,7 +9,7 @@ sns.set()
 
 whitelist = set(['seed','model','LR','noise', \
             'gamma','L','scoping','LRstep','rho','LRD', \
-            'langevin', 'langevin_noise'])
+            'langevin', 'langevin_noise','lr','input'])
 
 #colors = ["blue", "darkseagreen", "indianred", "purple", "sepia", "black"]
 #colors = sns.color_palette("muted")
@@ -87,8 +87,15 @@ def plot_idx(fs, df,
     #     'Training error')
     # plt.xlim([0,max_epochs])
 
+    # plt.figure(3)
+    # plt.clf()
+    # helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 0) & (df['batch'] == 0)].miss,
+    #     'Test error')
+    # plt.xlim([0,max_epochs])
+
+    # lstm
     plt.figure(3)
     plt.clf()
-    helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 0) & (df['batch'] == 0)].miss,
-        'Test error')
+    helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 0) & (df['iter'] == 0)].loss,
+        'Test loss')
     plt.xlim([0,max_epochs])
