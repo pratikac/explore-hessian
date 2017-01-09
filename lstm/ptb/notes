@@ -1,0 +1,9 @@
+ptb
+    th main.lua -L 10 -v --lrstep 1 --lrratio 0.1 --lr 1 --gamma 0.01 --max_epochs 5 --anneal_epoch 0 --model small-lstm
+     mom=0.5, does not really work
+
+    th main.lua -L 5 -v --lrstep 1 --lrratio 0.25 --lr 1 --gamma 0.01 --max_epochs 15 --anneal_epoch 3 --model lstm
+    mom=0.5
+    
+    123 @1 / 95 @2 epochs
+

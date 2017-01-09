@@ -18,11 +18,11 @@ opt = lapp[[
 --model             (default 'small-lstm')      Used inside entropy-optim
 -g,--gpu            (default 2)                 GPU idx
 -e,--max_epochs     (default 13)
+--anneal_epoch      (default 4)
 --lr                (default 1)
 --lclr              (default 1)
 --lrstep            (default 3)
 --lrratio           (default 0.5)
---beta1             (default 0.5)
 --grad_clip         (default 5)
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
@@ -45,24 +45,23 @@ if opt.model == 'small-lstm' then
     hdim=200,
     dropout=0,
     init_weight=0.1,
-    max_epoch=4,
-    max_max_epoch=13}
-elseif model == 'lstm' then
+    anneal_epoch=4,
+    max_epochs=13}
+elseif opt.model == 'lstm' then
     -- Train 1 day and gives 82 perplexity.
     params = {batch_size=20,
     T=35,
     hdim=1500,
     dropout=0.65,
     init_weight=0.04,
-    vocab_size=10000,
-    max_epoch=14,
-    max_max_epoch=55}
+    anneal_epoch=14,
+    max_epochs=55}
 else
     print('Unknown model: ' .. opt.model)
     os.exit(1)
 end
 opt.mom = 0
-if opt.L > 0 then opt.mom = 0.9 end
+if opt.L > 0 then opt.mom = 0.5 end
 
 for k,v in pairs(params) do opt[k] = v end
 print(opt)
@@ -74,7 +73,7 @@ opt.layers = 2
 
 logger = nil
 local symbols = {'tv', 'epoch', 'batch', 'loss'}
-local blacklist = {'hdim', 'init_weight', 'max_epoch', 'max_max_epoch', 'grad_clip'}
+local blacklist = {'hdim', 'init_weight', 'anneal_epoch', 'grad_clip','vocab_size','layers','T', 'batch_size'}
 if opt.log then
     logger, logfname = setup_logger(opt, symbols, blacklist)
 end
@@ -190,16 +189,16 @@ local function run_test()
 end
 
 function lrschedule(epoch)
-    if opt.L == 0 then
-        if epoch > opt.max_epoch then
+    if epoch > opt.anneal_epoch then
+        if opt.L == 0 then
             optim_state.learningRate = optim_state.learningRate*opt.lrratio
+        else
+            if epoch % opt.lrstep == 0 then
+                optim_state.learningRate = optim_state.learningRate * opt.lrratio
+            end
         end
-    else
-        if epoch % opt.lrstep == 0 then
-            optim_config.learningRate = optim_config.learningRate * opt.lrratio
-        end
+        print(('[LR] %.5f'):format(optim_state.learningRate))
     end
-    print(('[LR] %.5f'):format(optim_state.learningRate))
 end
 
 function main()
@@ -219,7 +218,6 @@ function main()
     local nesterov = false
     if opt.mom > 0 then nesterov = true end
     optim_state = { learningRate= opt.lr,
-    beta1=opt.beta1,
     momentum = opt.mom,
     nesterov = nesterov,
     dampening = 0,
@@ -232,7 +230,7 @@ function main()
 
     local timer = torch.Timer()
     local num_train = torch.floor(state_train.data:size(1) / opt.T)
-    local num_iterations = num_train*opt.max_max_epoch
+    local num_iterations = num_train*opt.max_epochs
     print("Starting training, num_train: " .. num_train)
 
     local train_loss = 0
@@ -254,10 +252,10 @@ function main()
             return f, dw
         end
         optim.entropysgd(feval, w, optim_state)
-        
+
         local epoch = math.ceil(i/num_train)
         local b = i%num_train
-        
+
         local s = {tv=1, batch=b, epoch=epoch, loss=torch.exp(train_loss/b)}
         logger_add(logger, s)
 
@@ -268,13 +266,13 @@ function main()
             logger_add(logger, s)
             train_loss = 0
 
-            local val_loss = run_valid()
+            local val_loss = run_valid
             print((colors.red .. '**[%d] %.3f'):format(epoch, val_loss))
             local s = {tv=0, batch=0, epoch=epoch, loss=val_loss}
             logger_add(logger, s)
-        
+
             -- schedule learning rate
-            lrschedule()
+            lrschedule(epoch)
 
             timer:reset()
         elseif b % 50 == 0 then
