@@ -15,7 +15,7 @@ local ptb = require('data')
 opt = lapp[[
 --output            (default "/local2/pratikac/results/")
 --input             (default 'ptb')
---model             (default 'lstm')            Used inside entropy-optim
+--model             (default 'lstm-small')      Used inside entropy-optim
 -g,--gpu            (default 2)                 GPU idx
 -e,--max_epochs     (default 13)
 --lr                (default 1)
@@ -31,34 +31,36 @@ opt = lapp[[
 --noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 2)                 GPU idx
 -f,--full                                       Use all data
--s,--seed           (default 1)
+-s,--seed           (default 42)
 -l,--log                                        Log statistics
 -v,--verbose                                    Show gradient statistics
 -h,--help                                       Print this message
 ]]
 
---[[
--- Train 1 day and gives 82 perplexity.
-local params = {batch_size=20,
-T=35,
-hdim=1500,
-dropout=0.65,
-init_weight=0.04,
-vocab_size=10000,
-max_epoch=14,
-max_max_epoch=55,
-}
---]]
-
--- Trains 1h and gives test 115 perplexity.
-local params = {batch_size=20,
-T=20,
-hdim=200,
-dropout=0,
-init_weight=0.1,
-max_epoch=4,
-max_max_epoch=13,
-}
+local params
+if opt.model == 'lstm-small' then
+    -- Trains 1h and gives test 115 perplexity.
+    params = {batch_size=20,
+    T=20,
+    hdim=200,
+    dropout=0,
+    init_weight=0.1,
+    max_epoch=4,
+    max_max_epoch=13}
+elseif model == 'lstm' then
+    -- Train 1 day and gives 82 perplexity.
+    params = {batch_size=20,
+    T=35,
+    hdim=1500,
+    dropout=0.65,
+    init_weight=0.04,
+    vocab_size=10000,
+    max_epoch=14,
+    max_max_epoch=55}
+else
+    print('Unknown model: ' .. opt.model)
+    os.exit(1)
+end
 
 for k,v in pairs(params) do opt[k] = v end
 print(opt)
@@ -185,6 +187,19 @@ local function run_test()
     return torch.exp(perp / (len - 1))
 end
 
+function lrschedule(epoch)
+    if opt.L == 0 then
+        if epoch > opt.max_epoch then
+            optim_state.learningRate = optim_state.learningRate*opt.lrratio
+        end
+    else
+        if epoch % opt.lrstep == 0 then
+            optim_config.learningRate = optim_config.learningRate * opt.lrratio
+        end
+    end
+    print(('[LR] %.5f'):format(optim_state.learningRate))
+end
+
 function main()
     g_init_gpu()
 
@@ -254,17 +269,20 @@ function main()
             local s = {tv=0, batch=0, epoch=epoch, loss=val_loss}
             logger_add(logger, s)
         
-            timer:reset()
+            -- schedule learning rate
+            lrschedule()
 
-            if epoch > opt.max_epoch then
-                optim_state.learningRate = optim_state.learningRate*opt.lrratio
-                print(('[LR] %.5f'):format(optim_state.learningRate))
-            end
+            timer:reset()
         elseif b % 50 == 0 then
             print((colors.blue .. '[%2d][%3d/%3d] %.2f'):format(epoch,b,num_train,torch.exp(train_loss/b)))
         end
     end
+
     local test_loss = run_test()
+    print((colors.red .. '**[%d] %.3f'):format(epoch, test_loss))
+    local s = {tv=2, batch=0, epoch=epoch, loss=test_loss}
+    logger_add(logger, s)
+
     print("Training is over.")
 end
 
