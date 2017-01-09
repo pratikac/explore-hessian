@@ -15,7 +15,7 @@ local ptb = require('data')
 opt = lapp[[
 --output            (default "/local2/pratikac/results/")
 --input             (default 'ptb')
---model             (default 'lstm-small')      Used inside entropy-optim
+--model             (default 'small-lstm')      Used inside entropy-optim
 -g,--gpu            (default 2)                 GPU idx
 -e,--max_epochs     (default 13)
 --lr                (default 1)
@@ -38,7 +38,7 @@ opt = lapp[[
 ]]
 
 local params
-if opt.model == 'lstm-small' then
+if opt.model == 'small-lstm' then
     -- Trains 1h and gives test 115 perplexity.
     params = {batch_size=20,
     T=20,
