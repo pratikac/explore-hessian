@@ -61,6 +61,8 @@ else
     print('Unknown model: ' .. opt.model)
     os.exit(1)
 end
+opt.mom = 0
+if opt.L > 0 then opt.mom = 0.9 end
 
 for k,v in pairs(params) do opt[k] = v end
 print(opt)
@@ -214,10 +216,12 @@ function main()
     end
     setup()
 
+    local nesterov = false
+    if opt.mom > 0 then nesterov = true end
     optim_state = { learningRate= opt.lr,
     beta1=opt.beta1,
-    momentum = 0,
-    nesterov = false,
+    momentum = opt.mom,
+    nesterov = nesterov,
     dampening = 0,
     gamma=opt.gamma,
     scoping=opt.scoping,
@@ -249,7 +253,7 @@ function main()
             end
             return f, dw
         end
-        optim.sgd(feval, w, optim_state)
+        optim.entropysgd(feval, w, optim_state)
         
         local epoch = math.ceil(i/num_train)
         local b = i%num_train
