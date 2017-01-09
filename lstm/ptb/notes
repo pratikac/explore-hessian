@@ -5,5 +5,5 @@ ptb
     th main.lua -L 5 -v --lrstep 1 --lrratio 0.25 --lr 1 --gamma 0.01 --max_epochs 15 --anneal_epoch 3 --model lstm
     mom=0.5
     
-    123 @1 / 95 @2 epochs
+    123 @1 / 95 @2 / 86.5 @3 / 83.15 @4 / 82.7 @5 epochs
 

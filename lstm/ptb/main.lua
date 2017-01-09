@@ -15,14 +15,14 @@ local ptb = require('data')
 opt = lapp[[
 --output            (default "/local2/pratikac/results/")
 --input             (default 'ptb')
---model             (default 'small-lstm')      Used inside entropy-optim
+--model             (default 'lstm')            Used inside entropy-optim
 -g,--gpu            (default 2)                 GPU idx
--e,--max_epochs     (default 13)
---anneal_epoch      (default 4)
+-e,--max_epochs     (default 6)
+--anneal_epoch      (default 3)
 --lr                (default 1)
 --lclr              (default 1)
 --lrstep            (default 3)
---lrratio           (default 0.5)
+--lrratio           (default 0.1)
 --grad_clip         (default 5)
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
@@ -44,18 +44,14 @@ if opt.model == 'small-lstm' then
     T=20,
     hdim=200,
     dropout=0,
-    init_weight=0.1,
-    anneal_epoch=4,
-    max_epochs=13}
+    init_weight=0.1}
 elseif opt.model == 'lstm' then
     -- Train 1 day and gives 82 perplexity.
     params = {batch_size=20,
     T=35,
     hdim=1500,
     dropout=0.65,
-    init_weight=0.04,
-    anneal_epoch=14,
-    max_epochs=55}
+    init_weight=0.04}
 else
     print('Unknown model: ' .. opt.model)
     os.exit(1)
@@ -271,6 +267,11 @@ function main()
             local s = {tv=0, batch=0, epoch=epoch, loss=val_loss}
             logger_add(logger, s)
 
+            local test_loss = run_test()
+            print((colors.red .. '***[%d] %.3f'):format(epoch, test_loss))
+            local s = {tv=2, batch=0, epoch=epoch, loss=test_loss}
+            logger_add(logger, s)
+
             -- schedule learning rate
             lrschedule(epoch)
 
@@ -279,11 +280,6 @@ function main()
             print((colors.blue .. '[%2d][%3d/%3d] %.2f'):format(epoch,b,num_train,torch.exp(train_loss/b)))
         end
     end
-
-    local test_loss = run_test()
-    print((colors.red .. '**[%d] %.3f'):format(epoch, test_loss))
-    local s = {tv=2, batch=0, epoch=epoch, loss=test_loss}
-    logger_add(logger, s)
 
     print("Training is over.")
 end
