@@ -8,27 +8,34 @@ LookupTable = nn.LookupTable
 
 require('nngraph')
 require('base')
-require '../dnn/entropyoptim'
-require '../dnn/exptutils'
+require '../../dnn/entropyoptim'
+require '../../dnn/exptutils'
 local ptb = require('data')
 
 opt = lapp[[
+--output            (default "/local2/pratikac/results/")
 --model             (default 'lstm')            Used inside entropy-optim
 -g,--gpu            (default 2)                 GPU idx
 -e,--max_epochs     (default 12)
---LR                (default 1)                 Learning rate
---lclr              (default 1)                 SGLD step size
---gnorm             (default 5)                 Max. grad norm
+--dropout           (default 0)
+--lr                (default 1e-2)
+--lclr              (default 1)
+--lrstep            (default 3)
+--lrratio           (default 0.5)
+--beta1             (default 0.5)
+--grad_clip         (default 5)
 --L                 (default 0)                 Num. Langevin iterations
--s,--seed           (default 1)
---gamma             (default 1e-5)              Langevin gamma coefficient
+-r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
+--gamma             (default 1e-2)              Langevin gamma coefficient
 --scoping           (default 0)                 Scoping parameter \gamma*(1+scoping)^t
 --noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
+-g,--gpu            (default 2)                 GPU idx
+-f,--full                                       Use all data
+-s,--seed           (default 42)
+-l,--log                                        Log statistics
 -v,--verbose                                    Show gradient statistics
 -h,--help                                       Print this message
 ]]
-
-local fname = build_file_name(opt)
 
 --[[
 -- Train 1 day and gives 82 perplexity.
@@ -54,7 +61,7 @@ dropout=0,
 init_weight=0.1,
 max_epoch=4,
 max_max_epoch=13,
-max_grad_norm=opt.gnorm,
+max_grad_norm=opt.grad_clip
 }
 
 for k,v in pairs(params) do opt[k] = v end
@@ -65,66 +72,16 @@ end
 opt.vocab_size = 10000
 opt.layers = 2
 
-local function transfer_data(x)
-    return x:cuda()
+logger = nil
+local symbols = {'tv', 'epoch', 'batch', 'loss'}
+local blacklist = {'decay', 'hdim', 'init_weight', 'max_epoch', 'max_max_epoch', 'max_grad_norm'}
+if opt.log then
+    logger, logfname = setup_logger(opt, symbols, blacklist)
 end
 
 local state_train, state_valid, state_test
 local model = {}
 local w, dw
-
-local function lstm(x, prev_c, prev_h)
-    -- Calculate all four gates in one go
-    local i2h = nn.Linear(opt.hdim, 4*opt.hdim)(x)
-    local h2h = nn.Linear(opt.hdim, 4*opt.hdim)(prev_h)
-    local gates = nn.CAddTable()({i2h, h2h})
-
-    -- Reshape to (batch_size, n_gates, hid_size)
-    -- Then slize the n_gates dimension, i.e dimension 2
-    local reshaped_gates =  nn.Reshape(4,opt.hdim)(gates)
-    local sliced_gates = nn.SplitTable(2)(reshaped_gates)
-
-    -- Use select gate to fetch each gate and apply nonlinearity
-    local in_gate          = nn.Sigmoid()(nn.SelectTable(1)(sliced_gates))
-    local in_transform     = nn.Tanh()(nn.SelectTable(2)(sliced_gates))
-    local forget_gate      = nn.Sigmoid()(nn.SelectTable(3)(sliced_gates))
-    local out_gate         = nn.Sigmoid()(nn.SelectTable(4)(sliced_gates))
-
-    local next_c           = nn.CAddTable()({
-        nn.CMulTable()({forget_gate, prev_c}),
-        nn.CMulTable()({in_gate,     in_transform})
-    })
-    local next_h           = nn.CMulTable()({out_gate, nn.Tanh()(next_c)})
-
-    return next_c, next_h
-end
-
-local function create_network()
-    local x                = nn.Identity()()
-    local y                = nn.Identity()()
-    local prev_s           = nn.Identity()()
-    local i                = {[0] = LookupTable(opt.vocab_size,
-    opt.hdim)(x)}
-    local next_s           = {}
-    local split         = {prev_s:split(2 * opt.layers)}
-    for layer_idx = 1, opt.layers do
-        local prev_c         = split[2 * layer_idx - 1]
-        local prev_h         = split[2 * layer_idx]
-        local dropped        = nn.Dropout(opt.dropout)(i[layer_idx - 1])
-        local next_c, next_h = lstm(dropped, prev_c, prev_h)
-        table.insert(next_s, next_c)
-        table.insert(next_s, next_h)
-        i[layer_idx] = next_h
-    end
-    local h2y              = nn.Linear(opt.hdim, opt.vocab_size)
-    local dropped          = nn.Dropout(opt.dropout)(i[opt.layers])
-    local pred             = nn.LogSoftMax()(h2y(dropped))
-    local err              = nn.ClassNLLCriterion()({pred, y})
-    local module           = nn.gModule({x, y, prev_s},
-    {err, nn.Identity()(next_s)})
-    module:getParameters():uniform(-opt.init_weight, opt.init_weight)
-    return transfer_data(module)
-end
 
 local function setup()
     local core_network = create_network()
@@ -195,6 +152,7 @@ local function bp(state)
         cutorch.synchronize()
     end
     state.pos = state.pos + opt.T
+
     model.norm_dw = dw:norm()
     if model.norm_dw > opt.max_grad_norm then
         local shrink_factor = opt.max_grad_norm / model.norm_dw
@@ -210,8 +168,8 @@ local function run_valid()
     for i = 1, len do
         perp = perp + fp(state_valid)
     end
-    print("Validation set perplexity : " .. g_f3(torch.exp(perp / len)))
     g_enable_dropout(model.rnns)
+    return torch.exp(perp/len)
 end
 
 local function run_test()
@@ -227,12 +185,12 @@ local function run_test()
         perp = perp + perp_tmp[1]
         g_replace_table(model.s[0], model.s[1])
     end
-    print("Test set perplexity : " .. g_f3(torch.exp(perp / (len - 1))))
     g_enable_dropout(model.rnns)
+    return torch.exp(perp / (len - 1))
 end
 
 function main()
-    g_init_gpu({opt.gpu})
+    g_init_gpu()
 
     print('Loading PTB')
     state_train = {data=transfer_data(ptb.traindataset(opt.batch_size))}
@@ -245,28 +203,26 @@ function main()
     end
     setup()
 
-    optim_state = { learningRate= opt.LR,
-    momentum = 0,
-    nesterov = false,
+    optim_state = { learningRate= opt.lr,
+    beta1=opt.beta1,
+    momentum = 0.9,
+    nesterov = true,
     dampening = 0,
     gamma=opt.gamma,
     scoping=opt.scoping,
+    rho = opt.rho,
     L=opt.L,
     noise = opt.noise,
-    lclr=1}
+    lclr=opt.lclr}
 
-    local step = 0
-    local epoch = 0
-    local total_cases = 0
-    local beginning_time = torch.tic()
-    local start_time = torch.tic()
+    local timer = torch.Timer()
+    local num_train = torch.floor(state_train.data:size(1) / opt.T)
+    local num_iterations = num_train*opt.max_max_epoch
+    print("Starting training, num_train: " .. num_train)
 
-    local epoch_size = torch.floor(state_train.data:size(1) / opt.T)
-    print("Starting training, epoch_size: " .. epoch_size)
-    local perps
-    while epoch < opt.max_max_epoch do
+    local train_loss = 0
+    for i=1,num_iterations do
         collectgarbage()
-        local perp = 0
         -- closure for optim
         local function feval(_w, dry)
             local dry = dry or false
@@ -278,38 +234,43 @@ function main()
             cutorch.synchronize()
 
             if dry == false then
-                perp = perp + f
+                train_loss = train_loss + f
             end
             return f, dw
         end
         optim.entropysgd(feval, w, optim_state)
+        
+        local epoch = math.ceil(i/num_train)
+        local b = i%num_train
+        
+        local s = {tv=1, batch=b, epoch=epoch, loss=torch.exp(train_loss/b)}
+        logger_add(logger, s)
 
-        if perps == nil then
-            perps = torch.zeros(epoch_size):add(perp)
-        end
-        step = step + 1
-        perps[step % epoch_size + 1] = perp
-
-        total_cases = total_cases + opt.T * opt.batch_size
-        epoch = step / epoch_size
-        if step % torch.round(epoch_size / 10) == 0 then
-            local dt = g_d(torch.toc(beginning_time) / 60)
-            print('epoch = ' .. g_f3(epoch) ..
-            ', train perp. = ' .. g_f3(torch.exp(perps:mean())) ..
-            ', dw:norm() = ' .. g_f3(model.norm_dw) ..
-            ', lr = ' ..  g_f3(optim_state.learningRate) ..
-            ', dt = ' .. dt .. ' [m]')
+        if b % 50 == 0 then
+            print((colors.blue .. '[%2d][%3d/%3d] %.2f'):format(epoch,b,num_train,torch.exp(train_loss/b)))
         end
 
-        if step % epoch_size == 0 then
-            run_valid()
+        if (i%num_train) == 0 then
+            train_loss = torch.exp(train_loss/num_train)
+            print((colors.blue .. '++[%d] %.3f [%.3fs]'):format(epoch, train_loss, timer:time().real))
+            local s = {tv=1, batch=0, epoch=epoch, loss=train_loss}
+            logger_add(logger, s)
+            train_loss = 0
+
+            local val_loss = run_valid()
+            print((colors.red .. '**[%d] %.3f'):format(epoch, val_loss))
+            local s = {tv=0, batch=0, epoch=epoch, loss=val_loss}
+            logger_add(logger, s)
+        
+            timer:reset()
+
             if epoch > opt.max_epoch then
                 optim_state.learningRate = optim_state.learningRate / opt.decay
+                print(('[LR] %.5f'):format(optim_state.learningRate))
             end
         end
-
     end
-    run_test()
+    local test_loss = run_test()
     print("Training is over.")
 end
 

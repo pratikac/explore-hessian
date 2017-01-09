@@ -15,8 +15,6 @@ local unpack = unpack or table.unpack
 local lapp = require 'pl.lapp'
 lapp.slack = true
 
-local cmd = torch.CmdLine()
-
 opt = lapp[[
 --output            (default "/local2/pratikac/results/")
 --input             (default 'warpeace')
@@ -50,7 +48,9 @@ opt = lapp[[
 opt.input_h5 = 'data/' .. opt.input .. '.h5'
 opt.batchnorm = 1
 if opt.input == 'warpeace' then opt.wordvec_size = 85 end
-if opt.input == 'tiny-shakespeare' then opt.wordvec_size = 68 end
+if opt.input == 'tiny-shakespeare' or opt.input == 'shakespeare' then
+    opt.wordvec_size = 68
+end
 print(opt)
 
 logger = nil
