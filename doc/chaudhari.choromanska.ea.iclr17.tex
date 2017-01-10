@@ -21,6 +21,7 @@
 % notation goes here
 \newcommand\red[1]{{\color{red}#1}}
 \newcommand{\entropysgd}{\mathrm{Entropy}\textrm{-}\mathrm{SGD}}
+\newcommand{\entropyadam}{\mathrm{Entropy}\textrm{-}\mathrm{Adam}}
 \newcommand{\minibatch}[1]{\Xi^{#1}}
 \newcommand{\mnistfc}{\textrm{mnistfc}}
 \newcommand{\smallmnistfc}{\textrm{small-mnistfc}}
@@ -383,7 +384,7 @@ For both these networks, we train $\entropysgd$ for $5$ epochs with $L = 20$ and
 \centering
     \begin{subfigure}[t]{0.4\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{mnistfc_valid.pdf}
+        \includegraphics[width=1.02\textwidth]{mnistfc_valid.pdf}
         \caption{\small $\mnistfc$: Validation error}
         \label{fig:mnistfc_test}
     \end{subfigure}
@@ -405,7 +406,7 @@ For both these networks, we train $\entropysgd$ for $5$ epochs with $L = 20$ and
 \centering
     \begin{subfigure}[b]{0.4\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{allcnn_loss.pdf}
+        \includegraphics[width=1.02\textwidth]{allcnn_loss.pdf}
         \caption{\small $\allcnn$: Training loss}
         \label{fig:allcnn_loss}
     \end{subfigure}
@@ -435,10 +436,13 @@ In order to test the efficacy of $\entropysgd$ on recurrent architectures, we tr
 
 We run $\entropysgd$ for this network for $5$ epochs with $L = 5$, which results in only $25$ effective epochs. We do not use scoping for this network and fix the scope to $\g = 10^{-3}$. The initial learning rate of the outer loop is $\eta = 1$ which reduces by a factor of $10$ at each epoch after the third epoch; the SGLD learning rate is fixed to $\eta' = 1$ with $\e = 10^{-4}$. We obtain a word perplexity of $80.116 \pm 0.069$ on the validation set and $77.656 \pm 0.171$ on the test set. As Fig.~\ref{fig:ptb_valid} shows, $\entropysgd$ trains significantly faster than SGD to a slightly better generalization perplexity.
 
-Next, we train an LSTM to perform character-level text-prediction. As a dataset, following the experiments of~\citet{karpathy2015visualizing}, we use the text of War and Peace by Leo Tolstoy which contains about $3$ million divided into training ($80\%$), validation ($10\%$) and test ($10\%$) sets. We use an LSTM consisting of two layers of $128$ hidden units unrolled for $50$ time steps and a vocabulary of size $87$. We train the baseline with Adam with an initial learning rate of $0.002$ that decays by a factor of $2$ after every $5$ epochs to obtain a validation perplexity of $1.224 \pm 0.008$ and a test perplexity of $1.227 \pm 0.006$.
+Next, we train an LSTM to perform character-level text-prediction. As a dataset, following the experiments of~\citet{karpathy2015visualizing}, we use the text of War and Peace by Leo Tolstoy which contains about $3$ million divided into training ($80\%$), validation ($10\%$) and test ($10\%$) sets. We use an LSTM consisting of two layers of $128$ hidden units unrolled for $50$ time steps and a vocabulary of size $87$. We train the baseline with Adam for $50$ epochs with an initial learning rate of $0.002$ that decays by a factor of $2$ after every $5$ epochs to obtain a validation perplexity of $1.224 \pm 0.008$ and a test perplexity of \pc{$1.227 \pm 0.006$}{this is a place-holder, redo}.
+
+As noted in Sec.~\ref{ss:alg}, we can easily wrap Alg.~\ref{alg:entropysgd} inside other variants of SGD such as Adam; indeed this involves simply supplying the local entropy gradient in place of the usual back-propagated gradient. For this example, we construct $\entropyadam$ which is simply Adam that uses the local entropy gradient (computed via SGLD). We run $\entropyadam$ for $5$ epochs with $L = 5$ with an initial learning rate of $0.01$ that decreases by a factor of $2$ at each epoch. Note that this again results in only $25$ effective epochs. We obtain a validation perplexity of $1.213 \pm 0.007$ and a test perplexity of \pc{$1.20 \pm 00$}{place-holder} over $4$ independent runs which is slightly better than the baseline in half as much wall-clock time. We plot the error curves in Fig.~\ref{fig:char_valid} for this experiment.
 
 Let us note that tuning the momentum hyper-parameter was crucial to getting good results on RNNs. While the SGD baseline on $\ptblstm$ does not use momentum and in fact does not train well with momentum, we set it to $0.5$ for $\entropysgd$. On the other hand, the baseline for $\charlstm$ was trained with Adam with a $\b_1 = 0.9$ and we set $\b_1 = 0.5$ for $\entropyadam$. In contrast to this observation on RNNs, our experiments on CNNs above always used a momentum of $0.9$.
 
+\todo{the two plots below are place holders}
 \begin{figure}[htp!]
 \centering
     \begin{subfigure}[b]{0.4\textwidth}
@@ -450,11 +454,11 @@ Let us note that tuning the momentum hyper-parameter was crucial to getting good
     \hspace{0.2in}
     \begin{subfigure}[b]{0.4\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{allcnn_loss.pdf}
+        \includegraphics[width=1.02\textwidth]{allcnn_loss.pdf}
         \caption{\small $\charlstm$: Validation perplexity}
         \label{fig:char_valid}
     \end{subfigure}
-\caption{\small Comparison of $\entropysgd$ vs. SGD on PTB}
+\caption{\small Comparison of $\entropysgd$ vs. SGD / Adam on RNNs}
 \label{fig:rnn}
 \end{figure}
 
