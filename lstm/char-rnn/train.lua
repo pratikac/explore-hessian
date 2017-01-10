@@ -136,6 +136,7 @@ lclr=opt.lclr}
 
 local num_train = loader.split_sizes['train']
 local num_val = loader.split_sizes['val']
+local num_test = loader.split_sizes['test']
 print('Num train: ' .. num_train)
 
 local num_iterations = opt.max_epochs * num_train
@@ -173,6 +174,22 @@ for i = 1, num_iterations do
 
         print((colors.red .. '**[%d] %.3f'):format(epoch, val_loss))
         local s = {tv=0, batch=0, epoch=epoch, loss=val_loss}
+        logger_add(logger, s)
+
+        -- also test model
+        model:evaluate()
+        model:resetStates()
+        local test_loss = 0
+        for j=1,num_test do
+            local x,y = loader:nextBatch('test')
+            x,y = x:type(dtype), y:type(dtype)
+            local f = model:forward(x):view(N*T, -1)
+            val_loss = val_loss + crit:forward(f, y:view(N*T))
+        end
+        test_loss = test_loss/num_test
+
+        print((colors.red .. '***[%d] %.3f'):format(epoch, test_loss))
+        local s = {tv=2, batch=0, epoch=epoch, loss=test_loss}
         logger_add(logger, s)
 
         model:training()
