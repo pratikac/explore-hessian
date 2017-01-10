@@ -96,6 +96,6 @@ def plot_idx(fs, df,
     # lstm
     plt.figure(3)
     plt.clf()
-    helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 0) & (df['iter'] == 0)].loss,
+    helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 0) & (df['batch'] == 0)].loss,
         'Test loss')
     plt.xlim([0,max_epochs])
