@@ -125,7 +125,6 @@ def plot_mnistfc():
     if opt['save']:
         plt.savefig('../doc/fig/mnistfc_valid.pdf', bbox_inches='tight')
 
-
 def plot_allcnn():
     r1, r2 = load(sorted(glob.glob('../results/nov_expts/dnn/allcnn/original/*.log')), 200), \
             load(sorted(glob.glob('../results/jan_expts/allcnn10/toplot/*.log')), 10)
@@ -198,6 +197,6 @@ def plot_allcnn():
     if opt['save']:
         plt.savefig('../doc/fig/allcnn_loss.pdf', bbox_inches='tight')
 
-plot_lenet()
-plot_mnistfc()
-plot_allcnn()
+# plot_lenet()
+# plot_mnistfc()
+# plot_allcnn()
