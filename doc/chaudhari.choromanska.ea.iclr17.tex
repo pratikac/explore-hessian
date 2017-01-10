@@ -21,10 +21,12 @@
 % notation goes here
 \newcommand\red[1]{{\color{red}#1}}
 \newcommand{\entropysgd}{\mathrm{Entropy}\textrm{-}\mathrm{SGD}}
+\newcommand{\entropyadam}{\mathrm{Entropy}\textrm{-}\mathrm{Adam}}
 \newcommand{\minibatch}[1]{\Xi^{#1}}
 \newcommand{\mnistfc}{\textrm{mnistfc}}
 \newcommand{\smallmnistfc}{\textrm{small-mnistfc}}
-\newcommand{\charlstm}{\textrm{char-lstm}}
+\newcommand{\charlstm}{\textrm{char-LSTM}}
+\newcommand{\ptblstm}{\textrm{PTB-LSTM}}
 \newcommand{\lenet}{\textrm{LeNet}}
 \newcommand{\allcnn}{\textrm{All-CNN-BN}}
 
@@ -72,7 +74,7 @@ Email:\ \href{mailto:pratikac@ucla.edu}{pratikac@ucla.edu},
 \maketitle
 
 \begin{abstract}
-This paper proposes a new optimization algorithm called $\entropysgd$ for training deep neural networks that is motivated by the local geometry of the energy landscape. Local extrema with low generalization error have a large proportion of almost-zero eigenvalues in the Hessian with very few positive or negative eigenvalues. We leverage upon this observation to construct a local entropy based objective function that favors well-generalizable solutions lying in large flat regions of the energy landscape, while avoiding poorly-generalizable solutions located in the sharp valleys. Conceptually, our algorithm resembles two nested loops of SGD, where we use Langevin dynamics to compute the gradient of the local entropy at each update of the weights. We prove that the local entropy objective function is smoother than the original landscape and use uniform stability to show improved generalization bounds over SGD. Our experiments on competitive baselines demonstrate that $\entropysgd$ leads to generalization performances that compare with state of the art techniques and also has the potential to accelerate training.
+This paper proposes a new optimization algorithm called Entropy-SGD for training deep neural networks that is motivated by the local geometry of the energy landscape. Local extrema with low generalization error have a large proportion of almost-zero eigenvalues in the Hessian with very few positive or negative eigenvalues. We leverage upon this observation to construct a local entropy based objective function that favors well-generalizable solutions lying in large flat regions of the energy landscape, while avoiding poorly-generalizable solutions located in the sharp valleys. Conceptually, our algorithm resembles two nested loops of SGD where we use Langevin dynamics in the inner loop to compute the gradient of the local entropy before each update of the weights. We prove that the local entropy objective is smoother than the original landscape and show improved generalization bounds over SGD using uniform stability. Our experiments on convolutional and recurrent neural networks demonstrate that Entropy-SGD compares favorably with state of the art techniques in terms of generalization performance and training time.
 \end{abstract}
 
 \section{Introduction}
@@ -83,7 +85,7 @@ This paper presents a new optimization tool for deep learning designed to exploi
 \item positive eigenvalues (right inset) have a long tail with the largest one being almost $40$,
 \item negative eigenvalues (left inset), which are directions of descent that the optimizer missed, have a much faster decay (the largest negative eigenvalue is only $-0.4$).
 \end{enumerate}
-Interestingly, this trend is not unique to this particular network. Rather, its qualitative properties are shared across a variety of network architectures, sizes, datasets or optimization algorithms (refer to Sec.~\ref{s:expt} for more experiments). Local minima that generalize well and are discovered by gradient descent lie in ``wide valleys'' of the energy landscape, rather than in sharp isolated minima. \todo{For an intuitive understanding of this phenomenon, imagine a Bayesian prior concentrated at the minimizer of the expected loss, the marginal likelihood of wide valleys under this prior is much higher than narrow, sharp valleys even if the latter are close to the global minimum in training loss.} Almost-flat regions of the energy landscape are robust to data perturbations, noise in the activations, as well as perturbations of the parameters --- all of which are widely-used techniques to achieve good generalization. This suggests that wide valleys should result in better generalization and, indeed, standard optimization algorithms in deep learning --- without being explicitly tailored to do so --- seem to discover exactly that.
+Interestingly, this trend is not unique to this particular network. Rather, its qualitative properties are shared across a variety of network architectures, sizes, datasets or optimization algorithms (refer to Sec.~\ref{s:expt} for more experiments). Local minima that generalize well and are discovered by gradient descent lie in ``wide valleys'' of the energy landscape, rather than in sharp isolated minima. For an intuitive understanding of this phenomenon, imagine a Bayesian prior concentrated at the minimizer of the expected loss, the marginal likelihood of wide valleys under this prior is much higher than narrow, sharp valleys even if the latter are close to the global minimum in training loss. Almost-flat regions of the energy landscape are robust to data perturbations, noise in the activations, as well as perturbations of the parameters --- all of which are widely-used techniques to achieve good generalization. This suggests that wide valleys should result in better generalization and, indeed, standard optimization algorithms in deep learning --- without being explicitly tailored to do so --- seem to discover exactly that.
 
 \begin{figure}[tbh]
 % \vspace*{-0.1in}
@@ -93,9 +95,9 @@ Interestingly, this trend is not unique to this particular network. Rather, its 
 \label{fig:lenet_hessian}
 \end{figure}
 
-Based on this understanding of how the local geometry looks at the end of optimization, can we modify SGD to actively seek such regions? Motivated by the work of~\citet{baldassi2015subdominant} on shallow networks, we propose to replace the original loss function $f(x)$ by:
+Based on this understanding of how the local geometry looks at the end of optimization, can we modify SGD to actively seek such regions? Motivated by the work of~\citet{baldassi2015subdominant} on shallow networks, instead of minimizing the original loss $f(x)$, we propose to maximize
 $$
-F(x, \g) = - \log \int_{x' \in \reals^n}\ \exp \rbrac{-f(x') - \f{\g}{2}\ \norm{x-x'}^2_2}\ dx'.
+F(x, \g) = \log \int_{x' \in \reals^n}\ \exp \rbrac{-f(x') - \f{\g}{2}\ \norm{x-x'}^2_2}\ dx'.
 $$
 The above is a log-partition function measures both the depth of a valley at a location  $x \in \reals^n$, and its flatness through the entropy of $f(x')$; we call it ``local entropy'' in analogy to the free entropy used in statistical physics. The $\entropysgd$ algorithm presented in this paper employs stochastic gradient Langevin dynamics (SGLD) to approximate the gradient of local entropy. Our algorithm resembles two nested loops of SGD: the inner loop consists of SGLD iterations while the outer loop updates the parameters. We show that the above modified loss function results in a smoother energy landscape defined by the hyper-parameter $\g$ which we can think of as a ``scope'' that seeks out valleys of specific widths. Actively biasing the optimization towards wide valleys in the energy landscape results in better generalization error. We present experimental results on fully-connected and convolutional neural networks (CNNs) on the MNIST and CIFAR-10~\citep{krizhevsky2009learning} datasets and recurrent neural networks (RNNs) on the Penn Tree Bank dataset (PTB)~\citep{marcus1993building} and character-level text prediction. Our experiments show that $\entropysgd$ scales to deep networks used in practice, obtains comparable generalization error as competitive baselines and also trains much more quickly than SGD.
 
@@ -109,15 +111,13 @@ The existence of multiple, almost equivalent, local minima in deep networks has 
 
 Obtaining good \emph{generalization} error, however, is challenging: complex architectures are sensitive to initial conditions and learning rates~\citep{sutskever2013importance} and even linear networks~\citep{kawaguchi2016deep} may have degenerate and hard to escape saddle points~\citep{ge2015escaping,anandkumar2016efficient}. Techniques such as adaptive~\citep{duchi2011adaptive} and annealed learning rates, momentum~\citep{tieleman2012lecture}, as well as architectural modifications like dropout~\citep{srivastava2014dropout}, batch-normalization~\citep{ioffe2015batch,cooijmans2016recurrent}, weight scaling~\citep{salimans2016weight} etc. are different ways of tackling this issue by making the underlying landscape more amenable to first-order algorithms. However, the training process often requires a combination of such techniques and it is unclear beforehand to what extent each one of them helps.
 
-\todo{Closer to the subject of this paper are results by~\citet{baldassi2015subdominant,baldassi2016unreasonable,baldassi2016multilevel} which show that the energy landscape of shallow networks with discrete weights is characterized by an exponential number of isolated minima and few very dense regions with lots of local minima close to each other. These dense local minima can be shown to generalize well for random input data; more importantly, they are also accessible by efficient algorithms using a novel measure called ``robust ensemble'' that amplifies the weight of such dense regions. Algorithms 
+Closer to the subject of this paper are results by~\citet{baldassi2015subdominant,baldassi2016unreasonable,baldassi2016multilevel} who show that the energy landscape of shallow networks with discrete weights is characterized by an exponential number of isolated minima and few very dense regions with lots of local minima close to each other. These dense local minima can be shown to generalize well for random input data; more importantly, they are also accessible by efficient algorithms using a novel measure called ``robust ensemble'' that amplifies the weight of such dense regions. The authors use belief propagation to estimate local entropy for simpler models considered there. A related work in this context is EASGD~\citep{zhang2015deep} which trains multiple deep networks in parallel and modulates the distance of each worker to the ensemble average. Such an ensemble training procedure enables improved generalization by ensuring that different workers land in the same wide valley and indeed, it turns out to be closely related to the replica theoretic analysis of~\citep{baldassi2016unreasonable}.
 
-Let us note that a related work in this direction is EASGD~\citep{zhang2015deep} which trains multiple deep networks in parallel and modulates the distance of each worker to the ensemble average. An ensemble training procedure provides improved generalization by ensuring that different works land in the same wide valley and indeed, this turns out to be closely related to the robust ensemble approach.
-%
-Our work generalizes the local entropy approach to modern deep networks with continuous weights. It exploits the same phenomenon of wide valleys in the energy landscape but does so without incurring the hardware and communication complexity of a distributed training algorithm.}
+Our work generalizes the local entropy approach above to modern deep networks with continuous weights. It exploits the same phenomenon of wide valleys in the energy landscape but does so without incurring the hardware and communication complexity of replicated training or being limited to models where one can estimate local entropy using belief propagation. The enabling technique in our case is using Markov chain Monte Carlo for estimating the gradient of local entropy, which can be done efficiently even for large deep networks using mini-batch updates.
 
-The authors in~\citet{hochreiter1997flat} introduce hard constraints on the width of local minima and training loss and show using the Gibbs formalism~\citep{haussler1997mutual} that this leads to improved generalization. \pc{Their analysis of the generalization performance (see their Sec. A1) necessitates a few unrealistic assumptions whereas in our analysis, as will be shown, we use uniform stability~\citet{bousquet2002stability} to obtain a precise characterization of generalization.}{} Furthermore, as they mention, the effect of hyper-parameters for the constraints they use is intricately tied together and they are difficult to choose even for small problems. Their formulation depends on Hessian-vector products. It is unclear how this method could be scaled to modern deep networks. Motivated by the same final goal, viz., flat local minima, our approach eliminates these extraneous and difficult to control hyper-parameters and instead results in a scalable algorithm. Also recent work by~\citet{keskar2016large} is relevant in the context of the main theme of our paper. The authors estimate the loss in a neighborhood of the weights to argue that small batch size in SGD (i.e., larger gradient noise) generalizes better than large mini-batches and also results in significantly flatter minima.
+The authors in~\citet{hochreiter1997flat} introduce a similar technique as our work, they introduce hard constraints on the width of local minima and training loss and show using the Gibbs formalism~\citep{haussler1997mutual} that this leads to improved generalization. \pc{Their analysis of the generalization performance (see their Sec. A1) necessitates a few unrealistic assumptions whereas in our analysis, as will be shown, we use uniform stability~\citet{bousquet2002stability} to obtain a precise characterization of generalization.}{one sentence about the similarities} Furthermore, as they mention, the effect of hyper-parameters for the constraints they use is intricately tied together and they are difficult to choose even for small problems. Their formulation depends on Hessian-vector products. It is unclear how this method could be scaled to modern deep networks. Motivated by the same final goal, viz., flat local minima, our approach eliminates these extraneous and difficult to control hyper-parameters and instead results in a scalable algorithm. Also recent work by~\citet{keskar2016large} is relevant in the context of the main theme of our paper. The authors estimate the loss in a neighborhood of the weights to argue that small batch size in SGD (i.e., larger gradient noise) generalizes better than large mini-batches and also results in significantly flatter minima.
 
-In the sense that local entropy results in a smoother energy landscape (cf.\@ Sec.~\ref{ss:theoretical_properties}), it resembles continuation methods~\citep{allgower2012numerical} that convolve the loss function to solve sequentially refined optimization problems. These techniques however require a special class of loss functions where successively smaller convolutions result in minimizers that lie close to each other or closed-form expressions of smoothened loss functions~\citep{,DBLP:conf/icml/HazanLS16,mobahi2015link}; these may not be possible for deep networks with isolated minima and highly-nonlinear loss functions. Our modified objective instead weighs each location by the local entropy in its neighborhood and does not require stringent assumptions on the objective, it is also applicable to full-scale deep networks. %\pc{Let us also note that motivated from continuation,~\citet{gulcehre2016mollifying} insert annealed additive noise in the activation function to approximately convolve the original objective function.}{This paper is not related to our work, it is related to continuation. I don't see any reason to add this sentence}
+\todo{In the sense that local entropy results in a smoother energy landscape (cf.\@ Sec.~\ref{ss:theoretical_properties}), it resembles continuation methods~\citep{allgower2012numerical} that convolve the loss function to solve sequentially refined optimization problems. These techniques however require a special class of loss functions where successively smaller convolutions result in minimizers that lie close to each other or closed-form expressions of smoothened loss functions~\citep{,DBLP:conf/icml/HazanLS16,mobahi2015link}; these may not be possible for deep networks with isolated minima and highly-nonlinear loss functions. Our modified objective instead weighs each location by the local entropy in its neighborhood and does not require stringent assumptions on the objective, it is also applicable to full-scale deep networks.} %\pc{Let us also note that motivated from continuation,~\citet{gulcehre2016mollifying} insert annealed additive noise in the activation function to approximately convolve the original objective function.}{This paper is not related to our work, it is related to continuation. I don't see any reason to add this sentence}
 
 \section{Local entropy}
 \label{s:local_entropy}
@@ -216,7 +216,7 @@ We can obtain some intuition of how $\entropysgd$ works using the expression for
 \subsection{Algorithm and Implementation details}
 \label{ss:alg}
 
-Alg.~\ref{alg:entropysgd} provides the pseudo-code for one iteration of the $\entropysgd$ algorithm. At each iteration, lines $3$-$6$ perform $L$ iterations of Langevin dynamics to estimate $\mu = \ag{x'; \minibatch{\ell}}$. The weights $x$ are updated with the modified gradient on line $9$.
+Alg.~\ref{alg:entropysgd} provides the pseudo-code for one iteration of the $\entropysgd$ algorithm. At each iteration, lines $3$-$6$ perform $L$ iterations of Langevin dynamics to estimate $\mu = \ag{x'; \minibatch{\ell}}$. The weights $x$ are updated with the modified gradient on line $7$.
 
 \begin{center}
 \begin{minipage}{0.7 \textwidth}
@@ -227,7 +227,7 @@ Alg.~\ref{alg:entropysgd} provides the pseudo-code for one iteration of the $\en
 
     \small
     \Input{\quad $\textrm{current weights}\ x$, $\textrm{Langevin iterations}\ L$}
-    \HyperParameters{\quad $\textrm{Scope}\ \g$, $\textrm{Learning rate}\ \eta$}
+    \HyperParameters{\quad $\textrm{scope}\ \g$, $\textrm{learning rate}\ \eta$, $\textrm{SGLD step size}\ \eta'$}
     \vspace{0.1in}
     \nonl \textrm{// SGLD iterations}\;
     \vspace{0.025in}
@@ -238,7 +238,7 @@ Alg.~\ref{alg:entropysgd} provides the pseudo-code for one iteration of the $\en
         \vspace{0.03in}
         $dx' \la \f{1}{m}\ \sum_{i=1}^m\ \nabla_{x'} f\rbrac{x';\ \xi_{\ell_i}} - \g\ \rbrac{x - x'}$\;
         \vspace{0.03in}
-        $x' \la x' - \eta'\ dx' + \sqrt{\eta'}\ \trm{N}(0, \e\ \trm{I})$\;
+        $x' \la x' - \eta'\ dx' + \sqrt{\eta'}\ \e\ \trm{N}(0, \trm{I})$\;
         \vspace{0.03in}
         $\mu \la (1-\a) \mu + \a\ x'$\;
     }
@@ -253,21 +253,28 @@ Alg.~\ref{alg:entropysgd} provides the pseudo-code for one iteration of the $\en
 \end{minipage}
 \end{center}
 
+Let us note that although we have written Alg.~\ref{alg:entropysgd} in the classical SGD setup, we can easily modify it to include techniques such as momentum and gradient pre-conditioning~\citep{duchi2011adaptive} by changing lines $5$ and $9$. In our experiments, we use Nesterov's momentum~\citep{sutskever2013importance} and Adam for outer and inner loops with similar qualitative results.
+
 \todo{
 We set the number of SGLD iterations $L$ to $5$-$20$ depending upon the complexity of the dataset, e.g., for experiments on convolutional networks on MNIST and CIFAR-10, we use $L = 20$ while for experiments on a fully-connected network on MNIST $L=5$ works well (cf. Sec.~\ref{s:expt}). We perform exponential averaging of the Langevin iterates $x'$ to estimate $\mu$ with a parameter $\a = 0.9$ so as to put more weight on later samples. In order to quickly transition to the Langevin dynamics phase of SGLD and ensure the we are sampling from the posterior even for small values of $L$, we set the learning rate $\eta'$ on line $5$ to be small factor of the outer SGD's learning rate: $\eta' = 0.1\ \eta$~\citep{welling2011bayesian}.}
 
-Let us note that although we have written Alg.~\ref{alg:entropysgd} in the classical SGD setup, we can easily modify it to include techniques such as momentum and gradient pre-conditioning~\citep{duchi2011adaptive} by changing lines $5$ and $9$. In our experiments, we have used both SGD with Nesterov's momentum~\citep{sutskever2013importance} and Adam for outer and inner loops with similar qualitative results.
 
 \subsubsection{Scoping of $\gamma$}
+\label{ss:scoping}
 
-\subsection{Connection to variational inference}
-\label{ss:connection_variational}
+Our scoping mechanism introduced in Sec.~\ref{ss:scoping} increases the value of $\g$ as training progresses in order to focus on more local neighborhoods. 
+
+The ``reverse-annealing'' of the scope $\g$ typically interferes with the learning rate annealing that is popular in deep learning, this is a direct consequence of the update step on Line 7 of Alg.~\ref{alg:entropysgd}. In practice, we therefore scale the local entropy gradient by $\g$ before the update and modify the line to read
+$$
+    x \leftarrow x - \eta (x - \mu).
+$$
+We found this to be very effective in simplifying hyper-parameter tuning.
 
 
 \subsection{Theoretical Properties}
 \label{ss:theoretical_properties}
 
-\pc{We can show that $\entropysgd$ results in a smoother loss function and obtains better generalization error than the original objective~\eqref{eq:dnn_objective} if trained for the same number of iterations. Proofs are deferred to the Appendix (see Sec.~\ref{s:app:proofs}).}{Clarify that the analysis here is only a sketch, it is not rigorous}
+\pc{We can show that $\entropysgd$ results in a smoother loss function and obtains better generalization error than the original objective~\eqref{eq:dnn_objective} if trained for the same number of iterations. Proofs are deferred to the Appendix (see Sec.~\ref{s:app:proofs}).}{clarify that the analysis here is only a sketch, it is not rigorous}
 
 With some overload of notation, we assume that the original loss $f(x)$ is $\b$-smooth, i.e., for all $x,y \in \reals^n$, we have $\norm{\nabla f(x) - \nabla f(y)} \leq \b\ \norm{x-y}$. We additionally assume for the purpose of analysis that no eigenvalue of the Hessian $\nabla^2 f(x)$ lies in the set $[-2 \g-c, c]$ for some small $c > 0$.
 %
@@ -307,6 +314,12 @@ which shows that $\entropysgd$ generalizes better than SGD for all $T > \a$.
 
 As an aside, it is easy to see from the proof of Lem.~\ref{lem:smoothness_reduction} that for a convex loss function $f(x)$, adding the local entropy term does not change the minimizer of the original problem.
 
+
+\section{Connection to variational inference}
+\label{s:app:connection_variational}
+The local entropy based objective in $\entropysgd$ has similar motivations as variational inference.
+
+
 \section{Experiments}
 \label{s:expt}
 
@@ -337,24 +350,24 @@ The right tails of the eigenspectra are much longer than the left tails. Indeed,
 
 \begin{figure}[!tbh]
 \centering
-    \begin{subfigure}[t]{0.47 \textwidth}
+    \begin{subfigure}[t]{0.44 \textwidth}
         \includegraphics[width=1.08\textwidth]{mnistfc_hessian.pdf}
         \caption{\small $\smallmnistfc$ ($2$ runs): Peak (clipped here) at zero ($\abs{\lambda} \leq 10^{-2}$) accounts for $90\%$ of the entries.\vspace{0.15in}}
         \label{fig:mnistfc_hessian}
     \end{subfigure}
     \hspace{0.2in}
-    \begin{subfigure}[t]{0.47 \textwidth}
+    \begin{subfigure}[t]{0.44 \textwidth}
         \includegraphics[width=\textwidth]{charlstm_hessian.pdf}
         \caption{\small $\charlstm$ ($5$ runs): Almost $95\%$ eigenvalues have absolute value below $10^{-5}$.}
         \label{fig:charlstm_hessian}
     \end{subfigure}
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \begin{subfigure}[b]{0.47 \textwidth}
+        \begin{subfigure}[b]{0.44 \textwidth}
         \includegraphics[width=\textwidth]{allcnn_dm.pdf}
         \end{subfigure}
         \hspace{0.2in}
-        \begin{subfigure}[b]{0.47 \textwidth}
+        \begin{subfigure}[b]{0.44 \textwidth}
         \includegraphics[width=\textwidth]{allcnn_dp.pdf}
         \end{subfigure}
     \caption{\small Negative and positive eigenvalues of the Fisher information matrix of $\allcnn$ at a local minimum ($4$ independent runs). The origin has a large peak with $\approx 95\%$ near-zero ($\abs{\lambda} \leq 10^{-5}$) eigenvalues (clipped here).}
@@ -367,97 +380,118 @@ The right tails of the eigenspectra are much longer than the left tails. Indeed,
 \subsection{MNIST}
 \label{ss:expt:mnist}
 
-In this section, we show that local entropy is a good measure of generalization, in fact, setting $\rho = 0$ in $\entropysgd$, i.e., completely disabling the original loss function is enough to train on MNIST. We consider two networks: the first is a fully-connected network with two hidden layers of $1024$ units each which we denote as ``$\mnistfc$'' and the second is a convolutional neural network similar to $\lenet$ but which batch-normalization~\citep{ioffe2015batch} and a dropout layer of probability $0.5$ added after each convolutional layer. We train for $100$ epochs with Adam and a learning rate of $10^{-3}$ that drops by a factor of $5$ after every $30$ epochs and compare the average error over $5$ independent runs in Fig.~\ref{fig:mnistfc_test} and Fig.~\ref{fig:lenet_test}.
+We consider two prototypical networks: the first is a fully-connected network with two hidden layers of $1024$ units each which we denote as ``$\mnistfc$'' and the second is a convolutional neural network with the same size as $\lenet$ but with batch-normalization~\citep{ioffe2015batch}; both with a dropout of probability $0.5$ after each layer. As a baseline, we train for $100$ epochs with Adam and a learning rate of $10^{-3}$ that drops by a factor of $5$ after every $30$ epochs to obtain an average error of $1.39 \pm 0.03\%$ and $0.51 \pm 0.01 \%$ for $\mnistfc$ and $\lenet$ respectively over $5$ independent runs.
 
-$\entropysgd$ converges to an error of $1.39\%$ in $22$ epochs on $\mnistfc$ while Adam obtains the same (best) error after $67$ epochs. For a small network such as this, with a presumably easy energy landscape, we perform $5$ SGLD iterations and set $\g = 1$. For $\lenet$, we perform $20$ SGLD iterations and set $\g = 0.1$. In this case, $\entropysgd$ converges around epoch $40$ to an average error of $0.48\%$; Adam obtains a comparable error of $0.51\%$ after $100$ epochs. For this experiment, we use a small $\rho = 10^{-4}$ to fine-tune the network; the error without this is $0.52\%$.
+For both these networks, we train $\entropysgd$ for $5$ epochs with $L = 20$ and reduce the dropout probability ($0.15$ for $\mnistfc$ and $0.25$ for $\lenet$). The learning rate of the SGLD updates is fixed to $\eta' = 0.1$ while the outer loop's learning rate is set to $\eta=1$ and drops by a factor of $10$ after the second epoch; we use Nesterov's momentum for both the loops. The thermal noise in SGLD updates (Line 5 of Alg.~\ref{alg:entropysgd}) is set to $10^{-3}$. We use an exponentially increasing value of $\g$ for scoping, the initial value of the scope is set to $\g = 10^{-4}$ and this increases by a factor of $1.001$ after each parameter update. The results in Fig.~\ref{fig:mnistfc_test} and Fig.~\ref{fig:lenet_test} show that $\entropysgd$ obtains a comparable generalization error: $1.37 \pm 0.03 \%$ and $0.50 \pm 0.01 \%$, for $\mnistfc$ and $\lenet$ respectively.
 
-\textbf{Remark:} A single ``epoch'' for all algorithms considered here corresponds to the number of parameter updates necessary to run through the entire dataset once. Note that both SGD and $\entropysgd$ update parameters after each mini-batch, but $\entropysgd$ also runs $L$ iterations of SGLD between two updates of the parameters.
+\textbf{Computational complexity:} Since $\entropysgd$ runs $L$ steps of SGLD before each parameter update, the effective number of iterations over the dataset is $L$ times that of SGD or Adam for the same number of parameter updates. We therefore plot the error curves of $\entropysgd$ in Fig.~\ref{fig:mnist_test} and~\ref{fig:allcnn} against the ``effective number of epochs'', i.e. by multiplying the abscissae by a factor of $L$. Note that $L = 1$ for SGD or Adam.
 
-\begin{figure}[h!]
+\begin{figure}[htp!]
 \centering
-    \begin{subfigure}[t]{0.45\textwidth}
+    \begin{subfigure}[t]{0.4\textwidth}
         \centering
-        \includegraphics[width=0.98\textwidth]{mnistfc_valid.pdf}
-        \caption{\small $\mnistfc$: $\entropysgd$ with $\rho = 0$, $L = 5$.}
+        \includegraphics[width=1.02\textwidth]{mnistfc_valid.pdf}
+        \caption{\small $\mnistfc$: Validation error}
         \label{fig:mnistfc_test}
     \end{subfigure}
-    \hspace{0.1in}
-    \begin{subfigure}[t]{0.45\textwidth}
+    \hspace{0.2in}
+    \begin{subfigure}[t]{0.4\textwidth}
         \centering
         \includegraphics[width=\textwidth]{lenet_valid.pdf}
-        \caption{\small $\lenet$: $\entropysgd$ $\rho = 10^{-4}$, $L = 20$.}
+        \caption{\small $\lenet$: Validation error}
         \label{fig:lenet_test}
     \end{subfigure}
 \caption{\small Comparison of $\entropysgd$ vs. Adam on MNIST\vspace*{0.15in}}
 \label{fig:mnist_test}
 \end{figure}
 
+\subsection{CIFAR-10}
+\label{ss:expt:cifar}
+
 \begin{figure}[htp!]
 \centering
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.4\textwidth}
         \centering
-        \includegraphics[width=1.03\textwidth]{allcnn_loss.pdf}
+        \includegraphics[width=1.02\textwidth]{allcnn_loss.pdf}
         \caption{\small $\allcnn$: Training loss}
         \label{fig:allcnn_loss}
     \end{subfigure}
-    \hspace{0.1in}
-    \begin{subfigure}[b]{0.45\textwidth}
+    \hspace{0.2in}
+    \begin{subfigure}[b]{0.4\textwidth}
         \centering
         \includegraphics[width=\textwidth]{allcnn_valid.pdf}
         \caption{\small $\allcnn$: Validation error}
         \label{fig:allcnn_valid}
     \end{subfigure}
-\caption{\small Comparison of $\entropysgd$ vs. Adam on CIFAR-10}
+\caption{\small Comparison of $\entropysgd$ vs. SGD on CIFAR-10}
 \label{fig:allcnn}
 \end{figure}
 
-\subsection{CIFAR-10}
-\label{ss:expt:cifar}
+We train on CIFAR-10 without data augmentation after performing global contrast normalization and ZCA whitening~\citep{goodfellow2013maxout}. We consider the All-CNN-C network of~\citet{springenberg2014striving} with a batch normalization layer after each convolutional layer and all other architectural parameters such as filter-sizes and weight decay are kept the same. We train for $200$ epochs with SGD and Nesterov's momentum during which the initial learning rate of $0.1$ decreases by a factor of $5$ after every $60$ epochs. We obtain an average error of $8.30 \pm 0.1\%$ over $5$ runs of $200$ epochs vs.\ $9.08\%$ error in $350$ epochs as the authors in~\citet{springenberg2014striving} report and this is thus a very competitive baseline for this network. Let us note that the best result in the literature on non-augmented CIFAR-10 is the ELU-network by~\citet{clevert2015fast} with $6.55\%$ test error.
 
-We train on CIFAR-10 without data augmentation after performing global contrast normalization and ZCA whitening~\citep{goodfellow2013maxout}. As a baseline, we consider the All-CNN-C network of~\citet{springenberg2014striving} with a batch normalization layer after each convolutional layer; this is absent in the original paper. We recreate the training pipeline of the original authors with the same hyper-parameters and use SGD with Nesterov's momentum. We however decrease the initial learning rate of $0.1$ by a factor of $5$ after every $60$ epochs for SGD and after every $5$ epochs for $\entropysgd$. Probably due to batch-normalization, we obtain an average error of $8.30\%$ over $5$ runs of $200$ epochs vs.\ $9.08\%$ error in $350$ epochs as the authors in~\citet{springenberg2014striving} report. This gives us a very competitive baseline to compare $\entropysgd$ against. Let us note that the best result in literature on non-augmented CIFAR-10 is the ELU-network by~\citet{clevert2015fast} with $6.55\%$ test error while a wide ResNet of~\citet{zagoruyko2016wide} obtains an error of $4.17\%$ with data augmentation.
+We train $\entropysgd$ with $L = 20$ for $10$ epochs with the original dropout of $0.5$. The initial learning rate of the outer loop is set to $\eta = 1$ and drops by a factor of $5$ every $4$ epochs, while the learning rate of the SGLD updates is fixed to $\eta' = 0.1$ with thermal noise $\e = 10^{-4}$. As the scoping scheme, we set the initial value of the scope to $\g = 0.03$ which increases by a factor of $1.001$ after each parameter update.
+%
+Fig.~\ref{fig:allcnn} shows the training and validation error curves for $\entropysgd$ compared with SGD. It shows that local entropy performs as well as SGD on a large CNN; we obtain a validation error of $8.28 \pm 0.11 \%$ in the same number of effective epochs.
 
-%We list a few other comparable networks in the literature in Table~\ref{tab:cifar10}.
-% \begin{wraptable}{r}{0.6 \textwidth}
-% \centering
-% \renewcommand{\arraystretch}{1.2}
-% \resizebox{0.5 \columnwidth}{!}
-% {
-% \begin{tabular}{p{6.5cm} r}
-%     Model & Test error ($\%$)\\  \hline
-%     %Maxout~\citep{goodfellow2013maxout} & $11.68$\\
-%     NiN~\citep{lincy13} & $10.41$\\
-%     All-CNN-C~\citep{springenberg2014striving} & $9.04$\\
-%     All-CNN-BN (baseline: SGD, 200 epochs) & $8.30\ \pm\ 0.08$\\
-%     All-CNN-BN ($\entropysgd$, 15 epochs) & $8.65\ \pm\ 0.06$\\
-%     ELU~\citep{clevert2015fast} & $6.55$\\ \hline
-% \end{tabular}
-% }
-% \caption{\small Error rates on CIFAR-10 without data augmentation.}
-% \label{tab:cifar10}
-% \end{wraptable}
+We see almost no plateauing of training loss or validation error for $\entropysgd$ in Fig.~\ref{fig:allcnn_loss}; this trait is shared across different networks and datasets in our experiments. Moreover, while the magnitude of the gradients is similar for both SGD and $\entropysgd$ --- in fact, we use this as a way to tune SGLD's hyper-parameters $\eta'$ and $\g$ --- we can use significantly larger learning rates for $\entropysgd$. SGD with large learning rates, say $\eta = 1$ for the above network, would not train at all. These two observations are a direct consequence of the additional smoothness of the local entropy landscape.
 
-Fig.~\ref{fig:allcnn} compares $\entropysgd$ against SGD with $20$ SGLD iterations for $15$ epochs. Since CIFAR-10 is a more challenging dataset than MNIST, we could not obtain better test errors than $9.5\%$ while training with only the local entropy term ($\rho = 0$). We therefore set $\rho = 0.01$ to obtain an error of $8.65\%$ over $5$ independent runs. Refer to Fig.~\ref{fig:allcnn_loss}, $\entropysgd$ is designed to be an algorithm that seeks out wide local minima as opposed to sharp valleys; a side-effect of this is to smooth the energy landscape as we show in Sec.~\ref{ss:theoretical_properties}. In practice, we see this as a steady decrease in training loss for $\entropysgd$ without any plateaus that appear in the training loss for SGD. Similarly, the decrease in validation error in Fig.~\ref{fig:allcnn_valid} is also steady without any plateaus. Note that the original network $\textrm{All-CNN-C}$ was trained using SGD for $350$ epochs~\citep{springenberg2014striving}.
+
+\paragraph{Comparison with SGLD:}
+\todo{A common way to train Bayesian neural networks is through MCMC algorithms to approximate the likelihood of data marginalized over the weights. Indeed, SGLD which forms the inner loop of $\entropysgd$ is a popular algorithm for variational inference~\citep{balan2015bayesian}. We run vanilla SGLD for two prototypical networks in Sec.~\ref{s:expt}, $\lenet$ on MNIST and $\allcnn$ on CIFAR-10.}
+
+\subsection{Recurrent neural networks}
+\label{ss:expt:rnn}
+
+In order to test the efficacy of $\entropysgd$ on recurrent architectures, we train an LSTM network on the Penn Tree Bank (PTB) dataset for word-level text prediction. This dataset contains about one million words divided into a training set of about $930,000$ words, a validation set of $74,000$ words and $82,000$ words with a vocabulary of size $10,000$. As a baseline, we follow the experiments in~\citet{zaremba2014recurrent}. Our network called $\ptblstm$ consists of two layers with $1500$ hidden units, each unrolled for $35$ time steps and a dropout of probability $0.65$; note that this is a large network with about $66$ million weights. It is trained with SGD (without momentum, like the original authors) for $55$ epochs with a learning rate $\eta = 1$ for the first $14$ epochs that is annealed by a factor of $1.15$ after every epoch. \pc{We obtained a word perplexity of $81.125$ on the validation set and $78.232$}{std-dev} on the test set with this setup, which closely matches the results of the original authors.
+
+We run $\entropysgd$ on $\ptblstm$ for $5$ epochs with $L = 5$; note that this results in only $25$ effective epochs. We do not use scoping for this network and instead fix $\g = 10^{-3}$. The initial learning rate of the outer loop is $\eta = 1$ which reduces by a factor of $10$ at each epoch after the third epoch. The SGLD learning rate is fixed to $\eta' = 1$ with $\e = 10^{-4}$. We obtain a word perplexity of $80.116 \pm 0.069$ on the validation set and $77.656 \pm 0.171$ on the test set. As Fig.~\ref{fig:ptb_valid} shows, $\entropysgd$ trains significantly faster than SGD and also achieves a slightly better generalization perplexity.
+
+Next, we train an LSTM to perform character-level text-prediction. As a dataset, following the experiments of~\citet{karpathy2015visualizing}, we use the text of War and Peace by Leo Tolstoy which contains about $3$ million characters divided into training ($80\%$), validation ($10\%$) and test ($10\%$) sets. We use an LSTM consisting of two layers of $128$ hidden units unrolled for $50$ time steps and a vocabulary of size $87$. We train the baseline with Adam for $50$ epochs with an initial learning rate of $0.002$ that decays by a factor of $2$ after every $5$ epochs to obtain a validation perplexity of $1.224 \pm 0.008$ and a test perplexity of \pc{$1.227 \pm 0.006$}{this is a place-holder}.
+
+As noted in Sec.~\ref{ss:alg}, we can easily wrap Alg.~\ref{alg:entropysgd} inside other variants of SGD such as Adam; indeed this involves simply substituting the local entropy gradient in place of the usual back-propagated gradient. For this experiment, we construct $\entropyadam$ which is equivalent to Adam that uses the local entropy gradient (computed via SGLD). We run $\entropyadam$ for $5$ epochs with $L = 5$ and a fixed $\g = 0.01$ with an initial learning rate of $0.01$ that decreases by a factor of $2$ at each epoch. Note that this again results in only $25$ effective epochs. We obtain a validation perplexity of $1.213 \pm 0.007$ and a test perplexity of \pc{$1.20 \pm 00$}{this is a place-holder} over $4$ independent runs which is slightly better than the baseline, in half as much wall-clock time. We plot the error curves in Fig.~\ref{fig:char_valid} for this experiment.
+
+Tuning the momentum in $\entropysgd$ was crucial to getting good results on RNNs. While the SGD baseline on $\ptblstm$ does not use momentum (and in fact, does not train well with momentum) we used a momentum of $0.5$ for $\entropysgd$. On the other hand, the baseline for $\charlstm$ was trained with Adam with $\b_1 = 0.9$ ($\b_1$ in Adam controls the moving average of the gradient) while we set $\b_1 = 0.5$ for $\entropyadam$. In contrast to this observation about RNNs, all our experiments on CNNs used a momentum of $0.9$. \pc{This is also corroborated by monitoring the angle between the local entropy gradient and the vanilla SGD gradient during training. This angle changes much more rapidly for RNNs than for CNNs which suggests a more rugged energy landscape for the former.}{}
+
+\todo{the two plots below are place holders}
+\begin{figure}[htp!]
+\centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{allcnn_valid.pdf}
+        \caption{\small $\ptblstm$: Validation, test perplexity}
+        \label{fig:ptb_valid}
+    \end{subfigure}
+    \hspace{0.2in}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=1.02\textwidth]{allcnn_loss.pdf}
+        \caption{\small $\charlstm$: Validation perplexity}
+        \label{fig:char_valid}
+    \end{subfigure}
+\caption{\small Comparison of $\entropysgd$ vs. SGD / Adam on RNNs}
+\label{fig:rnn}
+\end{figure}
 
 \section{Discussion}
 \label{s:discussion}
 
-As discussed in Sec.~\ref{ss:intuition_local_entropy}, SGLD updates in the inner loop of our algorithm compute the average gradient of the original loss in the neighborhood of the current weights. An inexpensive and approximate way of computing these updates is to average the gradient over random perturbations of weights during the forward pass itself and, on the same mini-batch as the outer loop. In our experiments, using the same mini-batch performs slightly worse than $\entropysgd$ although it is still better than SGD. Such an implementation is close to averaged SGD of~\citep{polyak1992acceleration,bottou2012stochastic} and worth further study.
+In our experiments, $\entropysgd$ results in a comparable generalization error as SGD, but always has a lower cross-entropy loss on the training set. This suggests the following in the context of energy landscapes of deep networks. Roughly, wide valleys favored by $\entropysgd$ are located deeper in the landscape with a lower empirical loss than local minima discovered by SGD where it presumably gets stuck. Such an interpretation is contrast to theoretical models of deep networks (cf.\@ Sec.~\ref{s:prior_work}) which predicts multiple equivalent local minima with the same loss. Our work suggests that geometric properties of the energy landscape are crucial to generalize well and provides algorithmic approaches to exploit them. However, the literature lacks general results about the geometry of the loss functions of deep networks --- convolutional neural networks in particular --- and this is a promising direction for future work.
 
-In our experiments, $\entropysgd$ results in a comparable generalization error as SGD, but always has a lower cross-entropy loss on the training set. Roughly speaking, wide valleys favored by $\entropysgd$ seem to have lower empirical loss than local minima discovered by SGD. Theoretical models of deep networks (cf.\@ Sec.~\ref{s:prior_work}) suggest multiple local minima with the same loss but there is an absence of results in literature about the local geometry at these minima.
+\pc{If we focus on the inner loop of the algorithm, SGLD updates compute the average gradient (with Langevin noise) in a neighborhood of the parameters while maintaining the Polyak average of the new parameters. Such an interpretation is very close to averaged SGD of~\citet{polyak1992acceleration} and~\citet{bottou2012stochastic} and worth further study. Moreover, our experiments show that $\entropysgd$ trains significantly faster than SGD for recurrent networks with relatively minor gains in wall-clock time for CNNs. Estimating the gradient of local entropy cheaply with few SGLD iterations, or more interestingly, by using a smaller network in the teacher-student fashion~\citep{balan2015bayesian} is another avenue for extensions to this work.}{don't want to give away the farm}
 
 \section{Conclusions}
 \label{s:conclusions}
 
-We introduced an algorithm named $\entropysgd$ for optimization of deep networks. This was motivated from the observation that the energy landscape near a local minimum discovered by SGD is almost flat for a wide variety of deep networks irrespective of their architecture, input data or training methods. We connected this observation to the concept of local entropy which we used to bias the optimization towards flat regions that have low generalization error. Our experiments showed that this algorithm is applicable to large deep networks used in practice.
+We introduced an algorithm named $\entropysgd$ for optimization of deep networks. This was motivated from the observation that the energy landscape near a local minimum discovered by SGD is almost flat for a wide variety of deep networks irrespective of their architecture, input data or training methods. We connected this observation to the concept of local entropy which we used to bias the optimization towards flat regions that have low generalization error. Our experiments showed that this algorithm is applicable to large convolutional and recurrent deep networks used in practice.
 
-\section{Acknowledgements}
+\section{Acknowledgments}
 \label{s:acknowledgements}
 
 This work was supported by the Office of Naval Research (ONR), Air Force Office of Scientific Research (AFOSR) and Army Research Office (ARO).
 
 {
 \footnotesize
-\linespread{1.0}
+\linespread{0.8}
 \bibliographystyle{iclr2017_conference}
 \bibliography{chaudhari.choromanska.ea.iclr17}
 }
@@ -498,7 +532,7 @@ Let us note that there is a variety of increasingly sophisticated MCMC algorithm
 \section{Proofs}
 \label{s:app:proofs}
 
-\begin{proof}[Proof of Lemma~\ref{lem:smoothness_reduction}]
+\begin{proof}[Proof sketch of Lemma~\ref{lem:smoothness_reduction}]
 The gradient $-\nabla F(x)$ is computed in Sec.~\ref{ss:grad_local_entropy} to be $\g\ \rbrac{x - \ag{x';\ \minibatch{\ell}}}$. Consider the term
 \begin{align*}
     x - \ag{x';\ x}
