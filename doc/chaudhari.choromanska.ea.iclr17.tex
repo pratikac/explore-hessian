@@ -120,7 +120,7 @@ Motivated by the same final goal, viz., flat local minima, the authors in~\citet
 %, it bears supercial similarities to the uniform stability analysis~\citep{haussler1997mutual} we employ.
 %Recent work by~\citet{keskar2016large} is relevant in the context of the main theme of our paper. The authors estimate the loss in a neighborhood of the weights to argue that small batch size in SGD (i.e., larger gradient noise) generalizes better than large mini-batches and also results in significantly flatter minima.
 
-Another related area is homotopy continuation methods that convolve the loss function to solve sequentially refined optimization problems~\citep{allgower2012numerical,mobahi2015link} or methods that perturb the weights or activations to average the gradient~\citep{gulcehre2016mollifying} with an aim to smooth the rugged energy landscape. Such a smoothing is however different from local entropy. For instance, the latter places more weight on wide local minima even if they are much shallower than the global minimum (cf. Fig.~\ref{fig:entropyfig}) which cannot be obtained by smoothing. In fact, smoothing can introduce an artifical minimum between two sharp valleys connected by a high energy barrier which is detrimental to generalization. Please refer to Sec.~\ref{ss:connection_variational} for a more elaborate discussion. In order to be effective, continuation techniques also require that minimizers of successively smaller convolutions of the loss function lie close to each other~\citep{DBLP:conf/icml/HazanLS16}; it is not clear whether this is true for deep networks. Local entropy exploits wide minima which have been shown to exist in a variety of learning problems~\citep{monasson1995weight,cocco1996analytical}; our experiments on the eigenspectrum of the Hessian are a step to showing the existence of such wide minima in modern deep networks.
+Another related area is homotopy continuation methods that convolve the loss function to solve sequentially refined optimization problems~\citep{allgower2012numerical,mobahi2015link} or methods that perturb the weights or activations to average the gradient~\citep{gulcehre2016mollifying} with an aim to smooth the rugged energy landscape. Such a smoothing is however different from local entropy. For instance, the latter places more weight on wide local minima even if they are much shallower than the global minimum (cf. Fig.~\ref{fig:entropyfig}) which cannot be obtained by smoothing. In fact, smoothing can introduce an artifical minimum between two sharp valleys connected by a high energy barrier which is detrimental to generalization. Please refer to Sec.~\ref{ss:app:connection_variational} for a more elaborate discussion. In order to be effective, continuation techniques also require that minimizers of successively smaller convolutions of the loss function lie close to each other~\citep{DBLP:conf/icml/HazanLS16}; it is not clear whether this is true for deep networks. Local entropy exploits wide minima which have been shown to exist in a variety of learning problems~\citep{monasson1995weight,cocco1996analytical}; our experiments on the eigenspectrum of the Hessian are a step to showing the existence of such wide minima in modern deep networks.
 
 \section{Local entropy}
 \label{s:local_entropy}
@@ -269,7 +269,7 @@ The scoping parameter $\g$ is fixed in Alg.~\ref{alg:entropysgd}. For large valu
 $$
     \g(t) = \g_0\ \rbrac{1 + \g_1}^t;
 $$
-for the $t^{\trm{th}}$ parameter update. We have experimented with linear, quadratic and bounded exponential ($\g_0 \rbrac{1 - e^{-\tau t}}$) scoping schedules with similar qualitative results.
+for the $t^{\trm{th}}$ parameter update. We have experimented with linear, quadratic and bounded exponential ($\g_0 \rbrac{1 - e^{-\tau t}}$) scoping schedules and obtained qualitatively similar results.
 
 Scoping of $\g$ unfortunately interferes with the learning rate annealing that is popular in deep learning, this is a direct consequence of the update step on Line 7 of Alg.~\ref{alg:entropysgd}. In practice, we therefore scale the local entropy gradient by $\g$ before the update and modify the line to read
 $$
@@ -280,7 +280,7 @@ We found this to be very effective in simplifying hyper-parameter tuning. In gen
 \subsection{Theoretical Properties}
 \label{ss:theoretical_properties}
 
-\pc{We can show that $\entropysgd$ results in a smoother loss function and obtains better generalization error than the original objective~\eqref{eq:dnn_objective} if trained for the same number of iterations. Proofs are deferred to the Appendix (see Sec.~\ref{s:app:proofs}).}{clarify that the analysis here is only a sketch, it is not rigorous}
+We can show that $\entropysgd$ results in a smoother loss function and obtains better generalization error than the original objective~\eqref{eq:dnn_objective} if trained for the same number of iterations. Proofs are deferred to the Appendix (see Sec.~\ref{s:app:proofs}).
 
 With some overload of notation, we assume that the original loss $f(x)$ is $\b$-smooth, i.e., for all $x,y \in \reals^n$, we have $\norm{\nabla f(x) - \nabla f(y)} \leq \b\ \norm{x-y}$. We additionally assume for the purpose of analysis that no eigenvalue of the Hessian $\nabla^2 f(x)$ lies in the set $[-2 \g-c, c]$ for some small $c > 0$.
 %
@@ -289,7 +289,7 @@ With some overload of notation, we assume that the original loss $f(x)$ is $\b$-
 The objective $F(x, \g;\ \Xi)$ in~\eqref{eq:entropysgd_objective} is $\f{\a}{1 + \g^{-1}\ c}$-Lipschitz and $\f{\b}{1 + \g^{-1}\ c}$-smooth.
 \end{lemma}
 The local entropy objective is thus smoother than the original objective.
-
+%
 Let us now obtain a bound on the improvement in generalization error. We denote an optimization algorithm, viz., SGD or $\entropysgd$ by $A(\Xi)$, it is a function of the dataset $\Xi$ and outputs the parameters $x^*$ upon termination. Stability of the algorithm~\citep{bousquet2002stability} is then a notion of how much its output differs in loss upon being presented with two datasets $\Xi$ and $\Xi'$ that differ in at most one sample,
 $$
     \sup_{\xi\ \in\ \Xi\ \cup\ \Xi'}\ \sqbrac{ f \rbrac{A(\Xi), \xi} - f \rbrac{A(\Xi'), \xi}} \leq \e.
@@ -323,10 +323,6 @@ As an aside, it is easy to see from the proof of Lem.~\ref{lem:smoothness_reduct
 \begin{remark}
 discuss the eigenvalue assumption here
 \end{remark}
-
-\subsection{Connection to variational inference}
-\label{ss:connection_variational}
-The local entropy based objective in $\entropysgd$ has similar motivations as variational inference.
 
 \section{Experiments}
 \label{s:expt}
@@ -442,9 +438,6 @@ We train $\entropysgd$ with $L = 20$ for $10$ epochs with the original dropout o
 Fig.~\ref{fig:allcnn} shows the training and validation error curves for $\entropysgd$ compared with SGD. It shows that local entropy performs as well as SGD on a large CNN; we obtain a validation error of $8.22 \pm 0.11 \%$ in the same number of effective epochs.
 
 We see almost no plateauing of training loss or validation error for $\entropysgd$ in Fig.~\ref{fig:allcnn_loss}; this trait is shared across different networks and datasets in our experiments. Moreover, while the magnitude of the gradients is similar for both SGD and $\entropysgd$ --- in fact, we use this as a way to tune SGLD's hyper-parameters $\eta'$ and $\g$ --- we can use significantly larger learning rates for $\entropysgd$. SGD with large learning rates, say $\eta = 1$ for the above network, would not train at all. These two observations are a direct consequence of the additional smoothness of the local entropy landscape.
-
-\paragraph{Comparison with SGLD:}
-\todo{A common way to train Bayesian neural networks is through MCMC algorithms to approximate the likelihood of data marginalized over the weights. Indeed, SGLD which forms the inner loop of $\entropysgd$ is a popular algorithm for variational inference~\citep{balan2015bayesian}. We run vanilla SGLD for two prototypical networks in Sec.~\ref{s:expt}, $\lenet$ on MNIST and $\allcnn$ on CIFAR-10.}
 
 \subsection{Recurrent neural networks}
 \label{ss:expt:rnn}
@@ -602,6 +595,15 @@ is estimated using Langevin dynamics with $100$ iterations in Alg.~\ref{alg:entr
 For both~\eqref{eq:3sg} and~\eqref{eq:3sg_modified} we set $n = 100$ and perform $10^3$ Monte-Carlo runs from uniformly randomly sampled initial conditions on the hyper-sphere with a learning rate $\eta = 0.01$ until the norm of the gradient is smaller than $10^{-4}$. We then contrast the eigenspectrum of the original Hessian, viz., $\nabla^2 H(x)$ (projected onto the tangent space of the sphere) for both these problems.
 
 Fig.~\ref{fig:expt:sg} shows the results of this simulation. As expected, the solutions of~\eqref{eq:3sg} have energies close to the asymptotic value $-1.657$. The energies of the optimizers of~\eqref{eq:3sgentropy} are higher, with a mean $-1.45$. On the other hand, the Hessian for~\eqref{eq:3sg} has large positive eigenvalues suggesting deep, sharp local minima while the Hessian for~\eqref{eq:3sgentropy} has much smaller positive eigenvalues, which suggests shallower and wider valleys in the energy landscape. The effect of the local-entropy term is thus to artificially under-optimize the loss function; indeed it avoids deep and sharp valleys in the energy landscape and causes gradient descent to settle in wider --- although shallower --- local minima where nearby spins have similar values of the Hamiltonian $H(x)$. As experiments in Sec.~\ref{ss:expt:mnist} and~\ref{ss:expt:cifar} show, this is crucial to avoid over-fitting on the training set and leads to better generalization.
+}
+
+\todo{
+\subsection{Connection to variational inference}
+\label{ss:app:connection_variational}
+The local entropy based objective in $\entropysgd$ has similar motivations as variational inference.
+
+\paragraph{Comparison with SGLD:}
+A common way to train Bayesian neural networks is through MCMC algorithms to approximate the likelihood of data marginalized over the weights. Indeed, SGLD which forms the inner loop of $\entropysgd$ is a popular algorithm for variational inference~\citep{balan2015bayesian}. We run vanilla SGLD for two prototypical networks in Sec.~\ref{s:expt}, $\lenet$ on MNIST and $\allcnn$ on CIFAR-10.
 }
 
 \end{appendices}
