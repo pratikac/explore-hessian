@@ -23,13 +23,13 @@ opt = lapp[[
 --LRratio           (default 0.2)               LR drop factor
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
---gamma             (default 1e-4)              Langevin gamma coefficient
+--gamma             (default 0.03)              Langevin gamma coefficient
 --scoping           (default 1e-3)              Scoping parameter \gamma*(1+scoping)^t
 --noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 2)                 GPU id
 -f,--full                                       Use all data
 -d,--dropout        (default 0.5)               Dropout
---L2                (default 1e-3)                 L2 regularization
+--L2                (default 1e-3)              L2 regularization
 -s,--seed           (default 42)
 -e,--max_epochs     (default 10)
 --augment                                       Augment data with flips and mirrors
@@ -392,20 +392,21 @@ function learning_rate_schedule()
         elseif opt.LR > 0 then
             lr = opt.LR
         else
+            --[[
+            -- all-cnn-bn on cifar10 for SGD
             local regimes = {
                 {1,60, 0.1},
                 {60,120, 0.1*0.2^1},
                 {120,180, 0.1*0.2^2},
                 {180,250, 0.1*0.2^3}
             }
-            --[[
+            --]]
             -- all-cnn-bn on cifar10
             local regimes = {
             {1,4,1},
             {5,6,0.2},
-            {7,12,0.01}
+            {7,12,0.02}
             }
-            --]]
             --[[
             -- lenet
             local regimes = {
