@@ -164,7 +164,7 @@ The local free entropy of the Gibbs distribution in~\eqref{eq:gibbs_original}, c
     \label{eq:local_entropy}
 \end{align}
 \end{definition}
-The parameter $\g$ is used to focus the modified Gibbs distribution upon a local neighborhood of $x$ and we call it a ``scope'' henceforth. Fig.~\ref{fig:entropyfig} shows the negative local entropy $-F(x, \g)$ for the original energy landscape. Note that $-F(x, \g)$ has a global minimum near $x_{\textrm{robust}}$ which is exactly what we want; indeed, $x_{\textrm{robust}}$ has a higher local entropy than $x_{\textrm{non-robust}}$.
+The parameter $\g$ is used to focus the modified Gibbs distribution upon a local neighborhood of $x$ and we call it a ``scope'' henceforth. Fig.~\ref{fig:entropyfig} shows the negative local entropy $-F(x, \g)$ for the original energy landscape. Note that $-F(x, \g)$ has a global minimum near $x_{\textrm{robust}}$ which is exactly what we want; we expect $x_{\textrm{robust}}$ to be more robust than $x_{\textrm{non-robust}}$ to perturbations of data or parameters and thus generalize well.
 
 \paragraph{Connection to classical entropy:}
 The quantity we have defined as local entropy in Def.~\ref{def:local_entropy} is different from classical entropy which counts the number of likely configurations under a given distribution. For a continuous parameter space, this is given by
@@ -260,23 +260,22 @@ Let us discuss the algorithm in a little more detail. Although we have written A
 %
 We use exponential averaging to estimate $\mu$ in the SGLD loop (Line 6) with $\a = 0.75$ so as to put more weight on the later samples, this is akin to a burn-in of SGLD iterations.
 
-We set the number of SGLD iterations to $L = [5, 20]$ depending upon the complexity of the dataset. The learning rate $\eta'$ is fixed for all our experiments to values between $\eta' \in\ [0.1, 1]$. We found that annealing $\eta'$ (for instance, setting it to be the same as the outer learning rate $\eta$) is detrimental; indeed a small learning rate leads to poor estimates of local entropy towards the end of training where they are most needed. The parameter $\e$ (Line 5) is called the ``thermal noise'' in SGLD, we fix this to $\e = 10^{-4}$. Having thus fixed $L, \e$ and $\eta'$, an effective heuristic to tune the remaining parameter $\g$ is to match the magnitude of the gradient of the local entropy term, viz. $\g\ (x - \mu)$, to the gradient for vanilla SGD, viz. $m^{-1}\ \sum_{i=1}^m\ \nabla_x f(x; \xi_{\ell_i})$.
+We set the number of SGLD iterations to $L = [5, 20]$ depending upon the complexity of the dataset. The learning rate $\eta'$ is fixed for all our experiments to values between $\eta' \in\ [0.1, 1]$. We found that annealing $\eta'$ (for instance, setting it to be the same as the outer learning rate $\eta$) is detrimental; indeed a small learning rate leads to poor estimates of local entropy towards the end of training where they are most needed. The parameter $\e$ in SGLD on Line 5 is the thermal noise and we fix this to $\e = 10^{-4}$. Having thus fixed $L, \e$ and $\eta'$, an effective heuristic to tune the remaining parameter $\g$ is to match the magnitude of the gradient of the local entropy term, viz. $\g\ (x - \mu)$, to the gradient for vanilla SGD, viz. $m^{-1}\ \sum_{i=1}^m\ \nabla_x f(x;\ \xi_{\ell_i})$.
 
 \subsubsection{Scoping of $\gamma$}
 \label{ss:scoping}
 
-The scoping parameter $\g$ is fixed in Alg.~\ref{alg:entropysgd}. For large values of $\g$, the SGLD updates focus on local neighborhoods of the current parameters $x$ while small values of $\g$ allow the inner SGLD to explore further away from $x$. A ``reverse-annealing'' of the scope $\g$, i.e. increasing $\g$ as training progresses, thus has the effect of exploring the energy landscape on progressively finer scales. We call this process ``scoping'' and use a simple exponential schedule given by
+The scoping parameter $\g$ is fixed in Alg.~\ref{alg:entropysgd}. For large values of $\g$, the SGLD updates happen in a small neighborhood of the current parameters $x$ while low values of $\g$ allow the inner SGLD to explore further away from $x$. A ``reverse-annealing'' of the scope $\g$, i.e. increasing $\g$ as training progresses, thus has the effect of exploring the energy landscape on progressively finer scales. We call this process ``scoping'' and use a simple exponential schedule given by
 $$
     \g(t) = \g_0\ \rbrac{1 + \g_1}^t;
 $$
-for the $t^{\trm{th}}$ parameter update.
+for the $t^{\trm{th}}$ parameter update. We have experimented with linear, quadratic and bounded exponential ($\g_0 \rbrac{1 - e^{-\tau t}}$) scoping schedules with similar qualitative results.
 
-Scoping of $\g$ typically interferes with the learning rate annealing that is popular in deep learning, this is a direct consequence of the update step on Line 7 of Alg.~\ref{alg:entropysgd}. In practice, we therefore scale the local entropy gradient by $\g$ before the update and modify the line to read
+Scoping of $\g$ unfortunately interferes with the learning rate annealing that is popular in deep learning, this is a direct consequence of the update step on Line 7 of Alg.~\ref{alg:entropysgd}. In practice, we therefore scale the local entropy gradient by $\g$ before the update and modify the line to read
 $$
     x \leftarrow x - \eta (x - \mu).
 $$
 We found this to be very effective in simplifying hyper-parameter tuning. In general, we set $\g_0$ to be very close to zero, pick a large value of $\eta$ and set $\g_1$ to be such that the magnitude of the local entropy gradient is comparable to that of SGD. We use much larger learning rates than SGD in our experiments to enable fast progress in the smooth energy landscape with low values of $\g$, we can do so because the local entropy gradient is less noisier than the original back-propagated gradient.
-
 
 \subsection{Theoretical Properties}
 \label{ss:theoretical_properties}
