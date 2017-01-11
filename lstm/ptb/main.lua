@@ -262,7 +262,7 @@ function main()
             logger_add(logger, s)
             train_loss = 0
 
-            local val_loss = run_valid
+            local val_loss = run_valid()
             print((colors.red .. '**[%d] %.3f'):format(epoch, val_loss))
             local s = {tv=0, batch=0, epoch=epoch, loss=val_loss}
             logger_add(logger, s)
