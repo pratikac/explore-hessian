@@ -164,7 +164,7 @@ def plot_allcnn():
 
     ax.text(160, 10.0, r'$8.30\%$', fontsize=fsz,
             verticalalignment='center', color='k')
-    ax.text(160, 7.0, r'$8.28\%$', fontsize=fsz,
+    ax.text(160, 7.0, r'$8.22\%$', fontsize=fsz,
             verticalalignment='center', color='r')
 
     if opt['save']:
@@ -205,42 +205,89 @@ def plot_allcnn():
     if opt['save']:
         plt.savefig('../doc/fig/allcnn_loss.pdf', bbox_inches='tight')
 
-#def plot_charlstm():
-r1, r2 = load(sorted(glob.glob('../results/jan_expts/lstm/char-rnn/*\"L\":0*.log')), 50, True), \
-        load(sorted(glob.glob('../results/jan_expts/lstm/char-rnn/*\"L\":5*.log')), 5, True)
+def plot_charlstm():
+    r1, r2 = load(sorted(glob.glob('../results/jan_expts/lstm/char-rnn/*\"L\":0*.log')), 50, True), \
+            load(sorted(glob.glob('../results/jan_expts/lstm/char-rnn/*\"L\":5*.log')), 5, True)
 
-fig = plt.figure(2, figsize=(8,7))
-plt.clf()
-ax = fig.add_subplot(111)
-#plt.title(r'mnistfc: Validation error')
+    fig = plt.figure(2, figsize=(8,7))
+    plt.clf()
+    ax = fig.add_subplot(111)
+    #plt.title(r'char-LSTM: Validation error')
 
-v1 = np.array([smooth(r1['valid'].ix[i]) for i in range(4)])
-v2 = np.array([smooth(r2['valid'].ix[i]) for i in range(4)])
-sns.tsplot(v1,
-        condition=r'Adam', rasterized=True, color='k')
-sns.tsplot(v2, time=np.arange(5,30,5),
-        condition=r'Entropy-Adam', rasterized=True, color='r')
-plt.grid('on')
+    v1 = np.array([smooth(r1['valid'].ix[i]) for i in range(4)])
+    v2 = np.array([smooth(r2['valid'].ix[i]) for i in range(4)])
+    sns.tsplot(v1,
+            condition=r'Adam', rasterized=True, color='k')
+    sns.tsplot(v2, time=np.arange(5,30,5),
+            condition=r'Entropy-Adam', rasterized=True, color='r')
+    plt.grid('on')
 
-plt.ylim([1.2, 1.35])
-plt.xlim([0,50])
-yticks = [1.2, 1.25, 1.30, 1.35]
-plt.yticks(yticks, [str(y) for y in yticks])
-plt.xlabel(r'Epochs $\times$ L')
-plt.ylabel(r'Perplexity')
+    plt.ylim([1.2, 1.35])
+    plt.xlim([0,50])
+    yticks = [1.2, 1.25, 1.30, 1.35]
+    plt.yticks(yticks, [str(y) for y in yticks])
+    plt.xlabel(r'Epochs $\times$ L')
+    plt.ylabel(r'Perplexity')
 
-plt.plot([25], [1.39], 'o', c='k', markersize=10)
-plt.plot([120], [1.37], 'o', c='r', markersize=10)
-plt.plot(range(120), 1.37*np.ones(120), 'r--', lw=1)
+    plt.plot([25], [1.213], 'o', c='r', markersize=10)
+    plt.plot([40], [1.224], 'o', c='k', markersize=10)
+    plt.plot(range(50), 1.213*np.ones(50), 'r--', lw=1)
 
-ax.text(66, 1.35, r'$1.39\%$', fontsize=fsz,
-        verticalalignment='center', color='k')
-ax.text(115, 1.42, r'$1.37\%$', fontsize=fsz,
-        verticalalignment='center', color='r')
+    ax.text(37, 1.25, r'$(\mathrm{Test:} 1.226)$', fontsize=fsz,
+            verticalalignment='center', color='k')
+    ax.text(38, 1.24, r'$1.224$', fontsize=fsz,
+            verticalalignment='center', color='k')
+    ax.text(22, 1.23, r'$(\mathrm{Test:} 1.217)$', fontsize=fsz,
+            verticalalignment='center', color='r')
+    ax.text(23, 1.22, r'$1.213$', fontsize=fsz,
+            verticalalignment='center', color='r')
 
-if opt['save']:
-    plt.savefig('../doc/fig/mnistfc_valid.pdf', bbox_inches='tight')
+    if opt['save']:
+        plt.savefig('../doc/fig/charlstm_valid.pdf', bbox_inches='tight')
+
+
+def plot_ptb():
+    r1, r2 = load(sorted(glob.glob('../results/jan_expts/lstm/ptb/*\"L\":0*.log')), 55, True), \
+            load(sorted(glob.glob('../results/jan_expts/lstm/ptb/*\"L\":5*.log')), 5, True)
+
+    fig = plt.figure(2, figsize=(8,7))
+    plt.clf()
+    ax = fig.add_subplot(111)
+    #plt.title(r'PTB-LSTM: Validation error')
+
+    v1 = np.array([smooth(r1['valid'].ix[i]) for i in range(2)])
+    v2 = np.array([smooth(r2['valid'].ix[i]) for i in range(2)])
+    sns.tsplot(v1,
+            condition=r'SGD', rasterized=True, color='k')
+    sns.tsplot(v2, time=np.arange(5,30,5),
+            condition=r'Entropy-SGD', rasterized=True, color='r')
+    plt.grid('on')
+
+    plt.ylim([75, 115])
+    plt.xlim([0,54])
+    yticks = [75, 85, 95, 105, 115]
+    plt.yticks(yticks, [str(y) for y in yticks])
+    plt.xlabel(r'Epochs $\times$ L')
+    plt.ylabel(r'Perplexity')
+
+    plt.plot([25], [80.13], 'o', c='r', markersize=10)
+    plt.plot([54], [81.44], 'o', c='k', markersize=10)
+    plt.plot(range(54), 80.13*np.ones(54), 'r--', lw=1)
+
+    ax.text(45, 87, r'$(\mathrm{Test:} 78.6)$', fontsize=fsz,
+            verticalalignment='center', color='k')
+    ax.text(48, 84, r'$81.43$', fontsize=fsz,
+            verticalalignment='center', color='k')
+    ax.text(20, 85, r'$(\mathrm{Test:} 77.656)$', fontsize=fsz,
+            verticalalignment='center', color='r')
+    ax.text(22, 78, r'$80.116$', fontsize=fsz,
+            verticalalignment='center', color='r')
+
+    if opt['save']:
+        plt.savefig('../doc/fig/ptblstm_valid.pdf', bbox_inches='tight')
 
 # plot_lenet()
 # plot_mnistfc()
-# plot_allcnn()
+plot_allcnn()
+# plot_charlstm()
+# plot_ptb()
