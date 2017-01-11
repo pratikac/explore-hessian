@@ -87,21 +87,21 @@ def plot_idx(fs, df,
     #     'Training error')
     # plt.xlim([0,max_epochs])
 
-    # plt.figure(3)
-    # plt.clf()
-    # helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 0) & (df['batch'] == 0)].miss,
-    #     'Test error')
-    # plt.xlim([0,max_epochs])
-
-    # lstm
     plt.figure(3)
     plt.clf()
-    helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 0) & (df['batch'] == 0)].loss,
-        'Validation loss')
+    helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 0) & (df['batch'] == 0)].miss,
+        'Test error')
     plt.xlim([0,max_epochs])
 
-    plt.figure(4)
-    plt.clf()
-    helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 2) & (df['batch'] == 0)].loss,
-        'Test loss')
-    plt.xlim([0,max_epochs])
+    # lstm
+    # plt.figure(3)
+    # plt.clf()
+    # helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 0) & (df['batch'] == 0)].loss,
+    #     'Validation loss')
+    # plt.xlim([0,max_epochs])
+
+    # plt.figure(4)
+    # plt.clf()
+    # helper(df[(df['epoch'] <= max_epochs) & (df['tv'] == 2) & (df['batch'] == 0)].loss,
+    #     'Test loss')
+    # plt.xlim([0,max_epochs])
