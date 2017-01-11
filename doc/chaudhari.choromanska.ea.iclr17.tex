@@ -475,6 +475,26 @@ As noted in Sec.~\ref{ss:alg}, we can easily wrap Alg.~\ref{alg:entropysgd} insi
 \label{fig:rnn}
 \end{figure}
 
+% {
+% \renewcommand{\arraystretch}{1.3}
+% \begin{table}[H]
+% \centering
+% \resizebox{0.8 \columnwidth}{!}
+% {%
+% \LARGE
+% \begin{tabular}{p{8cm} c c r}
+%     Model & Validation perplexity & Test perplexity & Time per effective epoch (s)\\  \hline
+%     $\ptblstm$ (SGD) & $81.43 \pm 0.2$ & $78.6 \pm 0.26$ & $0$\\
+%     $\ptblstm$ ($\entropysgd$) & $80.12 \pm 0.07$ & $77.66 \pm 0.17$ & $0$\\\hline
+%     $\charlstm$ (Adam) & $1.224 \pm 0.008$ & $1.226 \pm 0.01$ & $0$\\
+%     $\charlstm$ ($\entropyadam$) & $1.213 \pm 0.007$ & $1.217 \pm 0.005$ & $0$\\ \hline
+% \end{tabular}
+% }
+% \caption{\small $\entropysgd$ on RNNs}
+% \label{tab:rnns}
+% \end{table}
+% }
+
 Tuning the momentum in $\entropysgd$ was crucial to getting good results on RNNs. While the SGD baseline on $\ptblstm$ does not use momentum (and in fact, does not train well with momentum) we used a momentum of $0.5$ for $\entropysgd$. On the other hand, the baseline for $\charlstm$ was trained with Adam with $\b_1 = 0.9$ ($\b_1$ in Adam controls the moving average of the gradient) while we set $\b_1 = 0.5$ for $\entropyadam$. In contrast to this observation about RNNs, all our experiments on CNNs used a momentum of $0.9$. \pc{In order to investigate this difficulty, we monitored the angle between the local entropy gradient and the vanilla SGD gradient during training. This angle changes much more rapidly for RNNs than for CNNs which suggests a more rugged energy landscape for the former; local entropy gradient is highly uncorrelated with the SGD gradient in this case.}{}
 
 \section{Discussion}
