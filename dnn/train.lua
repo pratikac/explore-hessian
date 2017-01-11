@@ -11,14 +11,15 @@ require 'entropyoptim'
 
 opt = lapp[[
 --output            (default "/local2/pratikac")
--m,--model          (default 'lstm')
+-m,--model          (default 'cifarconv')
 --retrain           (default '')
+--retest                                        Set to true if you want to re-test
 -F,--estimateF      (default '')
 -b,--batch_size     (default 128)               Batch size
 --LR                (default 0)                 Learning rate
 --LRD               (default 0)                 Learning rate decay
 --optim             (default 'sgd')             Optimization algorithm
---LRstep            (default 4)                 Drop LR after x epochs
+--LRstep            (default 60)                Drop LR after x epochs
 --LRratio           (default 0.2)               LR drop factor
 --L                 (default 0)                 Num. Langevin iterations
 -r,--rho            (default 0)                 Coefficient rho*f(x) - F(x,gamma)
@@ -27,8 +28,8 @@ opt = lapp[[
 --noise             (default 1e-4)              Langevin dynamics additive noise factor (*stepSize)
 -g,--gpu            (default 2)                 GPU id
 -f,--full                                       Use all data
--d,--dropout        (default 0.15)              Dropout
---L2                (default 0)                 L2 regularization
+-d,--dropout        (default 0.5)               Dropout
+--L2                (default 1e-3)                 L2 regularization
 -s,--seed           (default 42)
 -e,--max_epochs     (default 10)
 --augment                                       Augment data with flips and mirrors
@@ -156,17 +157,16 @@ function trainer_lstm(d)
         if b % 25 == 0 then
             print( (colors.blue .. '+[%2d][%3d/%3d] %.5f %.3f%% [%.2fs]'):format(epoch, b, num_batches, loss/b, (1 - confusion.totalValid)*100, timer:time().real))
         end
-
-        loss = loss/num_batches
-        print( (colors.blue .. '*[%2d] %.5f %.3f%%'):format(epoch, loss, (1 - confusion.totalValid)*100))
-
-        local stats = { tv=1,
-        epoch=epoch,
-        loss=loss,
-        miss = (1-confusion.totalValid)*100}
-        logger_add(logger, stats)
-
     end
+
+    loss = loss/num_batches
+    print( (colors.blue .. '*[%2d] %.5f %.3f%%'):format(epoch, loss, (1 - confusion.totalValid)*100))
+
+    local stats = { tv=1,
+    epoch=epoch,
+    loss=loss,
+    miss = (1-confusion.totalValid)*100}
+    logger_add(logger, stats)
 end
 
 function tester_lstm(d)
@@ -248,6 +248,7 @@ function trainer(d)
             print( (colors.blue .. '+[%2d][%3d/%3d] %.5f %.3f%% [%.2fs]'):format(epoch, b, num_batches, loss/b, (1 - confusion.totalValid)*100, timer:time().real))
         end
     end
+
     loss = loss/num_batches
     print( (colors.blue .. '*[%2d] %.5f %.3f%%'):format(epoch, loss, (1 - confusion.totalValid)*100))
 
@@ -256,10 +257,61 @@ function trainer(d)
     loss=loss,
     miss = (1-confusion.totalValid)*100}
     logger_add(logger, stats)
+end
 
+function set_dropout(p)
+    local p = p or 0
+    for i,m in ipairs(model.modules) do
+        if m.module_name == 'nn.Dropout' or torch.typename(m) == 'nn.Dropout' then
+            m.p = p
+        end
+    end
+    -- set input dropout back
+    if opt.model == 'cifarconv' then
+        if p > 0 then
+            local m = model.modules[1]
+            assert(m.module_name == 'nn.Dropout' or torch.typename(m) == 'nn.Dropout')
+            m.p = 0.2
+        end
+    end
+end
+
+function compute_bn_params(d)
+    set_dropout(0)
+
+    local x, y = d.data, d.labels
+    local w, dw = model:getParameters()
+    model:training()
+
+    local num_batches = x:size(1)/opt.batch_size
+    local bs = opt.batch_size*4
+
+    for b =1,num_batches do
+        collectgarbage()
+
+        local feval = function(_w)
+            if _w ~= w then w:copy(_w) end
+            dw:zero()
+
+            local idx = torch.Tensor(bs):random(1, d.size):type('torch.LongTensor')
+            local xc, yc = x:index(1, idx), y:index(1, idx):cuda()
+            xc = augment(xc):cuda()
+
+            local yh = model:forward(xc)
+            local f = cost:forward(yh, yc)
+            local dfdy = cost:backward(yh, yc)
+            model:backward(xc, dfdy)
+            cutorch.synchronize()
+            return f, dw
+        end
+        feval(w)
+    end
+    set_dropout(opt.dropout)
 end
 
 function tester(d)
+    compute_bn_params(d)
+
     local x, y = d.data, d.labels
     model:evaluate()
 
@@ -307,6 +359,7 @@ function tester(d)
     miss = (1-confusion.totalValid)*100,
     loss=loss}
     logger_add(logger, stats)
+
 end
 
 function save_model()
@@ -339,6 +392,12 @@ function learning_rate_schedule()
         elseif opt.LR > 0 then
             lr = opt.LR
         else
+            local regimes = {
+                {1,60, 0.1},
+                {60,120, 0.1*0.2^1},
+                {120,180, 0.1*0.2^2},
+                {180,250, 0.1*0.2^3}
+            }
             --[[
             -- all-cnn-bn on cifar10
             local regimes = {
@@ -456,6 +515,13 @@ function main()
     scoping=opt.scoping,
     L=opt.L,
     noise = opt.noise}
+
+    if opt.retest then
+        print('Re-testing...')
+        compute_bn_params()
+        tester(test)
+        os.exit(0)
+    end
 
     if opt.estimateF == '' then
         local symbols = {   'tv', 'epoch', 'batch', 'iter', 'loss', 'dF', 'lx', 'xxpd',

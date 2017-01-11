@@ -5,7 +5,7 @@ function build_file_name(opt, blacklist)
     local tmp = {'backend', 'output', 'full', 'log', 'help', 'gpu',
     'max_epochs', 'batch_size', 'backend_name',
     'retrain', 'verbose', 'dataset', 'augment',
-    'estimateF','rho'}
+    'estimateF','rho', 'retest'}
     for k,v in pairs(tmp) do
         blacklist[#blacklist+1] = v
     end
