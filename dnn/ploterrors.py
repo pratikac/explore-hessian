@@ -134,8 +134,8 @@ def plot_mnistfc():
         plt.savefig('../doc/fig/mnistfc_valid.pdf', bbox_inches='tight')
 
 def plot_allcnn():
-    r1, r2 = load(sorted(glob.glob('../results/nov_expts/dnn/allcnn/original/*.log')), 200), \
-            load(sorted(glob.glob('../results/jan_expts/allcnn10/toplot/*.log')), 10)
+    r1, r2 = load(sorted(glob.glob('../results/jan_expts/allcnn10/toplotbn/*\"L\":0*.log')), 200), \
+            load(sorted(glob.glob('../results/jan_expts/allcnn10/toplotbn/*\"L\":20*.log')), 10)
 
     # validation error
     fig = plt.figure(3, figsize=(8,7))
@@ -143,8 +143,8 @@ def plot_allcnn():
     ax = fig.add_subplot(111)
     #plt.title(r'All-CNN-BN: Validation error')
 
-    v1 = np.array([smooth(r1['valid'].ix[i]) for i in range(5)])
-    v2 = np.array([smooth(r2['valid'].ix[i]) for i in range(3)])
+    v1 = np.array([smooth(r1['valid'].ix[i]) for i in range(2)])
+    v2 = np.array([smooth(r2['valid'].ix[i]) for i in range(2)])
     sns.tsplot(v1,
             condition=r'SGD', rasterized=True, color='k')
     sns.tsplot(v2, time=np.arange(20,220,20),
@@ -158,13 +158,13 @@ def plot_allcnn():
     plt.xlabel(r'Epochs $\times$ L')
     plt.ylabel(r'\% Error')
 
-    plt.plot([200], [8.4], 'o', c='k', markersize=10)
-    plt.plot([200], [8.2], 'o', c='r', markersize=10)
-    plt.plot(range(200), 8.28*np.ones(200), 'r--', lw=1)
+    plt.plot([194], [7.71], 'o', c='k', markersize=10)
+    plt.plot([160], [7.81], 'o', c='r', markersize=10)
+    plt.plot(range(200), 7.81*np.ones(200), 'r--', lw=1)
 
-    ax.text(160, 10.0, r'$8.30\%$', fontsize=fsz,
+    ax.text(180, 9.0, r'$7.71\%$', fontsize=fsz,
             verticalalignment='center', color='k')
-    ax.text(160, 7.0, r'$8.22\%$', fontsize=fsz,
+    ax.text(115, 6.8, r'$7.81\%$', fontsize=fsz,
             verticalalignment='center', color='r')
 
     if opt['save']:
@@ -176,30 +176,30 @@ def plot_allcnn():
     ax = fig.add_subplot(111)
     #plt.title(r'All-CNN-BN: Training loss')
 
-    v1 = [smooth(r1['loss'].ix[i], 1e-1) for i in range(5)]
-    v2 = [smooth(r2['loss'].ix[i], 1e-1) for i in range(3)]
+    v1 = [smooth(r1['loss'].ix[i], 1e-1) for i in range(2)]
+    v2 = [smooth(r2['loss'].ix[i], 1e-1) for i in range(2)]
     sns.tsplot(v1, time = np.arange(0,200),
             condition=r'SGD', rasterized=True, color='k')
     sns.tsplot(v2, time = np.arange(20,220,20),
             condition=r'Entropy-SGD', rasterized=True, color='r')
     plt.grid('on')
 
-    plt.ylim([0,0.5])
+    plt.ylim([0,0.6])
     plt.xlim([0, 200])
     xticks = [0,50,100,150,200]
     plt.xticks(xticks, [r'$0$', r'$50$', r'$100$', r'$150$', r'$200$'])
-    yticks = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    yticks = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
     plt.yticks(yticks, [str(y) for y in yticks])
     plt.xlabel(r'Epochs $\times$ L')
-    plt.ylabel(r'Cross-entropy Loss')
+    plt.ylabel(r'Cross-Entropy Loss')
 
-    plt.plot([200], [0.03465], 'o', c='k', markersize=10)
-    plt.plot([200], [0.02681], 'o', c='r', markersize=10)
-    plt.plot(range(200), 0.02681*np.ones(200), 'r--', lw=1)
+    plt.plot([193], [0.0353], 'o', c='k', markersize=10)
+    plt.plot([200], [0.0336], 'o', c='r', markersize=10)
+    plt.plot(range(200), 0.0336*np.ones(200), 'r--', lw=1)
 
-    ax.text(180, 0.06, r'$0.035$', fontsize=fsz,
+    ax.text(190, 0.1, r'$0.0353$', fontsize=fsz,
             verticalalignment='center', color='k')
-    ax.text(100, 0.04, r'$0.027$', fontsize=fsz,
+    ax.text(100, 0.05, r'$0.036$', fontsize=fsz,
             verticalalignment='center', color='r')
 
     if opt['save']:
@@ -288,6 +288,6 @@ def plot_ptb():
 
 # plot_lenet()
 # plot_mnistfc()
-plot_allcnn()
+# plot_allcnn()
 # plot_charlstm()
 # plot_ptb()
