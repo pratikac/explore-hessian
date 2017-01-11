@@ -403,9 +403,9 @@ function learning_rate_schedule()
             --]]
             -- all-cnn-bn on cifar10
             local regimes = {
-            {1,4,1},
-            {5,6,0.2},
-            {7,12,0.02}
+            {1,3,1},
+            {4,6,0.1},
+            {7,12,0.01}
             }
             --[[
             -- lenet
