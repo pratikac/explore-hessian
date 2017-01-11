@@ -292,7 +292,7 @@ With some overload of notation, we assume that the original loss $f(x)$ is $\b$-
 \label{lem:smoothness_reduction}
 The objective $F(x, \g;\ \Xi)$ in~\eqref{eq:entropysgd_objective} is $\f{\a}{1 + \g^{-1}\ c}$-Lipschitz and $\f{\b}{1 + \g^{-1}\ c}$-smooth.
 \end{lemma}
-The local entropy objective is thus smoother than the original objective while the modified objective in~\eqref{eq:entropysgd_objective} results in a factor of $\r + \f{1}{1 + \g^{-1}\ c}$ in the above lemma.
+The local entropy objective is thus smoother than the original objective.
 
 Let us now obtain a bound on the improvement in generalization error. We denote an optimization algorithm, viz., SGD or $\entropysgd$ by $A(\Xi)$, it is a function of the dataset $\Xi$ and outputs the parameters $x^*$ upon termination. Stability of the algorithm~\citep{bousquet2002stability} is then a notion of how much its output differs in loss upon being presented with two datasets $\Xi$ and $\Xi'$ that differ in at most one sample,
 $$
@@ -324,14 +324,13 @@ which shows that $\entropysgd$ generalizes better than SGD for all $T > \a$.
 
 As an aside, it is easy to see from the proof of Lem.~\ref{lem:smoothness_reduction} that for a convex loss function $f(x)$, adding the local entropy term does not change the minimizer of the original problem.
 
-
-\section{Connection to variational inference}
-\label{s:app:connection_variational}
-The local entropy based objective in $\entropysgd$ has similar motivations as variational inference.
-
 \begin{remark}
 discuss the eigenvalue assumption here
 \end{remark}
+
+\subsection{Connection to variational inference}
+\label{ss:connection_variational}
+The local entropy based objective in $\entropysgd$ has similar motivations as variational inference.
 
 \section{Experiments}
 \label{s:expt}
