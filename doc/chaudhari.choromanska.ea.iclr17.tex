@@ -502,7 +502,7 @@ Tuning the momentum in $\entropysgd$ was crucial to getting good results on RNNs
 
 In our experiments, $\entropysgd$ results in a comparable generalization error as SGD, but always has a lower cross-entropy loss on the training set. This suggests the following in the context of energy landscapes of deep networks. Roughly, wide valleys favored by $\entropysgd$ are located deeper in the landscape with a lower empirical loss than local minima discovered by SGD where it presumably gets stuck. Such an interpretation is contrast to theoretical models of deep networks (cf.\@ Sec.~\ref{s:prior_work}) which predicts multiple equivalent local minima with the same loss. Our work suggests that geometric properties of the energy landscape are crucial to generalize well and provides algorithmic approaches to exploit them. However, the literature lacks general results about the geometry of the loss functions of deep networks --- convolutional neural networks in particular --- and this is a promising direction for future work.
 
-If we focus on the inner loop of the algorithm, SGLD updates compute the average gradient (with Langevin noise) in a neighborhood of the parameters while maintaining the Polyak average of the new parameters. Such an interpretation is very close to averaged SGD of~\citet{polyak1992acceleration} and~\citet{bottou2012stochastic} and worth further study. Our experiments show that while $\entropysgd$ trains significantly faster than SGD for recurrent networks, it gets relatively minor gains in terms of wall-clock time for CNNs. Estimating the gradient of local entropy cheaply with few SGLD iterations, or by using a smaller network to estimate the gradient in the teacher-student fashion~\citep{balan2015bayesian} is another avenue for extensions to this work.
+If we focus on the inner loop of the algorithm, SGLD updates compute the average gradient (with Langevin noise) in a neighborhood of the parameters while maintaining the Polyak average of the new parameters. Such an interpretation is very close to averaged SGD of~\citet{polyak1992acceleration} and~\citet{bottou2012stochastic} and worth further study. Our experiments show that while $\entropysgd$ trains significantly faster than SGD for recurrent networks, it gets relatively minor gains in terms of wall-clock time for CNNs. Estimating the gradient of local entropy cheaply with few SGLD iterations, or by using a smaller network to estimate it in a teacher-student framework~\citep{balan2015bayesian} is another avenue for extensions to this work.
 
 \section{Conclusions}
 \label{s:conclusions}
@@ -643,7 +643,7 @@ by an application of Jensen's inequality. It is thus clear that Eqn.~\eqref{eq:e
 
 Eschewing rigor, formally, if we modify Eqn.~\eqref{eq:elbo} to allow the prior $p(z)$ to depend upon $x$, we can see that the two lower bounds above are equivalent iff $q_x(z)$ belongs to a ``flat variational family'', i.e. uniform distributions with $x$ as the mean and $p_x(z) \propto \exp \rbrac{-\f{\g}{2}\ \norm{x-z}^2}$. We emphasize that the distribution $p_x(z)$ depends on the parameters $x$ themselves and is thus, not really a prior.
 
-This ``moving prior'' is absent in variational inference and indeed a crucial feature of the local entropy objective. The gradient of local entropy in Eqn.~\eqref{eq:entropysgd_grad} clarifies this point:
+This ``moving prior'' is absent in variational inference and indeed, a crucial feature of the local entropy objective. The gradient of local entropy in Eqn.~\eqref{eq:entropysgd_grad} clarifies this point:
 \aeqs{
     \nabla F(x, \g) &= -\g\ \rbrac{x - \ag{z;\ \Xi}} = -\g\ \E_{z\ \sim r(z; x)}\ \sqbrac{z};
 }
@@ -653,7 +653,7 @@ $$
 $$
 it thus contains a data likelihood term along with a prior that ``moves'' along with the current iterate $x$.
 
-Let us remark that methods in the deep learning literature that average the gradient in a local neighborhood of the weights $x$ through perturbations~\citep{mobahi2016training} or noisy activation functions~\citep{gulcehre2016mollifying} can be interpreted as computing the data likelihood in ELBO (without the KL-term) and are thus different from SVI and certainly, local entropy.
+Let us remark that methods in the deep learning literature that average the gradient through perturbations in the neighborhood of $x$~\citep{mobahi2016training} or noisy activation functions~\citep{gulcehre2016mollifying} can be interpreted as computing the data likelihood in ELBO (without the KL-term); such an averaging it thus different from local entropy.
 
 \subsection{Comparison with SGLD}
 \label{ss:app:comparison_sgld}

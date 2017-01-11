@@ -199,7 +199,7 @@ def plot_allcnn():
 
     ax.text(190, 0.1, r'$0.0353$', fontsize=fsz,
             verticalalignment='center', color='k')
-    ax.text(100, 0.05, r'$0.036$', fontsize=fsz,
+    ax.text(100, 0.05, r'$0.0336$', fontsize=fsz,
             verticalalignment='center', color='r')
 
     if opt['save']:
