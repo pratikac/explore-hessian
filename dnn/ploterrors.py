@@ -151,9 +151,9 @@ def plot_allcnn():
             condition=r'Entropy-SGD', rasterized=True, color='r')
     plt.grid('on')
 
-    plt.ylim([5, 25])
+    plt.ylim([5, 20])
     plt.xlim([0, 200])
-    yticks = [5, 10, 15, 20, 25]
+    yticks = [5, 10, 15, 20]
     plt.yticks(yticks, [str(y) for y in yticks])
     plt.xlabel(r'Epochs $\times$ L')
     plt.ylabel(r'\% Error')
