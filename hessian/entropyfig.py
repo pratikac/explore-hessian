@@ -60,11 +60,15 @@ f, s,_ = smooth(0, 1e-3)
 f = f + 1
 s = s - s.min()
 
+f2, s2,_ = smooth(0, 5e-5)
+s2 = s2 - s2.min()
+
 fig = plt.figure(1, figsize=(9,8))
 plt.clf()
 ax = fig.add_subplot(111)
 plt.plot(f, 'k-', label=r'$\mathrm{Original\ landscape}$', lw=1)
 plt.plot(s, 'indianred', label=r'$\mathrm{Negative\ local\ entropy}:\ \gamma = 0.001$', lw=2)
+plt.plot(s2, 'indianred', ls='--', label=r'$\mathrm{Negative\ local\ entropy}:\ \gamma = 0.00005$', lw=2)
 plt.legend(loc=2)
 #plt.title(r'$\mathrm{Local\ entropy\ energy\ landscape}$')
 plt.xticks([], [])
