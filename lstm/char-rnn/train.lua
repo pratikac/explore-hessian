@@ -184,7 +184,7 @@ for i = 1, num_iterations do
             local x,y = loader:nextBatch('test')
             x,y = x:type(dtype), y:type(dtype)
             local f = model:forward(x):view(N*T, -1)
-            val_loss = val_loss + crit:forward(f, y:view(N*T))
+            test_loss = test_loss + crit:forward(f, y:view(N*T))
         end
         test_loss = test_loss/num_test
 
