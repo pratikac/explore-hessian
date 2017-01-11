@@ -35,9 +35,11 @@ plt.rc('figure', titlesize=fsz)
 smooth = lambda x,c=com: pd.ewma(x, c)
 loss = lambda df, m: df[(df['epoch'] <= m) & (df['tv'] == 1) & (df['batch'] == 2)].loss
 train = lambda df, m: df[(df['epoch'] <= m) & (df['tv'] == 1) & (df['batch'] == 0)].miss
+trainloss = lambda df, m: df[(df['epoch'] <= m) & (df['tv'] == 1) & (df['batch'] == 0)].loss
 valid = lambda df, m: df[(df['epoch'] <= m) & (df['tv'] == 0) & (df['batch'] == 0)].miss
+validloss = lambda df, m: df[(df['epoch'] <= m) & (df['tv'] == 0) & (df['batch'] == 0)].loss
 
-def load(fs, m=50):
+def load(fs, m=50, isrnn = False):
     r = {}
     Ds = []
     for f in fs:
@@ -45,8 +47,14 @@ def load(fs, m=50):
     df = pd.concat(Ds, keys=[i for i in xrange(len(Ds))])
 
     r['loss'] = loss(df, m)
-    r['train'] = train(df, m)
-    r['valid'] = valid(df, m)
+    if isrnn:
+        r['train'] = trainloss(df, m)
+    else:
+        r['train'] = train(df, m)
+    if isrnn:
+        r['valid'] = validloss(df, m)
+    else:
+        r['valid'] = valid(df, m)
 
     return r
 
@@ -196,6 +204,42 @@ def plot_allcnn():
 
     if opt['save']:
         plt.savefig('../doc/fig/allcnn_loss.pdf', bbox_inches='tight')
+
+#def plot_charlstm():
+r1, r2 = load(sorted(glob.glob('../results/jan_expts/lstm/char-rnn/*\"L\":0*.log')), 50, True), \
+        load(sorted(glob.glob('../results/jan_expts/lstm/char-rnn/*\"L\":5*.log')), 5, True)
+
+fig = plt.figure(2, figsize=(8,7))
+plt.clf()
+ax = fig.add_subplot(111)
+#plt.title(r'mnistfc: Validation error')
+
+v1 = np.array([smooth(r1['valid'].ix[i]) for i in range(4)])
+v2 = np.array([smooth(r2['valid'].ix[i]) for i in range(4)])
+sns.tsplot(v1,
+        condition=r'Adam', rasterized=True, color='k')
+sns.tsplot(v2, time=np.arange(5,30,5),
+        condition=r'Entropy-Adam', rasterized=True, color='r')
+plt.grid('on')
+
+plt.ylim([1.2, 1.35])
+plt.xlim([0,50])
+yticks = [1.2, 1.25, 1.30, 1.35]
+plt.yticks(yticks, [str(y) for y in yticks])
+plt.xlabel(r'Epochs $\times$ L')
+plt.ylabel(r'Perplexity')
+
+plt.plot([25], [1.39], 'o', c='k', markersize=10)
+plt.plot([120], [1.37], 'o', c='r', markersize=10)
+plt.plot(range(120), 1.37*np.ones(120), 'r--', lw=1)
+
+ax.text(66, 1.35, r'$1.39\%$', fontsize=fsz,
+        verticalalignment='center', color='k')
+ax.text(115, 1.42, r'$1.37\%$', fontsize=fsz,
+        verticalalignment='center', color='r')
+
+if opt['save']:
+    plt.savefig('../doc/fig/mnistfc_valid.pdf', bbox_inches='tight')
 
 # plot_lenet()
 # plot_mnistfc()
