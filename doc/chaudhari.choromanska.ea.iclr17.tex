@@ -75,7 +75,7 @@ Email:\ \href{mailto:pratikac@ucla.edu}{pratikac@ucla.edu},
 \maketitle
 
 \begin{abstract}
-This paper proposes a new optimization algorithm called Entropy-SGD for training deep neural networks that is motivated by the local geometry of the energy landscape. Local extrema with low generalization error have a large proportion of almost-zero eigenvalues in the Hessian with very few positive or negative eigenvalues. We leverage upon this observation to construct a local entropy based objective function that favors well-generalizable solutions lying in large flat regions of the energy landscape, while avoiding poorly-generalizable solutions located in the sharp valleys. Conceptually, our algorithm resembles two nested loops of SGD where we use Langevin dynamics in the inner loop to compute the gradient of the local entropy before each update of the weights. We show that the local entropy objective is smoother than the original landscape and show improved generalization bounds over SGD using uniform stability, \pc{under certain assumptions}{}. Our experiments on convolutional and recurrent neural networks demonstrate that Entropy-SGD compares favorably to state-of-the-art techniques in terms of generalization error and training time.
+This paper proposes a new optimization algorithm called Entropy-SGD for training deep neural networks that is motivated by the local geometry of the energy landscape. Local extrema with low generalization error have a large proportion of almost-zero eigenvalues in the Hessian with very few positive or negative eigenvalues. We leverage upon this observation to construct a local entropy based objective function that favors well-generalizable solutions lying in large flat regions of the energy landscape, while avoiding poorly-generalizable solutions located in the sharp valleys. Conceptually, our algorithm resembles two nested loops of SGD where we use Langevin dynamics in the inner loop to compute the gradient of the local entropy before each update of the weights. We show that the local entropy objective is smoother than the original landscape and show improved generalization bounds over SGD using uniform stability, under certain assumptions. Our experiments on convolutional and recurrent neural networks demonstrate that Entropy-SGD compares favorably to state-of-the-art techniques in terms of generalization error and training time.
 \end{abstract}
 
 \section{Introduction}
@@ -129,7 +129,7 @@ Another related area is homotopy continuation methods that convolve the loss fun
 \section{Local entropy}
 \label{s:local_entropy}
 
-We first provide a simple intuition for the concept of local entropy of an energy landscape. \pc{The discussion in this section builds upon the results of~\citet{baldassi2016unreasonable} and extends it for the case of continuous variables.}{} Consider a cartoon energy landscape in Fig.~\ref{fig:entropyfig} where the x-axis denotes the configuration space of the parameters. We have constructed two local minima: a shallower although wider one at $x_{\trm{robust}}$ and a very sharp global minimum at $x_{\trm{non-robust}}$. Under a Bayesian prior on the parameters, say a Gaussian of a fixed variance at locations $x_{\trm{robust}}$ and $x_{\trm{non-robust}}$ respectively, the wider local minimum has a higher marginalized likelihood than the sharp valley on the right.
+We first provide a simple intuition for the concept of local entropy of an energy landscape. The discussion in this section builds upon the results of~\citet{baldassi2016unreasonable} and extends it for the case of continuous variables. Consider a cartoon energy landscape in Fig.~\ref{fig:entropyfig} where the x-axis denotes the configuration space of the parameters. We have constructed two local minima: a shallower although wider one at $x_{\trm{robust}}$ and a very sharp global minimum at $x_{\trm{non-robust}}$. Under a Bayesian prior on the parameters, say a Gaussian of a fixed variance at locations $x_{\trm{robust}}$ and $x_{\trm{non-robust}}$ respectively, the wider local minimum has a higher marginalized likelihood than the sharp valley on the right.
 
 \begin{wrapfigure}{r}{0.4\textwidth}
 \centering
@@ -168,7 +168,7 @@ The local free entropy of the Gibbs distribution in~\eqref{eq:gibbs_original}, c
     \label{eq:local_entropy}
 \end{align}
 \end{definition}
-\pc{The parameter $\g$ is used to focus the modified Gibbs distribution upon a local neighborhood of $x$ and we call it a ``scope'' henceforth. Fig.~\ref{fig:entropyfig} shows the negative local entropy $-F(x, \g)$ for the original energy landscape.}{talk about small gamma and large gamma valleys} Note that $-F(x, \g)$ has a \emph{global} minimum near $x_{\textrm{robust}}$ which is exactly what we want; we expect $x_{\textrm{robust}}$ to be more robust than $x_{\textrm{non-robust}}$ to perturbations of data or parameters and thus generalize well.
+The parameter $\g$ is used to focus the modified Gibbs distribution upon a local neighborhood of $x$ and we call it a ``scope'' henceforth. Fig.~\ref{fig:entropyfig} shows the negative local entropy $-F(x, \g)$ for the original energy landscape. Note that $-F(x, \g)$ has a \emph{global} minimum near $x_{\textrm{robust}}$ which is exactly what we want; we expect $x_{\textrm{robust}}$ to be more robust than $x_{\textrm{non-robust}}$ to perturbations of data or parameters and thus generalize well.
 
 \paragraph{Connection to classical entropy:}
 The quantity we have defined as local entropy in Def.~\ref{def:local_entropy} is different from classical entropy which counts the number of likely configurations under a given distribution. For a continuous parameter space, this is given by
@@ -325,11 +325,9 @@ $$
 $$
 As an aside, it is easy to see from the proof of Lem.~\ref{lem:smoothness_reduction} that for a convex loss function $f(x)$, adding the local entropy term does not change the minimizer of the original problem.
 
-\pc{
 \begin{remark}
 The above analysis hinges upon an assumption that the Hessian $\nabla^2 f(x)$ does not have eigenvalues in the set $[-2\g-c, c]$ for a constant $c > 0$. This is admittedly unrealistic, for instance, the eigenspectrum of the Hessian at a local minimum in Fig.~\ref{fig:lenet_hessian} has a large fraction of its eigenvalues almost zero. Let us however remark that the bound on uniform stability in Thm.~\ref{thm:generalization_bound_nonconvex} by~\citet{hardt2015train} assumes global conditions on the smoothness of the loss function; one imagines that Eqn.~\ref{eq:stability_bound} remains qualitatively the same (with respect to $T$ in particular) even if this assumption is violated to an extent before convergence happens. Obtaining a rigorous generalization bound without this assumption would require a dynamical analysis of SGD and seems out of reach of the current literature.
 \end{remark}
-}{}
 
 \section{Experiments}
 \label{s:expt}
