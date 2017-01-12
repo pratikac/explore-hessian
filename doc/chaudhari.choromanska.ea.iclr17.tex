@@ -125,7 +125,7 @@ Another related area is homotopy continuation methods that convolve the loss fun
 \section{Local entropy}
 \label{s:local_entropy}
 
-We first provide a simple intuition for the concept of local entropy of an energy landscape. Consider a cartoon energy landscape in Fig.~\ref{fig:entropyfig} where the x-axis denotes the configuration space of the parameters. We have constructed two local minima: a shallower although wider one at $x_{\trm{robust}}$ and a very sharp global minimum at $x_{\trm{non-robust}}$. Under a Bayesian prior on the parameters, say a Gaussian of a fixed variance at locations $x_{\trm{robust}}$ and $x_{\trm{non-robust}}$ respectively, the wider local minimum has a higher marginalized likelihood than the sharp valley on the right.
+We first provide a simple intuition for the concept of local entropy of an energy landscape. \pc{The discussion in this section builds upon the results of~\citet{baldassi2016unreasonable} and extends it for the case of continuous variables.}{} Consider a cartoon energy landscape in Fig.~\ref{fig:entropyfig} where the x-axis denotes the configuration space of the parameters. We have constructed two local minima: a shallower although wider one at $x_{\trm{robust}}$ and a very sharp global minimum at $x_{\trm{non-robust}}$. Under a Bayesian prior on the parameters, say a Gaussian of a fixed variance at locations $x_{\trm{robust}}$ and $x_{\trm{non-robust}}$ respectively, the wider local minimum has a higher marginalized likelihood than the sharp valley on the right.
 
 \begin{wrapfigure}{r}{0.4\textwidth}
 \centering
@@ -315,14 +315,15 @@ Using Lem.~\ref{lem:smoothness_reduction} and Thm.~\ref{thm:generalization_bound
     \e_{\ \entropysgd} \lessapprox \rbrac{\a\ T^{-1}}^{\rbrac{1 - \f{1}{1 + \g^{-1}c}}\ \b}\ \e_{\ \textrm{SGD}},
     \label{eq:stability_bound}
 \end{equation}
-which shows that $\entropysgd$ generalizes better than SGD for all $T > \a$ if they both converge within $T$ parameter updates. \pc{However, from our experiments, $\entropysgd$ converges in roughly $L$ times fewer parameter updates than SGD, using this we can draw out the dependency on the number of Langevin iterations to get
+which shows that $\entropysgd$ generalizes better than SGD for all $T > \a$ if they both converge in $T$ parameter updates. However, from our experiments, $\entropysgd$ converges in roughly $L$ times fewer parameter updates than SGD, using this we can draw out the dependency on the number of Langevin iterations to get
 $$
     \e_{\ \entropysgd} \lessapprox L^{-\f{c\ \b}{\g}}\ \e_{\ \textrm{SGD}}.
 $$
 As an aside, it is easy to see from the proof of Lem.~\ref{lem:smoothness_reduction} that for a convex loss function $f(x)$, adding the local entropy term does not change the minimizer of the original problem.
 
+\pc{
 \begin{remark}
-The above analysis hinges upon an assumption that the Hessian $\nabla^2 f(x)$ does not have eigenvalues in the set $[-2\g-c, c]$ for a constant $c > 0$. This is admittedly unrealistic, for instance, the eigenspectrum of the Hessian at a local minimum in Fig.~\ref{fig:lenet_hessian} has a large fraction of its eigenvalues near zero. Let us however remark that the bound on uniform stability in Thm.~\ref{thm:generalization_bound_nonconvex} assumes global conditions on the smoothness of the loss function~\citep{hardt2015train}; one imagines that Eqn.~\ref{eq:stability_bound} remains qualitatively the same (with respect to $T$ in particular) even if this assumption is violated to an extent before convergence happens.
+The above analysis hinges upon an assumption that the Hessian $\nabla^2 f(x)$ does not have eigenvalues in the set $[-2\g-c, c]$ for a constant $c > 0$. This is admittedly unrealistic, for instance, the eigenspectrum of the Hessian at a local minimum in Fig.~\ref{fig:lenet_hessian} has a large fraction of its eigenvalues near zero. Let us however remark that the bound on uniform stability in Thm.~\ref{thm:generalization_bound_nonconvex} by~\citet{hardt2015train} assumes global conditions on the smoothness of the loss function; one imagines that Eqn.~\ref{eq:stability_bound} remains qualitatively the same (with respect to $T$ in particular) even if this assumption is violated to an extent before convergence happens. Obtaining a rigorous generalization bound without this assumption would require a dynamical analysis of SGD and seems out of reach of the current literature.
 \end{remark}
 }{}
 
@@ -390,7 +391,7 @@ We consider two prototypical networks: the first is a fully-connected network wi
 
 For both these networks, we train $\entropysgd$ for $5$ epochs with $L = 20$ and reduce the dropout probability ($0.15$ for $\mnistfc$ and $0.25$ for $\lenet$). The learning rate of the SGLD updates is fixed to $\eta' = 0.1$ while the outer loop's learning rate is set to $\eta=1$ and drops by a factor of $10$ after the second epoch; we use Nesterov's momentum for both the loops. The thermal noise in SGLD updates (Line 5 of Alg.~\ref{alg:entropysgd}) is set to $10^{-3}$. We use an exponentially increasing value of $\g$ for scoping, the initial value of the scope is set to $\g = 10^{-4}$ and this increases by a factor of $1.001$ after each parameter update. The results in Fig.~\ref{fig:mnistfc_test} and Fig.~\ref{fig:lenet_test} show that $\entropysgd$ obtains a comparable generalization error: $1.37 \pm 0.03 \%$ and $0.50 \pm 0.01 \%$, for $\mnistfc$ and $\lenet$ respectively.
 
-\textbf{Remark on the computational complexity:} Since $\entropysgd$ runs $L$ steps of SGLD before each parameter update, the effective number of passes over the dataset is $L$ times that of SGD or Adam for the same number of parameter updates. We therefore plot the error curves of $\entropysgd$ in Fig.~\ref{fig:mnist_test} and~\ref{fig:allcnn} against the ``effective number of epochs'', i.e. by multiplying the abscissae by a factor of $L$. (define $L = 1$ for SGD or Adam). This is thus a direct measure of wall-clock time, agnostic to the underlying hardware and implementation.
+\textbf{Remark on the computational complexity:} Since $\entropysgd$ runs $L$ steps of SGLD before each parameter update, the effective number of passes over the dataset is $L$ times that of SGD or Adam for the same number of parameter updates. We therefore plot the error curves of $\entropysgd$ in Figs.~\ref{fig:mnist_test},~\ref{fig:allcnn}, and~\ref{fig:rnn} against the ``effective number of epochs'', i.e. by multiplying the abscissae by a factor of $L$. (define $L = 1$ for SGD or Adam). This is thus a direct measure of wall-clock time, agnostic to the underlying hardware and implementation.
 
 \begin{figure}[htp!]
 \centering
@@ -495,7 +496,7 @@ As noted in Sec.~\ref{ss:alg}, we can easily wrap Alg.~\ref{alg:entropysgd} insi
 % \end{table}
 % }
 
-Tuning the momentum in $\entropysgd$ was crucial to getting good results on RNNs. While the SGD baseline on $\ptblstm$ does not use momentum (and in fact, does not train well with momentum) we used a momentum of $0.5$ for $\entropysgd$. On the other hand, the baseline for $\charlstm$ was trained with Adam with $\b_1 = 0.9$ ($\b_1$ in Adam controls the moving average of the gradient) while we set $\b_1 = 0.5$ for $\entropyadam$. In contrast to this observation about RNNs, all our experiments on CNNs used a momentum of $0.9$. \pc{In order to investigate this difficulty, we monitored the angle between the local entropy gradient and the vanilla SGD gradient during training. This angle changes much more rapidly for RNNs than for CNNs which suggests a more rugged energy landscape for the former; local entropy gradient is highly uncorrelated with the SGD gradient in this case.}{}
+Tuning the momentum in $\entropysgd$ was crucial to getting good results on RNNs. While the SGD baseline on $\ptblstm$ does not use momentum (and in fact, does not train well with momentum) we used a momentum of $0.5$ for $\entropysgd$. On the other hand, the baseline for $\charlstm$ was trained with Adam with $\b_1 = 0.9$ ($\b_1$ in Adam controls the moving average of the gradient) while we set $\b_1 = 0.5$ for $\entropyadam$. In contrast to this observation about RNNs, all our experiments on CNNs used a momentum of $0.9$. In order to investigate this difficulty, we monitored the angle between the local entropy gradient and the vanilla SGD gradient during training. This angle changes much more rapidly for RNNs than for CNNs which suggests a more rugged energy landscape for the former; local entropy gradient is highly uncorrelated with the SGD gradient in this case.
 
 \section{Discussion}
 \label{s:discussion}
@@ -619,7 +620,6 @@ For both~\eqref{eq:3sg} and~\eqref{eq:3sg_modified} we set $n = 100$ and perform
 Fig.~\ref{fig:expt:sg} shows the results of this simulation. As expected, the solutions of~\eqref{eq:3sg} have energies close to the asymptotic value $-1.657$. The energies of the optimizers of~\eqref{eq:3sgentropy} are higher, with a mean $-1.45$. On the other hand, the Hessian for~\eqref{eq:3sg} has large positive eigenvalues suggesting deep, sharp local minima while the Hessian for~\eqref{eq:3sgentropy} has much smaller positive eigenvalues, which suggests shallower and wider valleys in the energy landscape. The effect of the local-entropy term is thus to artificially under-optimize the loss function; indeed it avoids deep and sharp valleys in the energy landscape and causes gradient descent to settle in wider --- although shallower --- local minima where nearby spins have similar values of the Hamiltonian $H(x)$. As experiments in Sec.~\ref{ss:expt:mnist} and~\ref{ss:expt:cifar} show, this is crucial to avoid over-fitting on the training set and leads to better generalization.
 }
 
-\todo{
 \section{Connection to variational inference}
 \label{s:app:connection_variational}
 
@@ -663,7 +663,6 @@ We use stochastic gradient Langevin dynamics (cf. Sec.~\ref{s:app:langevin}) to 
 To this end, we compare the performance of SGLD on two prototypical networks: $\lenet$ on MNIST and $\allcnn$ on CIFAR-10. After a hyper-parameter search, we obtained a test error on $\lenet$ of $0.63 \pm 0.1\%$ after $300$ epochs and $9.89 \pm 0.11\%$ on $\allcnn$ after $500$ epochs. Even if one were to disregard the slow convergence of SGLD, its generalization error is much worse than our experimental results; we get $0.50 \pm 0.01 \%$ on $\lenet$ and $7.81 \pm 0.09 \%$ on $\allcnn$. For comparison, the authors in~\citet{chen2015bridging} report $0.71\%$ error on MNIST on a slightly larger network. Our results with local entropy on RNNs are much better than those reported in~\citet{gan2016scalable} for SGLD. On the PTB dataset, we obtain a test perplexity of $77.656 \pm 0.171$ vs. $94.03$ for the same model whereas we obtain a test perplexity of $1.213 \pm 0.007$ vs. $1.3375$ for $\charlstm$ on the War and Peace dataset.
 
 Training Bayesian deep networks with SGLD, or other more sophisticated algorithms such as SGHMC~\citep{chen2014stochastic,neal2011mcmc} is difficult and the lack of such results in the literature corroborates our experimental results. Roughly speaking, local entropy is so effective because it operates on a transformation of the energy landscape that exploits local entropic effects. Conventional MCMC techniques such as SGLD or Nose'-Hoover thermostats~\citep{ding2014bayesian} can only trade energy for entropy via the temperature parameter which does not allow direct use of the geometric information of the energy landscape and does not help with narrow minima.
-}
 
 \end{appendices}
 
