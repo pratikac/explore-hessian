@@ -73,7 +73,19 @@ One could argue that accuracy in the approximation of HVP does not matter in pra
 -----------------------------------------------------------------------
 
 
+--------------------
+Area chair:
 
+>> You should make the connections clearer and more explicit
+We have updated the paper with the above discussion about SVI and experiments comparing with SGLD in Appendix C. As our previous comment shows, it'd be inaccurate to term local entropy as "SVI with a moving prior" since the latter is not rigorously defined, the resemblance is quite conceptual in nature.
+
+>> change x-axis for error curves
+We have updated the experiments in the paper and now plot all error curves against the "effective number of epochs", i.e., the number of epochs for Entropy-SGD is multiplied by L (we set L=1 for SGD/Adam). Note that this is proportional to the number of back-props. Please see the "updates to the paper" comment above for more details.
+
+>> Exact HVP is easy to compute
+The comment regarding [P94] above discusses this. Computing the exact HVP requires averaging over the entire dataset, i.e., ~4x the complexity of one epoch, which is expensive.
+
+---------------------------
 REBUTTAL
  
 We thank the reviewers and the area chair for their insightful feedback. We have incorporated all comments into our current draft. We first discuss the updates to the paper that address common questions raised by the reviewers. We have posted comments to each reviewer to address specific questions.
