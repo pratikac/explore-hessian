@@ -83,41 +83,39 @@ Updates
 
 a) We have updated the experimental section of the paper with new experiments on MNIST, CIFAR-10 and two datasets on RNNs (PTB and char-LSTM). We also modified the algorithm to increase the value of the scoping parameter \gamma as training progresses instead of fixing it (Sec. 4.3). As a result of this, we can now train all our networks with only the local entropy loss instead of treating it as a regularizer (Eqn. 6).
 
+We now plot the error curves in Figs. 4, 5 and 6 against the "effective number of epochs", i.e., the number of epochs of Entropy-SGD is multiplied by the number of Langevin iterations L (we set L=1 for SGD/Adam). Thus the x-axis is now a direct measure of the wall-clock time agnostic to the underlying implementation and proportional to the number of back-props as suggested, which makes the comparison fair.
+
 We obtain significant speed-ups with respect to earlier results due to scoping of the parameter \gamma and the wall-clock training time for all our networks with Entropy-SGD is now comparable to SGD/Adam. In fact, Entropy-SGD is twice as fast as SGD on our experiments on RNNs and also obtains a better generalization error (cf. Fig. 6). The acceleration for CNNs on MNIST and CIFAR-10 is about 20%.
 
 b) Improved exposition of the algorithm in Sec. 4.2 and discussion of experiments in Sec. 5.3, 5.4 that includes intuition for hyper-parameter tuning.
 
 c) Appendix C discusses the possible connections to variational inference (this is the same as the discussion with the AC below). Sec. C.1 presents a comparison of local entropy and SGLD. We note here that our results using Entropy-SGD for both CNNs and RNNs are much better than SGLD is significantly smaller (~3x) wall-clock times.
 
-d) 
-
 Response to the reviewers:
 -------------------------
 
-a) comment about speed
-We now plot the error curves in Figs. 4, 5 and 6 against the "effective number of epochs", i.e., the number of epochs of Entropy-SGD is multipled by the number of Langevin iterations L (we set L=1 for SGD/Adam). Thus the x-axis is now a direct measure of the wall-clock time (agnostic to the underlying implementation and proportional to the number of back-props as suggested), which makes the comparison fair.
+a) smoothing of the original loss vs. local entropy
+We discuss this in detail in the related work in Sec. 2 and Appendix C. While smoothing the original loss function using convolutions or averaging gradient over perturbations of weights reduces the ruggedness of the energy landscape, it does not help with sharp, narrow valleys. Local entropy introduces a measure that focuses on wide local minima in the energy landscape which is the primary reason for its efficacy. Smoothing the loss function can also, for instance, generate an artificial local minimum between two sharp valleys separated by a tall energy barrier which is detrimental to generalization.
 
-b) smoothing of the original loss vs. local entropy
-We discuss this in detail in the related work in Sec. 2 and Appendix C. While smoothing the original loss function using convolutions or averaging gradient over perturbations of weights reduces the ruggedness of the energy landscape, it does not help with sharp, narrow valleys. Local entropy introduces a measure that focuses on wide local minima in the energy landscape which is the primary reason for its efficacy. Smoothing the loss function can also, for instance, generate an artificial local minimum between two sharp valleys separated by a tall energ barrier which is detrimental to generalization.
-
-c) unrealistic eigenvalue assumption in Sec. 4.3
+b) unrealistic eigenvalue assumption in Sec. 4.3
 We have clarified this point in Remark 4. Our analysis employs an assumption that the Hessian \nabla^2 f(x) does not have eigenvalues in the set [-2\gamma-c, c]. This is admittedly unrealistic, for instance, the eigenspectrum of the Hessian at a local minimum in Fig. 1 has a large fraction of its eigenvalues almost zero. Let us however remark that the bound on uniform stability in Thm. 3 by Hardt et al. assumes global conditions on the smoothness of the loss function; one imagines that Eqn. 9 remains qualitatively the same (with respect to the number of training iterations in particular) even if this assumption is violated to an extent before convergence happens. Obtaining a rigorous generalization bound without this assumption would require a dynamical analysis of SGD and seems out of reach of the current literature.
 
 ------------------
 AnonReviewer4:
 
 >> how to reconcile "Entropy-SGD obtains better generalization but results in lower cross-entropy loss"
-The confusion is probably caused by our omission, it should read "lower cross-entropy loss on the training set" and is fixed now. This experimental insight suggests that there exist wide valleys that are deeper in the energy landscape that generalize well; (possibly) Entropy-SGD manages to find them while SGD gets stuck at a higher loss.
+The confusion is probably caused by our omission, it should read "lower cross-entropy loss on the training set" (fixed now). This experimental observation suggests that there exist wide valleys that are deeper in the energy landscape that generalize well; (possibly) Entropy-SGD manages to find them while SGD gets stuck at a higher loss.
 
->> the parameter \rho is used on CIFAR-10
+>> \rho = 0.01 on CIFAR-10 while \rho = 0 on MNIST
 We have modified the algorithm to only train with local entropy (i.e., \rho = 0 always). Using scoping we can obtain better results both in terms of generalization error and wall-clock time.
 
->> also discuss similarities to Hochreiter and Schmidhuber '97 [HS97]
-We have modified our discussion of HS97 in Sec. 2. While the motivation is exactly the same, the similarities with their formulation are few and only superficial, e.g., in a flat minimum, the local entropy is a direct measure of the width of the valley, this is conceptually similar to their usage of Hessian. We agree with the reviewer that the elaborate analysis of generalization of HS97 using the Gibbs formalism is a promising direction. In our case, we benefit from similar technical results introduced for uniform stability [BE02].
+>> discuss similarities to Hochreiter and Schmidhuber '97 [HS97]
+We have modified our discussion of HS97 in Sec. 2 to include this discussion: While the motivations are exactly the same, the similarities with their formulation are only conceptual in nature, e.g., in a flat minimum, the local entropy is a direct measure of the width of the valley which is similar to their usage of Hessian. The Gibbs variant to averaging in weight space (Eqn. 33, pg. 22 of [HS97]) is similar to the averaging in Eqn. 7 of our paper. 
+
+We agree with the reviewer that the elaborate analysis of generalization of HS97 using the Gibbs formalism is a promising direction. In our case, we benefit from similar technical results introduced for uniform stability [BE02].
 
 >> experiments are on a toy example
-Please note that our results on CIFAR-10 are close to the best result on non-augmented CIFAR-10 (6.55% error using ELU units) and certainly the best reported result for All-CNN-BN which is a medium-sized model with about 1.6 million weights. The largest model we experimented with is an LSTM on the PTB dataset with 66 million weights, please see the updates above for more details.
-
+Please note that our results on CIFAR-10 are close to the best result on non-augmented CIFAR-10 (6.55% error using ELU units) and certainly the best reported results for the popular All-CNN network which is a medium-sized model with about 1.6 million weights. The largest model we experimented with is an LSTM on the PTB dataset with 66 million weights, please see the updates above for more details.
 
 [BE02] Olivier Bousquet and Andre Elisseeff. Stability and generalization. JMLR, 2002.
 
@@ -125,7 +123,7 @@ Please note that our results on CIFAR-10 are close to the best result on non-aug
 Csaba Szepesvari:
 
 >> discussion of Baldassi et. al. '16 in related work
-We have expanded the discussion of local entropy previously introduced by Baldassi et. al. in Sec. 2. This paper builds upon their work and generalizes it to models with continuous variables, deep networks in particular. After posting the first version of this paper, we have collaborated with Baldassi et. al. on experiments with scoping techniques and they have co-authored this version of the paper.
+We have expanded the discussion of local entropy previously introduced by Baldassi et. al. in Sec. 2 and included due citations in Sec. 1 and 3 as well. This paper builds upon their work and generalizes it to models with continuous variables, deep networks in particular. After posting the first version of this paper, we have been collaborating with Baldassi et. al. for experiments on scoping techniques and they have co-authored this version of the paper.
 
 Please see the "updates to the paper" comment above for the response to the questions regarding (i) eigenvalue assumption, (ii) more thorough experimental results and, (iii) smoothing the loss vs. local entropy.
 
@@ -141,17 +139,5 @@ Please see updates to the paper above (a), we have included results for word-lev
 ------------------
 AnonReviewer2:
 
-4. We set c from Thm. 3.12 of Hardt's paper to be 1 for clarity (c is the initial learning rate). Including it in the exponent does not change our analysis.
-
-------------------
-Areachair1 [Stefano should maybe edit and post that comment]:
-
-Re: You should make these connections clearer and more explicit
-We have discussed this in depth with sufficient technical details above. Using terms like "similar to motivations of Bayesian methods" and "using Bayesian methods in the inner loop" is generalizing to the point of absurdity.
-
-It is not accurate to term local entropy as "SVI with a moving prior" for a number of reasons. "SVI with a moving prior" has no theoretical basis. It is not connected to the log-likelihood of data, it is connected to local entropy instead. As we have discussed above, local entropy *resembles* SVI with a moving prior but only in an extremely non-rigorous and merely conceptual fashion.
-
-We have updated the experiments in our paper. We now plot the number of gradient evaluations on the x-axis and using scoping, we can in fact show that local entropy performs better in a smaller amount of time. As requested, we have also added a section comparing local-entropy with SGLD.
-
-Re: Exact Hessian-vector product is easy to compute
-We have discussed this above (see the comment regarding [P94]). Computing the "exact" HVP requires averaging over the entire dataset, i.e., ~4x the complexity of one epoch, which is expensive.
+>> Thm. 3 does not have the constant c in Hardt et. al. '15
+We set the constant c of Hardt et. al., to 1 in our statement to avoid confusion with our constant, with is also called c (the learning \eta_t \leq 1/t instead of the original \eta_t \leq c/t). This does not change the result qualitatively.
