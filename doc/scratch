@@ -1,0 +1,6 @@
+\red{Recent works on shallow networks with discrete weights~\citep{baldassi2015subdominant,baldassi2016unreasonable} have shown that the geometrical structure of the energy landscape is characterized by the existence of an exponentially large number of local minima, a large number of narrow isolated minima, and few very dense regions of minima. These dense states have been discovered analytically by adopting an appropriate local entropy measure, and have been shown to be both algorithmically accessible and to have good generalization properties in both random and real-world settings. The original analysis was done in the case of binary weights, and was later generalized by~\citet{baldassi2016multilevel} to the case of weights with an arbitrary number of precision bits. Here, we generalize this approach to the case of deep architectures and continuous weights, and develop a Langevin stochastic gradient descent algorithm based on the local entropy measure.}
+
+\red{The existence of wide minima in deep networks is also suggested by the spectral analysis of the Hessian~\citep{sagun2016singularity}.}
+
+\red{For a more detailed recent
+analysis of the Hessian, see the parallel work of~\citet{sagun2016singularity}.}
