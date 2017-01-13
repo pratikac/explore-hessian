@@ -330,7 +330,7 @@ The above analysis hinges upon an assumption that the Hessian $\nabla^2 f(x)$ do
 \section{Experiments}
 \label{s:expt}
 
-In Sec.~\ref{ss:expt:universality}, we discuss experiments that suggest that the characteristics of the energy landscape around local minimal accessible by SGD are universal to deep architectures.  This observation motivates the $\entropysgd$ algorithm considered in this paper and in Sec.~\ref{ss:expt:mnist} and~\ref{ss:expt:cifar}, we present experimental results on two standard image classification datasets, viz., MNIST and CIFAR-10.
+In Sec.~\ref{ss:expt:universality}, we discuss experiments that suggest that the characteristics of the energy landscape around local minimal accessible by SGD are universal to deep architectures. We then present experimental results on two standard image classification datasets, viz. MNIST and CIFAR-10 and two datasets for text prediction, viz. PTB and the text of War and Peace. Table~\ref{tab:expts} summarizes the results of these experiments on deep networks.
 
 \subsection{Universality of the Hessian at local minima}
 \label{ss:expt:universality}
@@ -476,25 +476,31 @@ As noted in Sec.~\ref{ss:alg}, we can easily wrap Alg.~\ref{alg:entropysgd} insi
 \label{fig:rnn}
 \end{figure}
 
-% {
-% \renewcommand{\arraystretch}{1.3}
-% \begin{table}[H]
-% \centering
-% \resizebox{0.8 \columnwidth}{!}
-% {%
-% \LARGE
-% \begin{tabular}{p{8cm} c c r}
-%     Model & Validation perplexity & Test perplexity & Time per effective epoch (s)\\  \hline
-%     $\ptblstm$ (SGD) & $81.43 \pm 0.2$ & $78.6 \pm 0.26$ & $0$\\
-%     $\ptblstm$ ($\entropysgd$) & $80.12 \pm 0.07$ & $77.66 \pm 0.17$ & $0$\\\hline
-%     $\charlstm$ (Adam) & $1.224 \pm 0.008$ & $1.226 \pm 0.01$ & $0$\\
-%     $\charlstm$ ($\entropyadam$) & $1.213 \pm 0.007$ & $1.217 \pm 0.005$ & $0$\\ \hline
-% \end{tabular}
-% }
-% \caption{\small $\entropysgd$ on RNNs}
-% \label{tab:rnns}
-% \end{table}
-% }
+{
+\setlength{\heavyrulewidth}{1.5pt}
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\resizebox{0.9 \columnwidth}{!}
+{
+\large
+\begin{tabular}{p{4cm} | c c | c c}
+\toprule
+    \rowcolor{gray!15} Model & \multicolumn{2}{c}{$\entropysgd$} & \multicolumn{2}{c}{SGD / Adam}\\
+\toprule
+    & Error (\%) / Perplexity & Epochs & Error (\%) / Perplexity & Epochs\\
+    \rowcolor{gray!15} $\mnistfc$ & $1.37 \pm 0.03$ & $120$ & $1.39 \pm 0.03$ & $66$\\
+    $\lenet$ & $0.5 \pm 0.01$ & $80$ & $0.51 \pm 0.01$ & $100$\\
+    \rowcolor{gray!15} $\allcnn$ & $7.81 \pm 0.09$ & $115$ & $7.71 \pm 0.19$ & $180$\\
+    $\ptblstm$ & $77.656 \pm 0.171$ & $25$ & $78.6 \pm 0.26$ & $55$\\
+    \rowcolor{gray!15} $\charlstm$ & $1.217 \pm 0.005$ & $25$ & $1.226 \pm 0.01$ & $40$\\
+\bottomrule
+\end{tabular}
+}
+\caption{\small Experimental results: $\entropysgd$ vs. SGD / Adam}
+\label{tab:expts}
+\end{table}
+}
 
 Tuning the momentum in $\entropysgd$ was crucial to getting good results on RNNs. While the SGD baseline on $\ptblstm$ does not use momentum (and in fact, does not train well with momentum) we used a momentum of $0.5$ for $\entropysgd$. On the other hand, the baseline for $\charlstm$ was trained with Adam with $\b_1 = 0.9$ ($\b_1$ in Adam controls the moving average of the gradient) while we set $\b_1 = 0.5$ for $\entropyadam$. In contrast to this observation about RNNs, all our experiments on CNNs used a momentum of $0.9$. In order to investigate this difficulty, we monitored the angle between the local entropy gradient and the vanilla SGD gradient during training. This angle changes much more rapidly for RNNs than for CNNs which suggests a more rugged energy landscape for the former; local entropy gradient is highly uncorrelated with the SGD gradient in this case.
 
