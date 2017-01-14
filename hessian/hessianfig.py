@@ -31,22 +31,22 @@ plt.rc('figure', titlesize=fontsize)
 def load_data(n):
     e = []
     if n == 'lenet':
-        for i in glob.glob('../../results/hessian/lenet/*.npy'):
+        for i in glob.glob('../results/nov_expts/hessian/lenet/*.npy'):
             e.append(np.real(np.load(i)))
     elif n == 'mnistfc':
-        for i in glob.glob('../../results/hessian/mnistfc2/*.npy'):
+        for i in glob.glob('../results/nov_expts/hessian/mnistfc2/*.npy'):
             e.append(np.load(i)[:,0]*128)
     elif n == 'charlstm':
-        for i in glob.glob('../../results/hessian/char_lstm/*.npy'):
+        for i in glob.glob('../results/nov_expts/hessian/char_lstm/*.npy'):
             e.append(np.load(i)[:,0]*32)
     elif n == 'cifarfc':
-        for i in glob.glob('../../results/hessian/cifarfc/*.npy'):
+        for i in glob.glob('../results/nov_expts/hessian/cifarfc/*.npy'):
             e.append(np.load(i)[:,0])
     elif n == 'lenet_nonconvg':
-        for i in glob.glob('../../results/hessian/lenet_nonconvg/*.npy'):
+        for i in glob.glob('../results/nov_expts/hessian/lenet_nonconvg/*.npy'):
             e.append(np.real(np.load(i)))
     elif n == 'cifarconv':
-        for i in glob.glob('../../results/hessian/allcnn_fisher/*.optim_state.t7'):
+        for i in glob.glob('../results/nov_expts/hessian/allcnn_fisher/*.optim_state.t7'):
             t = thf.load(i)
             e.append( (t['v'] - t['m']**2)*256)
     else:
