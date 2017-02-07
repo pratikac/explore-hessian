@@ -44,7 +44,7 @@ def load(fs, m=50, isrnn = False):
     Ds = []
     for f in fs:
         Ds.append(pd.read_csv(f, sep=None, engine='python'))
-    df = pd.concat(Ds, keys=[i for i in xrange(len(Ds))])
+    df = pd.concat(Ds, keys=[i for i in xrange(len(fs))])
 
     r['loss'] = loss(df, m)
     if isrnn:
@@ -73,6 +73,9 @@ def plot_lenet():
             condition=r'Adam', rasterized=True, color='k')
     sns.tsplot(v2, time=np.arange(20,120,20),
             condition=r'Entropy-SGD', rasterized=True, color='r')
+    sns.tsplot(v2, time=np.arange(20,120,20),
+            rasterized=True, color='r',
+            err_style="ci_bars", interpolate=False)
 
     plt.ylim([0.45, 0.75])
     plt.xlim([20,100])
@@ -112,6 +115,9 @@ def plot_mnistfc():
             condition=r'Adam', rasterized=True, color='k')
     sns.tsplot(v2, time=np.arange(20,220,20),
             condition=r'Entropy-SGD', rasterized=True, color='r')
+    sns.tsplot(v2, time=np.arange(20,220,20),
+        rasterized=True, color='r',
+        err_style="ci_bars", interpolate=False)
     plt.grid('on')
 
     plt.ylim([1.2, 2])
@@ -149,6 +155,8 @@ def plot_allcnn():
             condition=r'SGD', rasterized=True, color='k')
     sns.tsplot(v2, time=np.arange(20,220,20),
             condition=r'Entropy-SGD', rasterized=True, color='r')
+    sns.tsplot(v2, time = np.arange(20,220,20),
+            rasterized=True, color='r', err_style='ci_bars',interpolate=False)
     plt.grid('on')
 
     plt.ylim([5, 20])
@@ -182,6 +190,8 @@ def plot_allcnn():
             condition=r'SGD', rasterized=True, color='k')
     sns.tsplot(v2, time = np.arange(20,220,20),
             condition=r'Entropy-SGD', rasterized=True, color='r')
+    sns.tsplot(v2, time = np.arange(20,220,20),
+            rasterized=True, color='r', err_style='ci_bars',interpolate=False)
     plt.grid('on')
 
     plt.ylim([0,0.6])
@@ -220,6 +230,8 @@ def plot_charlstm():
             condition=r'Adam', rasterized=True, color='k')
     sns.tsplot(v2, time=np.arange(5,30,5),
             condition=r'Entropy-Adam', rasterized=True, color='r')
+    sns.tsplot(v2, time=np.arange(5,30,5),
+            rasterized=True, color='r', err_style='ci_bars',interpolate=False)
     plt.grid('on')
 
     plt.ylim([1.2, 1.35])
@@ -255,12 +267,14 @@ def plot_ptb():
     ax = fig.add_subplot(111)
     #plt.title(r'PTB-LSTM: Validation error')
 
-    v1 = np.array([smooth(r1['valid'].ix[i]) for i in range(2)])
-    v2 = np.array([smooth(r2['valid'].ix[i]) for i in range(2)])
+    v1 = np.array([smooth(r1['valid'].ix[i],0.001) for i in range(2)])
+    v2 = np.array([smooth(r2['valid'].ix[i],0.001) for i in range(1)])
     sns.tsplot(v1,
             condition=r'SGD', rasterized=True, color='k')
     sns.tsplot(v2, time=np.arange(5,30,5),
             condition=r'Entropy-SGD', rasterized=True, color='r')
+    sns.tsplot(v2, time=np.arange(5,30,5),
+            rasterized=True, color='r', err_style='ci_bars',interpolate=False)
     plt.grid('on')
 
     plt.ylim([75, 115])
@@ -290,4 +304,4 @@ def plot_ptb():
 # plot_mnistfc()
 # plot_allcnn()
 # plot_charlstm()
-# plot_ptb()
+plot_ptb()
