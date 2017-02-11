@@ -169,3 +169,25 @@ AnonReviewer2:
 We set the constant c of Hardt et. al., to 1 in our statement to avoid confusion with our constant, with is also called c (our statement has the learning rate \eta_t \leq 1/t instead of their original \eta_t \leq c/t). This does not change the result qualitatively.
 
 Please see the "updates to the paper" comment above for the response to the questions regarding (i) the eigenvalue assumption, (ii) thorough experimental results and, (iii) smoothing the original loss vs. local entropy.
+
+
+--------------------------------------------------
+
+>>(short questions)
+
+Congratulations to the authors for the high points on the updated PDF. I hope I am not very late in asking two short questions. Will you be opensourcing the code for the method & how does the method relate to the discussions in some other recent ICLR papers
+
+[1] Understanding deep learning requires rethinking generalization
+[2] Snapshot Ensembles: Train 1, Get M for Free
+[3] On Large-Batch Training for Deep Learning: Generalization Gap and Sharp Minima
+
+They are only tangentially related I know but I was curious how the motivation of the method fits into the generalization arguments of [1,3] and whether the ensembling trick of [2] can be used in conjunction with Entropy-SGD to reap benefits of both.
+
+-----------
+We plan to open-source the code and examples.
+
+We could speculate on how our method relates to the experiments of [1] but we would rather leave this to further investigation.
+
+[2] is quite different from the replica theoretic motivations of Entropy-SGD, which aims to create one good model. While it is possible to use ensembles of multiple networks with local scoping, the benefits might be offset by significantly longer test time.
+
+The metric in [3] is a proxy for local entropy (max instead of our integral). Entropy-SGD is a specialized algorithm to lead to flat minima, achieving the same effect using parameters such as batch-size, dropout, batch-normalization, data augmentation etc. is quite hard.

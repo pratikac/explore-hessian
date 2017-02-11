@@ -54,6 +54,27 @@ def load_data(n):
 
     return pd.DataFrame(np.hstack(e), columns=['e'])
 
+def plot_lenet_all():
+    d = load_data('lenet')
+    dp = d
+    plt.figure(1, figsize=(8,8))
+    plt.clf()
+    p = ggplot(dp, aes(x='e')) + \
+        xlab(' ') + \
+        scale_color_manual('black') + \
+        geom_histogram(bins=50) + \
+        theme_bw()
+    print p
+    plt.yscale('symlog', linthreshy=10)
+    plt.xlabel(r'Eigenvalues')
+    plt.ylabel(r'Frequency')
+    xticks = [-5, 0, 10, 20, 30, 40]
+    plt.xticks(xticks, [r'$-5$', r'$0$', r'$10$', r'$20$', r'$30$', r'$40$'])
+    yticks=[0, 10, 1e3, 1e5]
+    plt.yticks(yticks, [r'$0$', r'$10$', r'$10^3$', r'$10^5$'])
+    if opt['save']:
+        plt.savefig('../doc/fig/lenet_all.pdf', bbox_inches='tight')
+
 def plot_lenet():
     d = load_data('lenet')
     t = 1e-4
@@ -203,27 +224,28 @@ def plot_charlstm():
         plt.xticks(xticks, [r'$-10$', r'$5$', r'$15$', r'$25\\ (\times 10^{-2})$'])
         plt.savefig('../../doc/fig/charlstm_hessian.pdf', bbox_inches='tight')
 
-d = load_data('cifarfc')
-plt.figure(1, figsize=(8,7))
-plt.clf()
-p = ggplot(d, aes(x='e')) + \
-    xlab(' ') + \
-    geom_histogram(bins=50) + \
-    theme_bw()
-print p
-plt.yscale('symlog', linthreshy=25)
-plt.ylim([0, 1e2])
-plt.xlim([-10, 4e3])
+def plot_cifarfc():
+    d = load_data('cifarfc')
+    plt.figure(1, figsize=(8,7))
+    plt.clf()
+    p = ggplot(d, aes(x='e')) + \
+        xlab(' ') + \
+        geom_histogram(bins=50) + \
+        theme_bw()
+    print p
+    plt.yscale('symlog', linthreshy=25)
+    plt.ylim([0, 1e2])
+    plt.xlim([-10, 4e3])
 
-xticks = [-1e-3, 5e-2, 15e-2, 25e-2]
-yticks = [0, 10, 50]
-plt.yticks(yticks, [r'$0$', r'$10$', r'$50$'])
-plt.title(r'small-LeNet: Unconverged Hessian')
-plt.xlabel(r'Eigenvalues')
-plt.ylabel(r'Frequency')
-if opt['save']:
-    plt.xticks(xticks, [r'$-10$', r'$5$', r'$15$', r'$25\\ (\times 10^{-2})$'])
-    plt.savefig('../../doc/fig/cifarfc_hessian.pdf', bbox_inches='tight')
+    xticks = [-1e-3, 5e-2, 15e-2, 25e-2]
+    yticks = [0, 10, 50]
+    plt.yticks(yticks, [r'$0$', r'$10$', r'$50$'])
+    plt.title(r'small-LeNet: Unconverged Hessian')
+    plt.xlabel(r'Eigenvalues')
+    plt.ylabel(r'Frequency')
+    if opt['save']:
+        plt.xticks(xticks, [r'$-10$', r'$5$', r'$15$', r'$25\\ (\times 10^{-2})$'])
+        plt.savefig('../../doc/fig/cifarfc_hessian.pdf', bbox_inches='tight')
 
 
 # from fitter import Fitter
@@ -240,6 +262,7 @@ if opt['save']:
 # f.fit()
 
 
+plot_lenet_all()
 # plot_lenet()
 # plot_allcnn()
 # plot_mnistfc()
