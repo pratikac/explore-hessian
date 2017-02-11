@@ -79,6 +79,8 @@ function ptb.split(a,b)
     local train, val, test =    loadptb('ptb.train.txt'),
                                 loadptb('ptb.valid.txt'),
                                 loadptb('ptb.test.txt')
+    torch.save('ptb.t7', {  train=train,valid=val,test=test, size=10000,
+                            vocab=vocab,ivocab=ivocab,wordf=wordf})
 
     if opt and opt.full ~= true then
         print('Overfitting on 10% subset ...')
