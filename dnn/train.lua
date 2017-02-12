@@ -95,7 +95,6 @@ function trainer_lstm(d)
     confusion:zero()
     for b=1,num_batches do
         collectgarbage()
-        timer:reset()
 
         local feval = function(_w)
             local dry = dry or false
@@ -160,7 +159,7 @@ function trainer_lstm(d)
     end
 
     loss = loss/num_batches
-    print( (colors.blue .. '*[%2d] %.5f %.3f%%'):format(epoch, loss, (1 - confusion.totalValid)*100))
+    print( (colors.blue .. '*[%2d] %.5f %.3f%% [%.3fs]'):format(epoch, loss, (1 - confusion.totalValid)*100), timer:time().real)
 
     local stats = { tv=1,
     epoch=epoch,
@@ -188,8 +187,7 @@ function trainer(d)
     confusion:zero()
     for b =1,num_batches do
         collectgarbage()
-
-        timer:reset()
+        local timer1 = torch.Timer()
 
         local feval = function(_w, dry)
             local dry = dry or false
@@ -206,6 +204,7 @@ function trainer(d)
             local dfdy = cost:backward(yh, yc)
             model:backward(xc, dfdy)
             cutorch.synchronize()
+            print('[bp-dt] ' .. timer1:time().real)
 
             if dry == false then
                 loss = loss + f
@@ -230,7 +229,6 @@ function trainer(d)
                     logger_add(logger, stats)
                 end
             end
-
             return f, dw
         end
 
@@ -244,13 +242,15 @@ function trainer(d)
             assert(false, 'opt.optim: ' .. opt.optim)
         end
 
+        --print('[err-dt] ' .. timer1:time().real)
+
         if b % 25 == 0 then
             print( (colors.blue .. '+[%2d][%3d/%3d] %.5f %.3f%% [%.2fs]'):format(epoch, b, num_batches, loss/b, (1 - confusion.totalValid)*100, timer:time().real))
         end
     end
 
     loss = loss/num_batches
-    print( (colors.blue .. '*[%2d] %.5f %.3f%%'):format(epoch, loss, (1 - confusion.totalValid)*100))
+    print( (colors.blue .. '*[%2d] %.5f %.3f%% [%.2fs]'):format(epoch, loss, (1 - confusion.totalValid)*100, timer:time().real))
 
     local stats = { tv=1,
     epoch=epoch,
@@ -404,8 +404,8 @@ function learning_rate_schedule()
             -- all-cnn-bn on cifar10
             local regimes = {
             {1,3,1},
-            {4,6,0.1},
-            {7,12,0.01}
+            {4,6,0.2},
+            {7,12,0.04}
             }
             --[[
             -- lenet
