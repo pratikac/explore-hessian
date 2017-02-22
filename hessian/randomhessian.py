@@ -13,23 +13,24 @@ import argparse, os, time
 
 parser = argparse.ArgumentParser(description='Hessian of random data')
 parser.add_argument('-s', '--seed',  default=42,    help='Random seed',  type=int)
+parser.add_argument('-nh', '--num_hidden',  default=256,    help='Hidden',  type=int)
 args = vars(parser.parse_args())
 
 dtype = np.float16
 
 opt = dict(
-    B=100,
-    N=10000,
+    B=10,
+    N=128,
     bsz=128,
     d=196,
     lr=1e-2,
     lrd=0.95,
-    l2=1e-1,
-    network=[196,256,256,10])
+    l2=1e-2,
+    network=[196,args['nh'],args['nh'],10])
 
 opt.update(args)
 opt['nb'] = opt['N'] // opt['bsz']
-opt['hnb'] = opt['nb']
+opt['hnb'] = 1 #opt['nb']
 np.random.seed(args['seed'])
 
 dataset = dict(data = np.random.randn(opt['N'], opt['d']),
@@ -44,7 +45,6 @@ def init_params(sz, rs = npr.RandomState(opt['seed'])):
 
 def predict(p, x):
     relu = lambda _x: np.maximum(_x, 0.)
-
     for w, b in p:
         yh = np.dot(x, w) + b
         x = relu(yh)
@@ -87,6 +87,7 @@ params = p
 
 flat_f, unflatten, flat_params = flatten_func(objective, params)
 flat_hess = hessian(flat_f)
+
 h = np.zeros((flat_params.shape[0], flat_params.shape[0]))
 for i in np.random.permutation(np.arange(opt['nb']))[:opt['hnb']]:
     h += flat_hess(flat_params, i).squeeze()
@@ -95,4 +96,4 @@ h = h.squeeze()/float(opt['hnb']*opt['bsz'])
 print '[hessian] ', time.time() -s
 
 e = np.linalg.eigvals(h)
-np.save('randomh.npz', e=e,h=h)
+np.savez('randomh.npz', e=e,h=h)
