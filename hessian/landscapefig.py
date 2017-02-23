@@ -42,8 +42,8 @@ def plot_clusters():
         fig = plt.figure(1, figsize=(6,6))
         plt.clf()
         ax = fig.add_subplot(111)
-        plt.plot(_x[:,0], _x[:,1], '.', marker='.', ms=20)
-        plt.plot(_xc[:,0], _xc[:,1], 'r.', marker='.', ms=20)
+        plt.plot(_x[:,0], _x[:,1], 'r.', marker='.', ms=20)
+        plt.plot(_xc[:,0], _xc[:,1], 'b.', marker='.', ms=20)
         plt.plot(np.cos(np.linspace(0,2*np.pi,100)),np.sin(np.linspace(0,2*np.pi,100)),
             'k-', lw=1)
 
@@ -59,3 +59,5 @@ def plot_clusters():
 # #def plot_golfcourse():
 # t = np.arange(-10, 10, 0.1)
 # x = np.sin()
+
+plot_clusters()
