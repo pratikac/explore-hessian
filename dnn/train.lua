@@ -60,8 +60,6 @@ if opt.dataset == 'mnist' then
     dataset = mnist
 elseif opt.dataset == 'cifar' then
     dataset = require 'cifarload'
-elseif opt.dataset == 'ptb' then
-    dataset = require 'ptbload'
 end
 
 function augment(xc)
@@ -185,7 +183,7 @@ function compute_bn_params(d)
     model:training()
 
     local num_batches = x:size(1)/opt.batch_size
-    local bs = opt.batch_size*4
+    local bs = opt.batch_size
 
     for b =1,num_batches do
         collectgarbage()
@@ -199,9 +197,6 @@ function compute_bn_params(d)
             xc = augment(xc):cuda()
 
             local yh = model:forward(xc)
-            local f = cost:forward(yh, yc)
-            local dfdy = cost:backward(yh, yc)
-            model:backward(xc, dfdy)
             cutorch.synchronize()
             return f, dw
         end
@@ -216,8 +211,8 @@ function tester(d)
     local x, y = d.data, d.labels
     model:evaluate()
 
-    local num_batches = math.ceil(x:size(1)/opt.batch_size)
-    local bs = opt.batch_size
+    local bs = 1024
+    local num_batches = math.ceil(x:size(1)/bs)
 
     local mc = 1
     local loss = 0
